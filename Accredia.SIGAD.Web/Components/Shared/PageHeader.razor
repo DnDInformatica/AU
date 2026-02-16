@@ -7,15 +7,50 @@
         {
             <MudText Typo="Typo.body2" Class="sigad-page-subtitle">@Subtitle</MudText>
         }
-        @if (!string.IsNullOrWhiteSpace(Breadcrumbs))
+        @if (HasStructuredBreadcrumbs)
+        {
+            <nav class="sigad-breadcrumbs" aria-label="Breadcrumb">
+                @for (var i = 0; i < BreadcrumbItems!.Count; i++)
+                {
+                    var item = BreadcrumbItems[i];
+                    var isLast = i == BreadcrumbItems.Count - 1;
+
+                    @if (i > 0)
+                    {
+                        <span class="sigad-breadcrumb-sep" aria-hidden="true">/</span>
+                    }
+
+                    @if (isLast || string.IsNullOrWhiteSpace(item.Href))
+                    {
+                        <span class="sigad-breadcrumb-current" aria-current="page">@item.Label</span>
+                    }
+                    else
+                    {
+                        <a class="sigad-breadcrumb-link" href="@item.Href">@item.Label</a>
+                    }
+                }
+            </nav>
+        }
+        else if (HasLegacyBreadcrumbs)
         {
             <MudText Typo="Typo.caption" Class="sigad-page-breadcrumbs">@Breadcrumbs</MudText>
         }
     </div>
-    @if (!string.IsNullOrWhiteSpace(PrimaryActionLabel) || !string.IsNullOrWhiteSpace(SecondaryActionLabel))
+    @if (HasActions)
     {
         <div class="sigad-page-header-action">
-            <MudStack Direction="Row" Spacing="1">
+            <MudStack Direction="Row" Spacing="1" AlignItems="AlignItems.Center">
+                @if (HasBackButton)
+                {
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Default"
+                               Href="@BackHref"
+                               StartIcon="@Icons.Material.Filled.ArrowBack"
+                               Class="sigad-back-btn"
+                               aria-label="@BackLabel">
+                        @BackLabel
+                    </MudButton>
+                }
                 @if (!string.IsNullOrWhiteSpace(SecondaryActionLabel))
                 {
                     <MudButton Variant="Variant.Outlined"
@@ -38,16 +73,3 @@
         </div>
     }
 </div>
-
-@code {
-    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
-    [Parameter] public string? Subtitle { get; set; }
-    [Parameter] public string? Breadcrumbs { get; set; }
-    [Parameter] public string? PrimaryActionLabel { get; set; }
-    [Parameter] public bool PrimaryActionDisabled { get; set; }
-    [Parameter] public EventCallback OnPrimaryAction { get; set; }
-
-    [Parameter] public string? SecondaryActionLabel { get; set; }
-    [Parameter] public bool SecondaryActionDisabled { get; set; }
-    [Parameter] public EventCallback OnSecondaryAction { get; set; }
-}

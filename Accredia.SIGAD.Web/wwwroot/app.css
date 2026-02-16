@@ -494,6 +494,55 @@ a {
     margin-top: 4px;
 }
 
+/* ── Structured breadcrumbs (clickable) ── */
+.sigad-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-breadcrumb-link {
+    color: var(--sigad-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+    .sigad-breadcrumb-link:hover {
+        color: var(--sigad-graphite);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .sigad-breadcrumb-link:focus-visible {
+        outline: 2px solid var(--sigad-ocra, #d4a574);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
+.sigad-breadcrumb-sep {
+    color: var(--sigad-text-secondary);
+    opacity: 0.5;
+    margin: 0 2px;
+    user-select: none;
+}
+
+.sigad-breadcrumb-current {
+    color: var(--sigad-graphite);
+    font-weight: 600;
+}
+
+/* ── Back button ── */
+.sigad-back-btn {
+    text-transform: none !important;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
 .sigad-table-link {
     display: inline-flex;
     align-items: center;

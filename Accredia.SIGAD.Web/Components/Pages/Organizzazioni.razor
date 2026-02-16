@@ -10,7 +10,7 @@
 
     <PageHeader Title="Organizzazioni"
                 Subtitle="Elenco delle organizzazioni censite."
-                Breadcrumbs="Home / Anagrafiche / Organizzazioni"
+                BreadcrumbItems="@_breadcrumbs"
                 PrimaryActionLabel="Nuova organizzazione"
                 PrimaryActionDisabled="false"
                 OnPrimaryAction="CreateNew" />
@@ -57,7 +57,8 @@
                            OnChangeStatusSelected="OnChangeStatusSelected"
                            BulkInProgress="@_bulkInProgress"
                            BulkCurrent="@_bulkCurrent"
-                           BulkTotal="@_bulkTotal" />
+                           BulkTotal="@_bulkTotal"
+                           ListReturnUrl="@BuildReturnUrl()" />
 
 </MudContainer>
 

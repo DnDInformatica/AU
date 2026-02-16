@@ -156,7 +156,7 @@
             <MudTd DataLabel="Denominazione">
                 <MudText Typo="Typo.body2" Class="fw-bold">
                     <a class="sigad-table-link"
-                       href="@($"/organizzazioni/{context.OrganizzazioneId}")"
+                       href="@BuildDetailHref(context.OrganizzazioneId)"
                        @onclick:stopPropagation="true">
                         @context.Denominazione
                     </a>
@@ -255,6 +255,15 @@
     [Parameter] public bool BulkInProgress { get; set; }
     [Parameter] public int BulkCurrent { get; set; }
     [Parameter] public int BulkTotal { get; set; }
+    [Parameter] public string? ListReturnUrl { get; set; }
+
+    private string BuildDetailHref(int organizzazioneId)
+    {
+        var baseUrl = $"/organizzazioni/{organizzazioneId}";
+        return string.IsNullOrEmpty(ListReturnUrl)
+            ? baseUrl
+            : $"{baseUrl}?returnUrl={Uri.EscapeDataString(ListReturnUrl)}";
+    }
 
     private int BulkProgressPercent => BulkTotal <= 0 ? 0 : (int)Math.Round(BulkCurrent * 100.0 / BulkTotal);
 

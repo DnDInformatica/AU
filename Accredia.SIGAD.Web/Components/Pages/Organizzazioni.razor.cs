@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using Accredia.SIGAD.Web.Components.Shared;
 using Accredia.SIGAD.Web.Models.Anagrafiche;
+using Accredia.SIGAD.Web.Models.Common;
 using Accredia.SIGAD.Web.Services;
 using System.Globalization;
 using System.Text;
@@ -23,6 +24,13 @@ public partial class Organizzazioni : ComponentBase
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    private readonly List<Models.Common.BreadcrumbItem> _breadcrumbs = new()
+    {
+        new("Home", "/"),
+        new("Anagrafiche"),
+        new("Organizzazioni")
+    };
 
     private MudTable<OrganizzazioneListItem>? _table;
     private ElementReference _resultsFocus;
@@ -302,7 +310,36 @@ public partial class Organizzazioni : ComponentBase
     private void NavigateToDetail(int organizzazioneId)
     {
         QuickDrawer.Close();
-        Navigation.NavigateTo($"/organizzazioni/{organizzazioneId}");
+        var returnUrl = BuildReturnUrl();
+        var url = string.IsNullOrEmpty(returnUrl)
+            ? $"/organizzazioni/{organizzazioneId}"
+            : $"/organizzazioni/{organizzazioneId}?returnUrl={Uri.EscapeDataString(returnUrl)}";
+        Navigation.NavigateTo(url);
+    }
+
+    private string BuildReturnUrl()
+    {
+        var sb = new StringBuilder("/organizzazioni");
+        var sep = '?';
+
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            sb.Append(sep).Append("q=").Append(Uri.EscapeDataString(_query.Trim()));
+            sep = '&';
+        }
+
+        if (_statoAttivita is not null)
+        {
+            sb.Append(sep).Append("statoId=").Append(_statoAttivita.Id.ToString(CultureInfo.InvariantCulture));
+            sep = '&';
+        }
+
+        if (_tipoOrganizzazione is not null)
+        {
+            sb.Append(sep).Append("tipoId=").Append(_tipoOrganizzazione.Id.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return sb.Length > "/organizzazioni".Length ? sb.ToString() : string.Empty;
     }
 
     private static string BuildQuickSubtitle(OrganizzazioneListItem item)
