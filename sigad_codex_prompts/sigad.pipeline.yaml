@@ -1,0 +1,29 @@
+workspace: C:\Accredia\Sviluppo\AU
+sandbox: workspace-write
+
+defaults:
+  reasoning: medium
+  stopOnError: true
+
+prompts:
+  - id: 0
+    file: PROMPT_0_Bootstrap_Verifica_Solution.md
+    reasoning: medium
+  - id: 1
+    file: PROMPT_1_VSA_Microservizi.md
+    reasoning: medium
+  - id: 2
+    file: PROMPT_2_Database_ConnectionString.md
+    reasoning: high
+  - id: 3
+    file: PROMPT_3_Config_Resilienza_Diagnostica.md
+    reasoning: medium
+  - id: 4
+    file: PROMPT_4_Identity_JWT.md
+    reasoning: high
+  - id: 5
+    file: PROMPT_5_Versioning_API.md
+    reasoning: low
+  - id: 6
+    file: PROMPT_6_Osservabilita.md
+    reasoning: medium

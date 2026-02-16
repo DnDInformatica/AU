@@ -1,0 +1,113 @@
+@using MudBlazor
+@using Accredia.SIGAD.Web.Models.Admin
+@inject AdminClient AdminClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">
+            <MudText Typo="Typo.h6">Conferma Logout Multiplo</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">
+                Stai per disconnettere <strong>@Users.Count utenti</strong> dal sistema.
+                <br />
+                Questa azione non può essere annullata.
+            </MudText>
+        </MudAlert>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">
+            Utenti selezionati:
+        </MudText>
+
+        <MudPaper Elevation="0" Class="pa-3" Style="max-height: 300px; overflow-y: auto;">
+            @foreach (var user in Users)
+            {
+                <div class="d-flex align-center mb-2">
+                    <MudAvatar Size="Size.Small" Color="Color.Primary" Class="mr-2">
+                        @GetUserInitials(user.Username)
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.body2">@user.Username</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@user.Email</MudText>
+                    </div>
+                </div>
+            }
+        </MudPaper>
+
+        <MudTextField @bind-Value="_reason"
+                      Label="Motivo (opzionale)"
+                      Placeholder="Es: Manutenzione sistema, rotazione password..."
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      Class="mt-4"
+                      HelperText="Nota: il backend attuale non registra ancora il motivo (campo previsto per evoluzione)." />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Disabled="@_isExecuting">
+            Annulla
+        </MudButton>
+        <MudButton Color="Color.Error" 
+                   Variant="Variant.Filled" 
+                   OnClick="ExecuteBulkLogoutAsync"
+                   Disabled="@_isExecuting"
+                   StartIcon="@(_isExecuting ? null : Icons.Material.Filled.Logout)">
+            @if (_isExecuting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <span class="ml-2">Logout...</span>
+            }
+            else
+            {
+                <span>Conferma</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<UserListDto> Users { get; set; } = new();
+
+    private string _reason = string.Empty;
+    private bool _isExecuting;
+
+    private async Task ExecuteBulkLogoutAsync()
+    {
+        _isExecuting = true;
+        try
+        {
+            var userIds = Users.Select(u => u.UserId).ToList();
+            var request = new LogoutUsersRequest(userIds);
+            
+            var result = await AdminClient.BulkLogoutAsync(request);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add($"{Users.Count} utenti disconnessi con successo", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add($"Errore: {result.Error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExecuting = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetUserInitials(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username)) return "?";
+        var parts = username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return string.Concat(parts[0][0], parts[^1][0]).ToUpperInvariant();
+    }
+}

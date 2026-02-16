@@ -1,0 +1,351 @@
+﻿@namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex
+
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+
+<MudPaper Class="sigad-table-wrap">
+
+    @* <div tabindex="-1" class="sigad-results-focus" @ref="_resultsFocus"></div> *@
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="sigad-table-toolbar">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Medium" />
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle2">Risultati</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Organizzazioni censite</MudText>
+            </MudStack>
+
+            @if (IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+            }
+        </MudStack>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            @if (!string.IsNullOrWhiteSpace(ResultsHint))
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
+                    @ResultsHint
+                </MudChip>
+            }
+
+            @if (_selectedIds.Count > 0)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                    Selezionati: @_selectedIds.Count
+                </MudChip>
+            }
+
+            @if (BulkInProgress)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">
+                    @($"{BulkCurrent}/{BulkTotal}")
+                </MudChip>
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+            }
+
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       Disabled="IsLoading || BulkInProgress"
+                       StartIcon="@Icons.Material.Outlined.Refresh"
+                       OnClick="RefreshAsync">
+                Aggiorna
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       Disabled="@(_selectedIds.Count == 0 || BulkInProgress)"
+                       StartIcon="@Icons.Material.Outlined.Download"
+                       OnClick="OnExportSelected">
+                Esporta
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       Size="Size.Small"
+                       Disabled="@(_selectedIds.Count == 0 || BulkInProgress)"
+                       StartIcon="@Icons.Material.Outlined.Delete"
+                       OnClick="OnDeleteSelected">
+                Elimina
+            </MudButton>
+
+            <MudMenu Dense="true"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined"
+                     Disabled="@(_selectedIds.Count == 0 || StatiAttivita.Count == 0 || BulkInProgress)"
+                     StartIcon="@Icons.Material.Outlined.Edit"
+                     Label="Cambia stato">
+                @foreach (var stato in StatiAttivita)
+                {
+                    <MudMenuItem OnClick="@(() => OnChangeStatusSelected.InvokeAsync(stato))">
+                        @stato.Label
+                    </MudMenuItem>
+                }
+            </MudMenu>
+
+            <MudMenu Dense="true"
+                     Color="Color.Inherit"
+                     Variant="Variant.Text"
+                     Disabled="BulkInProgress"
+                     EndIcon="@Icons.Material.Filled.MoreVert"
+                     Label="Altro...">
+                @if (MoreActions is not null)
+                {
+                    @MoreActions
+                }
+                else
+                {
+                    <MudMenuItem Disabled="true">Nessuna azione</MudMenuItem>
+                }
+            </MudMenu>
+        </MudStack>
+    </MudStack>
+
+    @if (BulkInProgress)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mx-4 mb-2">
+            <MudProgressLinear Value="@BulkProgressPercent" Color="Color.Primary" Class="flex-grow-1" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@($"{BulkProgressPercent}%")</MudText>
+        </MudStack>
+    }
+
+    <MudTable Items="Items"
+              ServerData="ServerData"
+              Hover="true"
+              Dense="true"
+              Elevation="0"
+              @ref="_table">
+
+        <HeaderContent>
+            <MudTh Style="width: 36px;">
+                <span style="cursor:pointer;" @onclick="ToggleSelectAllClick" @onclick:stopPropagation="true">
+                    @if (IsAllSelected)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Primary" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="Color.Default" />
+                    }
+                </span>
+            </MudTh>
+            <MudTh>Denominazione</MudTh>
+            <MudTh>Ragione sociale</MudTh>
+            <MudTh>Partita IVA</MudTh>
+            <MudTh>Codice Fiscale</MudTh>
+            <MudTh>Stato</MudTh>
+            <MudTh Style="text-align: right">Azioni</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd Style="width: 36px;">
+                <span style="cursor:pointer;" @onclick="@(() => ToggleRowSelectionClick(context))" @onclick:stopPropagation="true">
+                    @if (_selectedIds.Contains(context.OrganizzazioneId))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Primary" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="Color.Default" />
+                    }
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Denominazione">
+                <MudText Typo="Typo.body2" Class="fw-bold">
+                    <a class="sigad-table-link"
+                       href="@($"/organizzazioni/{context.OrganizzazioneId}")"
+                       @onclick:stopPropagation="true">
+                        @context.Denominazione
+                    </a>
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Ragione sociale">@context.RagioneSociale</MudTd>
+
+            <MudTd DataLabel="Partita IVA">
+                <MudText Typo="Typo.body2" Class="font-monospace">@context.PartitaIVA</MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Codice Fiscale">
+                <MudText Typo="Typo.body2" Class="font-monospace">@context.CodiceFiscale</MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Stato">
+                <MudChip T="string"
+                         Color="GetStatoColor.Invoke(context.StatoAttivitaId)"
+                         Variant="Variant.Filled"
+                         Size="Size.Small"
+                         Class="sigad-state-chip">
+                    @GetStatoLabel.Invoke(context.StatoAttivitaId)
+                </MudChip>
+            </MudTd>
+
+            <MudTd DataLabel="Azioni" Style="text-align: right; width: 1%; white-space: nowrap;">
+                <span @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OnQuickPreview.InvokeAsync(context))"
+                                   Title="Anteprima"
+                                   AriaLabel="Apri anteprima organizzazione" />
+                </span>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <div class="pa-6 text-center">
+                @if (!HasActiveFilters && (string.IsNullOrWhiteSpace(Query) || Query.Trim().Length < 2))
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mb-0">
+                        <MudText Typo="Typo.body2" Class="mb-2"><strong>Inizia la ricerca</strong></MudText>
+                        <MudText Typo="Typo.body2">
+                            Inserisci almeno 2 caratteri per cercare per denominazione
+                            o inserisci direttamente Codice Fiscale (16 caratteri) o P.IVA (11 caratteri).
+                        </MudText>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Class="mb-0">
+                        <MudText Typo="Typo.body2">
+                            Nessuna organizzazione trovata con i criteri di ricerca specificati.
+                        </MudText>
+                    </MudAlert>
+                }
+            </div>
+        </NoRecordsContent>
+
+        <PagerContent>
+            <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" />
+        </PagerContent>
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    [Parameter] public IEnumerable<OrganizzazioneListItem> Items { get; set; } = Array.Empty<OrganizzazioneListItem>();
+
+    [Parameter]
+    public Func<TableState, CancellationToken, Task<TableData<OrganizzazioneListItem>>> ServerData { get; set; }
+        = default!;
+
+    [Parameter] public string ResultsHint { get; set; } = string.Empty;
+    [Parameter] public bool IsLoading { get; set; }
+
+    [Parameter] public string? Query { get; set; }
+    [Parameter] public bool HasActiveFilters { get; set; }
+
+    [Parameter] public EventCallback<TableRowClickEventArgs<OrganizzazioneListItem>> OnRowClick { get; set; }
+    [Parameter] public EventCallback<OrganizzazioneListItem> OnQuickPreview { get; set; }
+
+    [Parameter] public Func<byte?, Color> GetStatoColor { get; set; } = default!;
+    [Parameter] public Func<byte?, string> GetStatoLabel { get; set; } = default!;
+
+    [Parameter] public EventCallback<MudTable<OrganizzazioneListItem>?> TableRefChanged { get; set; }
+    [Parameter] public EventCallback<ElementReference> ResultsFocusRefChanged { get; set; }
+    [Parameter] public IReadOnlyList<LookupItem> StatiAttivita { get; set; } = Array.Empty<LookupItem>();
+
+    [Parameter] public EventCallback OnExportSelected { get; set; }
+    [Parameter] public EventCallback OnDeleteSelected { get; set; }
+    [Parameter] public EventCallback<LookupItem> OnChangeStatusSelected { get; set; }
+    [Parameter] public RenderFragment? MoreActions { get; set; }
+    [Parameter] public bool BulkInProgress { get; set; }
+    [Parameter] public int BulkCurrent { get; set; }
+    [Parameter] public int BulkTotal { get; set; }
+
+    private int BulkProgressPercent => BulkTotal <= 0 ? 0 : (int)Math.Round(BulkCurrent * 100.0 / BulkTotal);
+
+    private MudTable<OrganizzazioneListItem>? _table;
+    private ElementReference _resultsFocus;
+    private HashSet<int> _selectedIds = new();
+    private bool _hasLocalSelectionChange;
+
+    [Parameter] public IReadOnlyCollection<OrganizzazioneListItem> SelectedItems { get; set; } = Array.Empty<OrganizzazioneListItem>();
+    [Parameter] public EventCallback<IReadOnlyCollection<OrganizzazioneListItem>> SelectedItemsChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // best effort: passiamo i ref al parent
+        await TableRefChanged.InvokeAsync(_table);
+        await ResultsFocusRefChanged.InvokeAsync(_resultsFocus);
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (_table is null)
+        {
+            return;
+        }
+
+        await _table.ReloadServerData();
+    }
+
+    private Task NotifySelectedItemsChanged()
+    {
+        if (SelectedItemsChanged.HasDelegate)
+        {
+            var selected = Items.Where(x => _selectedIds.Contains(x.OrganizzazioneId)).ToList();
+            return SelectedItemsChanged.InvokeAsync(selected);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void OnRowSelectionChanged(OrganizzazioneListItem item, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedIds.Add(item.OrganizzazioneId);
+        }
+        else
+        {
+            _selectedIds.Remove(item.OrganizzazioneId);
+        }
+
+        _hasLocalSelectionChange = true;
+        _ = NotifySelectedItemsChanged();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleRowSelectionClick(OrganizzazioneListItem item)
+        => OnRowSelectionChanged(item, !_selectedIds.Contains(item.OrganizzazioneId));
+
+    private void ToggleSelectAllClick()
+        => ToggleSelectAll(!IsAllSelected);
+
+    private bool IsAllSelected => Items.Any() && _selectedIds.Count == Items.Count();
+
+    private void ToggleSelectAll(bool isSelected)
+    {
+        _selectedIds = isSelected
+            ? new HashSet<int>(Items.Select(x => x.OrganizzazioneId))
+            : new HashSet<int>();
+
+        _hasLocalSelectionChange = true;
+        _ = NotifySelectedItemsChanged();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_hasLocalSelectionChange)
+        {
+            _hasLocalSelectionChange = false;
+            return;
+        }
+
+        if (SelectedItems.Count == 0 && _selectedIds.Count > 0)
+        {
+            _selectedIds.Clear();
+            return;
+        }
+
+        if (SelectedItems.Count > 0)
+        {
+            _selectedIds = new HashSet<int>(SelectedItems.Select(x => x.OrganizzazioneId));
+        }
+    }
+}

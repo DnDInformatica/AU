@@ -1,0 +1,1177 @@
+@page "/organizzazioni/{id:int}"
+@namespace Accredia.SIGAD.Web.Components.Pages.Dettagli.Organizzazioni
+@inject GatewayClient GatewayClient
+@inject IDialogService DialogService
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="@(_detail?.Denominazione ?? "Dettaglio organizzazione")"
+                Subtitle="@($"Scheda organizzazione #{Id}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Organizzazioni / {Id}")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 sigad-card d-flex align-center justify-center" Style="min-height:180px;">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="ml-3">Caricamento dati organizzazione…</MudText>
+        </MudPaper>
+    }
+    else if (_detail is not null)
+    {
+        @* ───── HERO CARD ───── *@
+        <div class="det-hero">
+            <div class="det-hero-main">
+                <div class="det-hero-title-row">
+                    <MudText Typo="Typo.h4" Class="det-hero-name">@_detail.Denominazione</MudText>
+                    <MudChip T="string"
+                             Color="@GetStatoColor(_detail.StatoAttivitaId)"
+                             Variant="Variant.Filled"
+                             Size="Size.Small"
+                             Class="sigad-state-chip">
+                        @GetStatoLabel(_detail.StatoAttivitaId)
+                    </MudChip>
+                    @if (_detail.DataCancellazione.HasValue)
+                    {
+                        <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small"
+                                 Class="sigad-state-chip">Cancellata</MudChip>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_detail.RagioneSociale)
+                     && !string.Equals(_detail.RagioneSociale, _detail.Denominazione, StringComparison.OrdinalIgnoreCase))
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="margin-top:2px;">
+                        @_detail.RagioneSociale
+                    </MudText>
+                }
+
+                @* ── Fiscal data ribbon ── *@
+                <div class="det-fiscal-ribbon">
+                    <div class="det-fiscal-item">
+                        <span class="det-fiscal-label">P.IVA</span>
+                        <span class="det-fiscal-value">@(_detail.PartitaIVA ?? "—")</span>
+                    </div>
+                    <div class="det-fiscal-sep"></div>
+                    <div class="det-fiscal-item">
+                        <span class="det-fiscal-label">Codice Fiscale</span>
+                        <span class="det-fiscal-value">@(_detail.CodiceFiscale ?? "—")</span>
+                    </div>
+                    <div class="det-fiscal-sep"></div>
+                    <div class="det-fiscal-item">
+                        <span class="det-fiscal-label">REA / Registro Imprese</span>
+                        <span class="det-fiscal-value">@(_detail.NRegistroImprese ?? "—")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="det-hero-actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Href="@($"/organizzazioni/{Id}/modifica")"
+                           Class="det-hero-edit-btn">
+                    Modifica
+                </MudButton>
+            </div>
+        </div>
+
+        @* ───── TABS ───── *@
+        <MudPaper Elevation="0" Class="det-tabs-wrap">
+            @* ── Toolbar: toggle orientamento ── *@
+            <div class="det-tabs-toolbar">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-right:4px;">
+                    @(_verticalTabs ? "Verticale" : "Orizzontale")
+                </MudText>
+                <MudTooltip Text="@(_verticalTabs ? "Passa a schede orizzontali" : "Passa a schede verticali")">
+                    <MudIconButton Icon="@(_verticalTabs
+                                       ? Icons.Material.Outlined.TableRows
+                                       : Icons.Material.Outlined.ViewColumn)"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   OnClick="@ToggleTabPosition" />
+                </MudTooltip>
+            </div>
+
+            <div class="@($"det-tabs-shell{(_verticalTabs ? " det-tabs-shell-vertical" : string.Empty)}")">
+                @if (_verticalTabs)
+                {
+                    <div class="det-side-tabbar" role="tablist" aria-label="Schede organizzazione">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Outlined.Dashboard"
+                                   FullWidth="true"
+                                   Class="det-side-tab-btn"
+                                   Style="@GetSideTabStyle(0)"
+                                   OnClick="@(() => ActivateTabAsync(0))">
+                            Overview
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Outlined.LocationOn"
+                                   FullWidth="true"
+                                   Class="det-side-tab-btn"
+                                   Style="@GetSideTabStyle(1)"
+                                   OnClick="@(() => ActivateTabAsync(1))">
+                            @GetSediTabText()
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Outlined.AccountTree"
+                                   FullWidth="true"
+                                   Class="det-side-tab-btn"
+                                   Style="@GetSideTabStyle(2)"
+                                   OnClick="@(() => ActivateTabAsync(2))">
+                            @GetUnitaTabText()
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Outlined.Work"
+                                   FullWidth="true"
+                                   Class="det-side-tab-btn"
+                                   Style="@GetSideTabStyle(3)"
+                                   OnClick="@(() => ActivateTabAsync(3))">
+                            @GetIncarichiTabText()
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Outlined.Badge"
+                                   FullWidth="true"
+                                   Class="det-side-tab-btn"
+                                   Style="@GetSideTabStyle(4)"
+                                   OnClick="@(() => ActivateTabAsync(4))">
+                            Identificativi IVA/CF
+                        </MudButton>
+                    </div>
+                }
+
+                <div class="det-tabs-main">
+                    <MudTabs @key="@_verticalTabs"
+                             Elevation="0"
+                             Rounded="false"
+                             Position="Position.Top"
+                             Class="@($"det-tabs{(_verticalTabs ? " det-tabs-hide-header" : string.Empty)}")"
+                             data-position="Top"
+                             ActivePanelIndex="@_activeTabIndex"
+                             ActivePanelIndexChanged="@OnTabChanged"
+                             ApplyEffectsToContainer="true"
+                             PanelClass="det-tab-panel"
+                             KeepPanelsAlive="true">
+
+                @* ── OVERVIEW ── *@
+                <MudTabPanel Text="Overview" Icon="@Icons.Material.Outlined.Dashboard">
+                    <MudGrid Spacing="3">
+                        @* — Anagrafica — *@
+                        <MudItem xs="12" md="6">
+                            <div class="det-section-card">
+                                <div class="det-section-header">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Business" Size="Size.Small" Class="det-section-icon" />
+                                    <MudText Typo="Typo.subtitle1" Class="det-section-title">Anagrafica</MudText>
+                                </div>
+                                <dl class="det-dl">
+                                    <dt>Denominazione</dt>
+                                    <dd>@_detail.Denominazione</dd>
+                                    <dt>Ragione sociale</dt>
+                                    <dd>@(_detail.RagioneSociale ?? "—")</dd>
+                                    <dt>Natura giuridica</dt>
+                                    <dd>@(!string.IsNullOrWhiteSpace(_detail.NaturaGiuridicaDescrizione) ? _detail.NaturaGiuridicaDescrizione : "Non disponibile")</dd>
+                                </dl>
+                                @if (!string.IsNullOrWhiteSpace(_detail.OggettoSociale))
+                                {
+                                    <div class="det-section-divider"></div>
+                                    <div class="det-subsection">
+                                        <span class="det-dl dt">Oggetto sociale</span>
+                                        <p class="det-oggetto-sociale">@_detail.OggettoSociale</p>
+                                    </div>
+                                }
+                            </div>
+                        </MudItem>
+
+                        @* — Dati e stato — *@
+                        <MudItem xs="12" md="6">
+                            <MudStack Spacing="3">
+                                <div class="det-section-card">
+                                    <div class="det-section-header">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Class="det-section-icon" />
+                                        <MudText Typo="Typo.subtitle1" Class="det-section-title">Dati e stato</MudText>
+                                    </div>
+                                    <dl class="det-dl">
+                                        <dt>Stato attività</dt>
+                                        <dd>
+                                            <MudChip T="string" Color="@GetStatoColor(_detail.StatoAttivitaId)"
+                                                     Variant="Variant.Filled" Size="Size.Small" Class="sigad-state-chip">
+                                                @GetStatoLabel(_detail.StatoAttivitaId)
+                                            </MudChip>
+                                        </dd>
+                                        <dt>Data costituzione</dt>
+                                        <dd>@FormatDate(_detail.DataCostituzione)</dd>
+                                        <dt>Data iscrizione R.I.</dt>
+                                        <dd>@FormatDate(_detail.DataIscrizioneIscrizioneRI)</dd>
+                                        <dt>Data cancellazione</dt>
+                                        <dd>@FormatDate(_detail.DataCancellazione)</dd>
+                                    </dl>
+                                </div>
+
+                                @* — Tipologie (card separata) — *@
+                                <div class="det-section-card">
+                                    <div class="det-section-header">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Label" Size="Size.Small" Class="det-section-icon" />
+                                        <MudText Typo="Typo.subtitle1" Class="det-section-title">Tipologie</MudText>
+                                    </div>
+                                    @if (_tipologie is { Count: > 0 })
+                                    {
+                                        <div class="det-chip-list">
+                                            @foreach (var t in _tipologie)
+                                            {
+                                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@t.Descrizione</MudChip>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Nessuna tipologia assegnata.</MudText>
+                                    }
+                                </div>
+                            </MudStack>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+
+                @* ── SEDI ── *@
+                <MudTabPanel Text="@GetSediTabText()" Icon="@Icons.Material.Outlined.LocationOn">
+                    <div class="d-flex align-center mb-2">
+                        <MudText Typo="Typo.h6">Sedi</MudText>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   Disabled="@_sediLoading"
+                                   OnClick="ReloadSediAsync"
+                                   Class="mr-2">
+                            Ricarica
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.RestartAlt"
+                                   OnClick="ResetSediView"
+                                   Class="mr-2">
+                            Reset vista
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Href="@($"/organizzazioni/{Id}/sedi/nuova")">
+                            Nuova sede
+                        </MudButton>
+                    </div>
+                    <MudTextField T="string"
+                                  Label="Cerca sedi"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  @bind-Value="_sediSearch"
+                                  Immediate="true"
+                                  Class="mb-3" />
+
+                    @if (_sediLoading)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+                            <MudSkeleton Width="40%" Height="18px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                        </MudPaper>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_sediError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">
+                            @_sediError
+                            <MudDivider Class="my-2" />
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadSediAsync">
+                                Riprova
+                            </MudButton>
+                        </MudAlert>
+                    }
+                    else if (_sedi.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                            Nessuna sede disponibile per questa organizzazione.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="sigad-table-wrap">
+                            <MudTable @key="_sediTableVersion"
+                                      Items="_sedi"
+                                      Filter="FilterSede"
+                                      Dense="true"
+                                      Hover="true"
+                                      Elevation="0"
+                                      @bind-CurrentPage="_sediCurrentPage"
+                                      @bind-RowsPerPage="_sediRowsPerPage">
+                                <HeaderContent>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<SedeItem, object?>(x => x.Denominazione ?? string.Empty))">Sede</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<SedeItem, object?>(x => FormatSedeAddress(x)))">Indirizzo</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<SedeItem, object?>(x => x.StatoSede ?? string.Empty))">Stato</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<SedeItem, object?>(x => x.DataApertura ?? DateTime.MinValue))">Apertura</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<SedeItem, object?>(x => x.DataCessazione ?? DateTime.MaxValue))">Cessazione</MudTableSortLabel></MudTh>
+                                    <MudTh Align="Right"></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Sede">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body2">
+                                                @(!string.IsNullOrWhiteSpace(context.Denominazione) ? context.Denominazione : $"Sede #{context.SedeId}")
+                                            </MudText>
+                                            <MudStack Direction="Row" Spacing="1" Class="mt-1">
+                                                @if (context.IsSedePrincipale)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                                                        Principale
+                                                    </MudChip>
+                                                }
+                                                @if (context.IsSedeOperativa)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                                                        Operativa
+                                                    </MudChip>
+                                                }
+                                            </MudStack>
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Indirizzo">@FormatSedeAddress(context)</MudTd>
+                                    <MudTd DataLabel="Stato">
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Variant="Variant.Outlined"
+                                                 Color="@GetSedeStatoColor(context.StatoSede)">
+                                            @(!string.IsNullOrWhiteSpace(context.StatoSede) ? context.StatoSede : "N/D")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Apertura">@FormatDate(context.DataApertura)</MudTd>
+                                    <MudTd DataLabel="Cessazione">@FormatDate(context.DataCessazione)</MudTd>
+                                    <MudTd Align="Right" Style="width:1%;white-space:nowrap;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Default"
+                                                       Size="Size.Small"
+                                                       Href="@($"/organizzazioni/{Id}/sedi/{context.SedeId}/modifica")"
+                                                       Title="Modifica sede" />
+                                    </MudTd>
+                                </RowTemplate>
+                                <NoRecordsContent>
+                                    <MudText Typo="Typo.body2" Class="pa-3 mud-text-secondary">
+                                        Nessuna sede trovata con il filtro corrente.
+                                    </MudText>
+                                </NoRecordsContent>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="_rowsPerPageOptions" />
+                                </PagerContent>
+                            </MudTable>
+                        </MudPaper>
+                    }
+                </MudTabPanel>
+
+                @* ── UNITÀ ORGANIZZATIVE ── *@
+                <MudTabPanel Text="@GetUnitaTabText()" Icon="@Icons.Material.Outlined.AccountTree">
+                    <div class="d-flex align-center mb-2">
+                        <MudText Typo="Typo.h6">Unità organizzative</MudText>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   Disabled="@_unitaLoading"
+                                   OnClick="ReloadUnitaAsync"
+                                   Class="mr-2">
+                            Ricarica
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.RestartAlt"
+                                   OnClick="ResetUnitaView"
+                                   Class="mr-2">
+                            Reset vista
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Href="@($"/organizzazioni/{Id}/unita-organizzative/nuova")">
+                            Nuova unità
+                        </MudButton>
+                    </div>
+                    <MudTextField T="string"
+                                  Label="Cerca unità organizzative"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  @bind-Value="_unitaSearch"
+                                  Immediate="true"
+                                  Class="mb-3" />
+
+                    @if (_unitaLoading)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+                            <MudSkeleton Width="45%" Height="18px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                        </MudPaper>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_unitaError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">
+                            @_unitaError
+                            <MudDivider Class="my-2" />
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadUnitaAsync">
+                                Riprova
+                            </MudButton>
+                        </MudAlert>
+                    }
+                    else if (_unita.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                            Nessuna unità organizzativa disponibile per questa organizzazione.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="sigad-table-wrap">
+                            <MudTable @key="_unitaTableVersion"
+                                      Items="_unita"
+                                      Filter="FilterUnita"
+                                      Dense="true"
+                                      Hover="true"
+                                      Elevation="0"
+                                      @bind-CurrentPage="_unitaCurrentPage"
+                                      @bind-RowsPerPage="_unitaRowsPerPage">
+                                <HeaderContent>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<UnitaOrganizzativaItem, object?>(x => x.Nome))">Nome</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<UnitaOrganizzativaItem, object?>(x => x.Codice ?? string.Empty))">Codice</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<UnitaOrganizzativaItem, object?>(x => x.TipoUnitaOrganizzativaId))">Tipo unità</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<UnitaOrganizzativaItem, object?>(x => x.TipoSedeId ?? 0))">Tipo sede</MudTableSortLabel></MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Nome">
+                                        <MudStack Direction="Row" Spacing="1" AlignItems="AlignItems.Center">
+                                            <MudText Typo="Typo.body2">@context.Nome</MudText>
+                                            @if (context.Principale)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                                                    Principale
+                                                </MudChip>
+                                            }
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Codice">@(!string.IsNullOrWhiteSpace(context.Codice) ? context.Codice : "—")</MudTd>
+                                    <MudTd DataLabel="Tipo unità">@GetTipoUnitaLabel(context.TipoUnitaOrganizzativaId)</MudTd>
+                                    <MudTd DataLabel="Tipo sede">@GetTipoSedeLabel(context.TipoSedeId)</MudTd>
+                                    <MudTd Style="width:1%;white-space:nowrap;text-align:right;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Default"
+                                                       Size="Size.Small"
+                                                       Href="@($"/organizzazioni/{Id}/unita-organizzative/{context.UnitaOrganizzativaId}/modifica")"
+                                                       Title="Modifica unità organizzativa" />
+                                    </MudTd>
+                                </RowTemplate>
+                                <NoRecordsContent>
+                                    <MudText Typo="Typo.body2" Class="pa-3 mud-text-secondary">
+                                        Nessuna unità trovata con il filtro corrente.
+                                    </MudText>
+                                </NoRecordsContent>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="_rowsPerPageOptions" />
+                                </PagerContent>
+                            </MudTable>
+                        </MudPaper>
+                    }
+                </MudTabPanel>
+
+                @* ── INCARICHI ── *@
+                <MudTabPanel Text="@GetIncarichiTabText()" Icon="@Icons.Material.Outlined.Work">
+                    <div class="d-flex align-center mb-2">
+                        <MudText Typo="Typo.h6">Incarichi</MudText>
+                        <MudSpacer />
+                        <MudCheckBox T="bool"
+                                     Label="Includi cessati/cancellati"
+                                     Value="_incarichiIncludeDeleted"
+                                     ValueChanged="OnIncarichiIncludeDeletedChanged"
+                                     Dense="true"
+                                     Class="mr-2" />
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   Disabled="@_incarichiLoading"
+                                   OnClick="ReloadIncarichiAsync"
+                                   Class="mr-2">
+                            Ricarica
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@Icons.Material.Filled.RestartAlt"
+                                   OnClick="ResetIncarichiView"
+                                   Class="mr-2">
+                            Reset vista
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Href="@($"/incarichi/nuovo?organizzazioneId={Id}")">
+                            Nuovo incarico
+                        </MudButton>
+                    </div>
+                    <MudTextField T="string"
+                                  Label="Cerca incarichi"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  @bind-Value="_incarichiSearch"
+                                  Immediate="true"
+                                  Class="mb-3" />
+
+                    @if (_incarichiLoading)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+                            <MudSkeleton Width="35%" Height="18px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="52px" Class="mb-2" />
+                        </MudPaper>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_incarichiError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">
+                            @_incarichiError
+                            <MudDivider Class="my-2" />
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadIncarichiAsync">
+                                Riprova
+                            </MudButton>
+                        </MudAlert>
+                    }
+                    else if (_incarichi.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                            Nessun incarico disponibile per questa organizzazione.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="sigad-table-wrap">
+                            <MudTable @key="_incarichiTableVersion"
+                                      Items="_incarichi"
+                                      Filter="FilterIncarichi"
+                                      Dense="true"
+                                      Hover="true"
+                                      Elevation="0"
+                                      @bind-CurrentPage="_incarichiCurrentPage"
+                                      @bind-RowsPerPage="_incarichiRowsPerPage">
+                                <HeaderContent>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => $"{x.PersonaCognome} {x.PersonaNome}".Trim()))">Persona</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => x.Ruolo))">Ruolo</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => x.StatoIncarico))">Stato</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => x.DataInizio))">Inizio</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => x.DataFine ?? DateTime.MaxValue))">Fine</MudTableSortLabel></MudTh>
+                                    <MudTh><MudTableSortLabel SortBy="@(new Func<IncaricoItem, object?>(x => x.UnitaOrganizzativaId ?? 0))">UO</MudTableSortLabel></MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Persona">@FormatPersona(context)</MudTd>
+                                    <MudTd DataLabel="Ruolo">@DisplayOrDash(context.Ruolo)</MudTd>
+                                    <MudTd DataLabel="Stato">
+                                        <MudStack Direction="Row" Spacing="1" AlignItems="AlignItems.Center">
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Variant="Variant.Outlined"
+                                                     Color="@GetIncaricoStatoColor(context.StatoIncarico)">
+                                                @DisplayStatoIncarico(context.StatoIncarico)
+                                            </MudChip>
+                                            @if (context.DataCancellazione.HasValue)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error">
+                                                    Cancellato
+                                                </MudChip>
+                                            }
+                                        </MudStack>
+                                    </MudTd>
+                                    <MudTd DataLabel="Inizio">@FormatDate(context.DataInizio)</MudTd>
+                                    <MudTd DataLabel="Fine">@FormatDate(context.DataFine)</MudTd>
+                                    <MudTd DataLabel="UO">@GetUnitaLabel(context.UnitaOrganizzativaId)</MudTd>
+                                    <MudTd Style="width:1%;white-space:nowrap;text-align:right;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Default"
+                                                       Size="Size.Small"
+                                                       Href="@($"/incarichi/{context.IncaricoId}/modifica")"
+                                                       Title="Modifica incarico" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                       Color="Color.Default"
+                                                       Size="Size.Small"
+                                                       Href="@($"/incarichi/{context.IncaricoId}")"
+                                                       Title="Apri dettaglio incarico" />
+                                    </MudTd>
+                                </RowTemplate>
+                                <NoRecordsContent>
+                                    <MudText Typo="Typo.body2" Class="pa-3 mud-text-secondary">
+                                        Nessun incarico trovato con il filtro corrente.
+                                    </MudText>
+                                </NoRecordsContent>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="_rowsPerPageOptions" />
+                                </PagerContent>
+                            </MudTable>
+                        </MudPaper>
+                    }
+                </MudTabPanel>
+
+                @* ── IDENTIFICATIVI IVA/CF ── *@
+                <MudTabPanel Text="Identificativi IVA/CF" Icon="@Icons.Material.Outlined.Badge">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary pa-4">
+                        Gestione identificativi in fase di sviluppo.
+                    </MudText>
+                </MudTabPanel>
+
+                    </MudTabs>
+                </div>
+            </div>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private OrganizzazioneDetail? _detail;
+    private IReadOnlyList<OrganizzazioneTipoItem>? _tipologie;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
+    private int _activeTabIndex;
+    private bool _verticalTabs;
+    private IReadOnlyList<SedeItem> _sedi = Array.Empty<SedeItem>();
+    private bool _sediLoading;
+    private bool _sediLoaded;
+    private string? _sediError;
+    private IReadOnlyList<UnitaOrganizzativaItem> _unita = Array.Empty<UnitaOrganizzativaItem>();
+    private bool _unitaLoading;
+    private bool _unitaLoaded;
+    private string? _unitaError;
+    private bool _unitaLookupsLoaded;
+    private IReadOnlyDictionary<int, string> _tipiUnitaById = new Dictionary<int, string>();
+    private IReadOnlyDictionary<int, string> _tipiSedeById = new Dictionary<int, string>();
+    private IReadOnlyDictionary<int, string> _unitaById = new Dictionary<int, string>();
+    private IReadOnlyList<IncaricoItem> _incarichi = Array.Empty<IncaricoItem>();
+    private bool _incarichiLoading;
+    private bool _incarichiLoaded;
+    private string? _incarichiError;
+    private bool _incarichiIncludeDeleted;
+    private const int DefaultRowsPerPage = 10;
+    private readonly int[] _rowsPerPageOptions = [10, 20, 50];
+    private int _sediTableVersion;
+    private int _unitaTableVersion;
+    private int _incarichiTableVersion;
+    private int _sediCurrentPage;
+    private int _unitaCurrentPage;
+    private int _incarichiCurrentPage;
+    private int _sediRowsPerPage = DefaultRowsPerPage;
+    private int _unitaRowsPerPage = DefaultRowsPerPage;
+    private int _incarichiRowsPerPage = DefaultRowsPerPage;
+    private string? _sediSearch;
+    private string? _unitaSearch;
+    private string? _incarichiSearch;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDetail();
+    }
+
+    private async Task LoadDetail()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var result = await GatewayClient.GetOrganizzazioneDetailAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _detail = result.Data;
+                var tipoResult = await GatewayClient.GetOrganizzazioneTipiAsync(Id, CancellationToken.None);
+                if (tipoResult.IsSuccess)
+                    _tipologie = tipoResult.Data;
+
+                // Preload conteggi tab (Sedi/UO/Incarichi) al caricamento dettaglio,
+                // così le etichette mostrano subito i numeri senza aprire ogni tab.
+                await PreloadTabCountsAsync();
+            }
+            else
+            {
+                _errorMessage = result.Error ?? "Errore nel caricamento dei dati.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore imprevisto: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ToggleTabPosition()
+    {
+        _verticalTabs = !_verticalTabs;
+    }
+
+    private async Task ActivateTabAsync(int index)
+    {
+        await OnTabChanged(index);
+    }
+
+    private async Task PreloadTabCountsAsync()
+    {
+        await Task.WhenAll(
+            EnsureSediLoadedAsync(),
+            EnsureUnitaLoadedAsync(),
+            EnsureIncarichiLoadedAsync());
+    }
+
+    private string GetSideTabStyle(int tabIndex)
+    {
+        var isActive = _activeTabIndex == tabIndex;
+        var border = isActive ? "#d4a574" : "transparent";
+        var background = isActive ? "rgba(212, 165, 116, 0.08)" : "transparent";
+        var color = isActive ? "#d4a574" : "#1a1a2e";
+        var weight = isActive ? "600" : "500";
+
+        return $"border-radius:0;justify-content:flex-end;text-align:right;border-right:3px solid {border};background:{background};color:{color};font-weight:{weight};";
+    }
+
+    private string GetSediTabText() => $"Sedi ({_sedi.Count})";
+    private string GetUnitaTabText() => $"Unità organizzative ({_unita.Count})";
+    private string GetIncarichiTabText() => $"Incarichi ({_incarichi.Count})";
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTabIndex = index;
+        if (index == 1) // Sedi tab
+        {
+            await EnsureSediLoadedAsync();
+        }
+        else if (index == 2) // UO tab
+        {
+            await EnsureUnitaLoadedAsync();
+        }
+        else if (index == 3) // Incarichi tab
+        {
+            await EnsureIncarichiLoadedAsync();
+        }
+    }
+
+    private Task ReloadSediAsync() => EnsureSediLoadedAsync(force: true);
+
+    private void ResetSediView()
+    {
+        _sediSearch = null;
+        _sediCurrentPage = 0;
+        _sediRowsPerPage = DefaultRowsPerPage;
+        _sediTableVersion++;
+    }
+
+    private async Task EnsureSediLoadedAsync(bool force = false)
+    {
+        if (_sediLoading)
+        {
+            return;
+        }
+
+        if (_sediLoaded && !force)
+        {
+            return;
+        }
+
+        _sediLoading = true;
+        _sediError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = await GatewayClient.GetOrganizzazioneSediAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _sedi = (result.Data ?? Array.Empty<SedeItem>())
+                    .OrderByDescending(static x => x.IsSedePrincipale)
+                    .ThenByDescending(static x => x.IsSedeOperativa)
+                    .ThenBy(static x => x.Denominazione ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(static x => x.SedeId)
+                    .ToList();
+                _sediLoaded = true;
+            }
+            else
+            {
+                _sedi = Array.Empty<SedeItem>();
+                _sediError = result.Error ?? "Errore nel caricamento sedi.";
+                _sediLoaded = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _sedi = Array.Empty<SedeItem>();
+            _sediError = $"Errore imprevisto: {ex.Message}";
+            _sediLoaded = false;
+        }
+        finally
+        {
+            _sediLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task ReloadUnitaAsync() => EnsureUnitaLoadedAsync(force: true);
+
+    private void ResetUnitaView()
+    {
+        _unitaSearch = null;
+        _unitaCurrentPage = 0;
+        _unitaRowsPerPage = DefaultRowsPerPage;
+        _unitaTableVersion++;
+    }
+
+    private async Task EnsureUnitaLoadedAsync(bool force = false)
+    {
+        if (_unitaLoading)
+        {
+            return;
+        }
+
+        if (_unitaLoaded && !force)
+        {
+            return;
+        }
+
+        _unitaLoading = true;
+        _unitaError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = await GatewayClient.GetOrganizzazioneUnitaAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _unita = (result.Data ?? Array.Empty<UnitaOrganizzativaItem>())
+                    .OrderByDescending(static x => x.Principale)
+                    .ThenBy(static x => x.Nome, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(static x => x.Codice ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                _unitaById = _unita
+                    .GroupBy(static x => x.UnitaOrganizzativaId)
+                    .ToDictionary(static g => g.Key, static g => g.First().Nome);
+                await EnsureUnitaLookupsLoadedAsync();
+                _unitaLoaded = true;
+            }
+            else
+            {
+                _unita = Array.Empty<UnitaOrganizzativaItem>();
+                _unitaError = result.Error ?? "Errore nel caricamento unità organizzative.";
+                _unitaLoaded = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _unita = Array.Empty<UnitaOrganizzativaItem>();
+            _unitaError = $"Errore imprevisto: {ex.Message}";
+            _unitaLoaded = false;
+        }
+        finally
+        {
+            _unitaLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task ReloadIncarichiAsync() => EnsureIncarichiLoadedAsync(force: true);
+
+    private void ResetIncarichiView()
+    {
+        _incarichiSearch = null;
+        _incarichiCurrentPage = 0;
+        _incarichiRowsPerPage = DefaultRowsPerPage;
+        _incarichiTableVersion++;
+    }
+
+    private async Task OnIncarichiIncludeDeletedChanged(bool value)
+    {
+        _incarichiIncludeDeleted = value;
+        _incarichiLoaded = false;
+        if (_activeTabIndex == 3)
+        {
+            await EnsureIncarichiLoadedAsync(force: true);
+        }
+    }
+
+    private async Task EnsureIncarichiLoadedAsync(bool force = false)
+    {
+        if (_incarichiLoading)
+        {
+            return;
+        }
+
+        if (_incarichiLoaded && !force)
+        {
+            return;
+        }
+
+        _incarichiLoading = true;
+        _incarichiError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = await GatewayClient.GetOrganizzazioneIncarichiAsync(Id, _incarichiIncludeDeleted, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _incarichi = (result.Data ?? Array.Empty<IncaricoItem>())
+                    .OrderByDescending(static x => x.DataInizio)
+                    .ThenBy(static x => x.PersonaCognome ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(static x => x.PersonaNome ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (_incarichi.Any(static x => x.UnitaOrganizzativaId.HasValue))
+                {
+                    await EnsureUnitaNameIndexLoadedAsync();
+                }
+                _incarichiLoaded = true;
+            }
+            else
+            {
+                _incarichi = Array.Empty<IncaricoItem>();
+                _incarichiError = result.Error ?? "Errore nel caricamento incarichi.";
+                _incarichiLoaded = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _incarichi = Array.Empty<IncaricoItem>();
+            _incarichiError = $"Errore imprevisto: {ex.Message}";
+            _incarichiLoaded = false;
+        }
+        finally
+        {
+            _incarichiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task EnsureUnitaLookupsLoadedAsync(bool force = false)
+    {
+        if (_unitaLookupsLoaded && !force)
+        {
+            return;
+        }
+
+        var lookupsResult = await GatewayClient.GetUnitaLookupsAsync(CancellationToken.None);
+        if (!lookupsResult.IsSuccess || lookupsResult.Data is null)
+        {
+            _tipiUnitaById = new Dictionary<int, string>();
+            _tipiSedeById = new Dictionary<int, string>();
+            _unitaLookupsLoaded = false;
+            return;
+        }
+
+        _tipiUnitaById = (lookupsResult.Data.TipiUnitaOrganizzativa ?? Array.Empty<LookupItem>())
+            .GroupBy(static x => x.Id)
+            .ToDictionary(static g => g.Key, static g => string.IsNullOrWhiteSpace(g.First().Label) ? g.Key.ToString() : g.First().Label);
+        _tipiSedeById = (lookupsResult.Data.TipiSede ?? Array.Empty<LookupItem>())
+            .GroupBy(static x => x.Id)
+            .ToDictionary(static g => g.Key, static g => string.IsNullOrWhiteSpace(g.First().Label) ? g.Key.ToString() : g.First().Label);
+        _unitaLookupsLoaded = true;
+    }
+
+    private async Task EnsureUnitaNameIndexLoadedAsync()
+    {
+        if (_unitaById.Count > 0)
+        {
+            return;
+        }
+
+        var result = await GatewayClient.GetOrganizzazioneUnitaAsync(Id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            return;
+        }
+
+        _unitaById = result.Data
+            .GroupBy(static x => x.UnitaOrganizzativaId)
+            .ToDictionary(static g => g.Key, static g => string.IsNullOrWhiteSpace(g.First().Nome) ? $"UO #{g.Key}" : g.First().Nome);
+    }
+
+    private static string FormatDate(DateTime? date) =>
+        date.HasValue ? date.Value.ToString("dd/MM/yyyy") : "—";
+
+    private bool FilterSede(SedeItem item)
+    {
+        if (string.IsNullOrWhiteSpace(_sediSearch))
+        {
+            return true;
+        }
+
+        var term = _sediSearch.Trim();
+        return Contains(item.Denominazione, term)
+            || Contains(item.Indirizzo, term)
+            || Contains(item.CAP, term)
+            || Contains(item.Localita, term)
+            || Contains(item.Provincia, term)
+            || Contains(item.Nazione, term)
+            || Contains(item.StatoSede, term);
+    }
+
+    private bool FilterUnita(UnitaOrganizzativaItem item)
+    {
+        if (string.IsNullOrWhiteSpace(_unitaSearch))
+        {
+            return true;
+        }
+
+        var term = _unitaSearch.Trim();
+        return Contains(item.Nome, term)
+            || Contains(item.Codice, term)
+            || Contains(GetTipoUnitaLabel(item.TipoUnitaOrganizzativaId), term)
+            || Contains(GetTipoSedeLabel(item.TipoSedeId), term);
+    }
+
+    private bool FilterIncarichi(IncaricoItem item)
+    {
+        if (string.IsNullOrWhiteSpace(_incarichiSearch))
+        {
+            return true;
+        }
+
+        var term = _incarichiSearch.Trim();
+        return Contains(FormatPersona(item), term)
+            || Contains(item.Ruolo, term)
+            || Contains(item.StatoIncarico, term)
+            || Contains(GetUnitaLabel(item.UnitaOrganizzativaId), term)
+            || Contains(FormatDate(item.DataInizio), term)
+            || Contains(FormatDate(item.DataFine), term);
+    }
+
+    private static bool Contains(string? source, string term)
+        => !string.IsNullOrWhiteSpace(source)
+           && source.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    private static string DisplayOrDash(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string FormatSedeAddress(SedeItem sede)
+    {
+        var left = string.Join(" ", new[] { sede.Indirizzo, sede.NumeroCivico }.Where(static x => !string.IsNullOrWhiteSpace(x)));
+        var right = string.Join(" ", new[] { sede.CAP, sede.Localita, sede.Provincia }.Where(static x => !string.IsNullOrWhiteSpace(x)));
+        var nation = sede.Nazione;
+
+        var parts = new[] { left, right, nation }.Where(static x => !string.IsNullOrWhiteSpace(x)).ToArray();
+        return parts.Length == 0 ? "—" : string.Join(" · ", parts);
+    }
+
+    private static string FormatPersona(IncaricoItem incarico)
+    {
+        var fullName = string.Join(" ", new[] { incarico.PersonaCognome, incarico.PersonaNome }.Where(static x => !string.IsNullOrWhiteSpace(x)));
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            return $"Persona #{incarico.PersonaId}";
+        }
+
+        if (string.IsNullOrWhiteSpace(incarico.PersonaCodiceFiscale))
+        {
+            return fullName;
+        }
+
+        return $"{fullName} ({incarico.PersonaCodiceFiscale})";
+    }
+
+    private string GetTipoUnitaLabel(int tipoUnitaId)
+        => _tipiUnitaById.TryGetValue(tipoUnitaId, out var label) ? label : tipoUnitaId.ToString();
+
+    private string GetTipoSedeLabel(int? tipoSedeId)
+    {
+        if (!tipoSedeId.HasValue)
+        {
+            return "—";
+        }
+
+        return _tipiSedeById.TryGetValue(tipoSedeId.Value, out var label) ? label : tipoSedeId.Value.ToString();
+    }
+
+    private string GetUnitaLabel(int? unitaOrganizzativaId)
+    {
+        if (!unitaOrganizzativaId.HasValue)
+        {
+            return "—";
+        }
+
+        return _unitaById.TryGetValue(unitaOrganizzativaId.Value, out var label)
+            ? label
+            : $"UO #{unitaOrganizzativaId.Value}";
+    }
+
+    private static Color GetSedeStatoColor(string? statoSede)
+    {
+        if (string.IsNullOrWhiteSpace(statoSede))
+        {
+            return Color.Default;
+        }
+
+        var norm = statoSede.Trim().ToUpperInvariant();
+        return norm switch
+        {
+            "ATTIVA" => Color.Success,
+            "ATTIVO" => Color.Success,
+            "CESSATA" => Color.Error,
+            "CESSATO" => Color.Error,
+            "SOSPESA" => Color.Warning,
+            "SOSPESO" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    private static Color GetIncaricoStatoColor(string? statoIncarico)
+    {
+        if (string.IsNullOrWhiteSpace(statoIncarico))
+        {
+            return Color.Default;
+        }
+
+        var norm = statoIncarico.Trim().ToUpperInvariant();
+        return norm switch
+        {
+            "ATTIVO" => Color.Success,
+            "SOSPESO" => Color.Warning,
+            "CESSATO" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private static string DisplayStatoIncarico(string? statoIncarico)
+        => string.IsNullOrWhiteSpace(statoIncarico) ? "N/D" : statoIncarico;
+
+    private static Color GetStatoColor(byte? statoId) => statoId switch
+    {
+        1 => Color.Success,
+        2 => Color.Warning,
+        3 => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static string GetStatoLabel(byte? statoId) => statoId switch
+    {
+        1 => "Attiva",
+        2 => "Sospesa",
+        3 => "Cessata",
+        _ => "N/D",
+    };
+}

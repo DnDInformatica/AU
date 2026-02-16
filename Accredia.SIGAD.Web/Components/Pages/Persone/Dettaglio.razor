@@ -1,0 +1,477 @@
+@page "/persone/{id:int}"
+@namespace Accredia.SIGAD.Web.Components.Pages.Dettagli.Persone
+@inject GatewayClient GatewayClient
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="@(_detail is null ? "Dettaglio persona" : $"{_detail.Cognome} {_detail.Nome}")"
+                Subtitle="@($"Scheda persona #{Id}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Persone / {Id}")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 sigad-card d-flex align-center justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="ml-3">Caricamento dati persona...</MudText>
+        </MudPaper>
+    }
+    else if (_detail is not null)
+    {
+        <MudPaper Class="pa-4 sigad-card mb-4">
+            <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.h5">@_detail.Cognome @_detail.Nome</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="@($"/persone/{Id}/modifica")">Modifica</MudButton>
+            </MudStack>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
+                @(!string.IsNullOrWhiteSpace(_detail.CodiceFiscale) ? $"CF {_detail.CodiceFiscale}" : "CF non disponibile")
+                · Nato/a il @_detail.DataNascita.ToString("dd/MM/yyyy")
+            </MudText>
+        </MudPaper>
+
+        <MudTabs Elevation="0" Rounded="true" Class="sigad-card" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged">
+            <MudTabPanel Text="Overview">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4 sigad-card">
+                            <MudText Typo="Typo.subtitle2">Anagrafica</MudText>
+                            <MudDivider Class="my-2" />
+                            <MudText Typo="Typo.caption">Cognome</MudText>
+                            <MudText Typo="Typo.body2">@_detail.Cognome</MudText>
+                            <MudText Typo="Typo.caption" Class="mt-2">Nome</MudText>
+                            <MudText Typo="Typo.body2">@_detail.Nome</MudText>
+                            <MudText Typo="Typo.caption" Class="mt-2">Codice Fiscale</MudText>
+                            <MudText Typo="Typo.body2">@(_detail.CodiceFiscale ?? "—")</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4 sigad-card">
+                            <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudText Typo="Typo.subtitle2">Contatti</MudText>
+                                <MudSpacer />
+                                <MudCheckBox T="bool" @bind-Value="_contattiIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_contattiLoading" @bind-Value:after="OnContattiIncludeDeletedChanged" />
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_contattiLoading" OnClick="ReloadContattiAsync">Ricarica</MudButton>
+                            </MudStack>
+                            <MudDivider Class="my-2" />
+                            @if (!string.IsNullOrWhiteSpace(_contattiError))
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-2">@_contattiError</MudAlert>
+                            }
+
+                            <MudText Typo="Typo.subtitle2" Class="mb-1">Email</MudText>
+                            <MudTable Items="_emailItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                                <HeaderContent><MudTh>Email</MudTh><MudTh>Tipo</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.Email</MudTd>
+                                    <MudTd>@GetEmailTipoLabel(context.TipoEmailId)</MudTd>
+                                    <MudTd Align="Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditEmail(context))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEmailAsync(context.PersonaEmailId))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                            <MudGrid Spacing="1" Class="mb-3">
+                                <MudItem xs="12" sm="4"><MudSelect T="int" Label="Tipo" Dense="true" Variant="Variant.Outlined" @bind-Value="_emailForm.TipoEmailId">@foreach (var l in _emailLookups){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                                <MudItem xs="12" sm="6"><MudTextField T="string" Label="Email" Dense="true" Variant="Variant.Outlined" @bind-Value="_emailForm.Email" /></MudItem>
+                                <MudItem xs="12" sm="2"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEmailAsync">@(_emailEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                            </MudGrid>
+
+                            <MudText Typo="Typo.subtitle2" Class="mb-1">Telefoni</MudText>
+                            <MudTable Items="_telefonoItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                                <HeaderContent><MudTh>Telefono</MudTh><MudTh>Tipo</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@FormatTelefono(context)</MudTd>
+                                    <MudTd>@GetTelefonoTipoLabel(context.TipoTelefonoId)</MudTd>
+                                    <MudTd Align="Right">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTelefono(context))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTelefonoAsync(context.PersonaTelefonoId))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                            <MudGrid Spacing="1">
+                                <MudItem xs="12" sm="3"><MudSelect T="int" Label="Tipo" Dense="true" Variant="Variant.Outlined" @bind-Value="_telefonoForm.TipoTelefonoId">@foreach (var l in _telefonoLookups){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                                <MudItem xs="12" sm="3"><MudTextField T="string" Label="Prefisso" Dense="true" Variant="Variant.Outlined" @bind-Value="_telefonoForm.PrefissoInternazionale" /></MudItem>
+                                <MudItem xs="12" sm="4"><MudTextField T="string" Label="Numero" Dense="true" Variant="Variant.Outlined" @bind-Value="_telefonoForm.Numero" /></MudItem>
+                                <MudItem xs="12" sm="2"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTelefonoAsync">@(_telefonoEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetIncarichiTabText()">
+                @if (_incarichiLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else if (!string.IsNullOrWhiteSpace(_incarichiError))
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@_incarichiError</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="_incarichi" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent><MudTh>Organizzazione</MudTh><MudTh>Ruolo</MudTh><MudTh>Stato</MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@(string.IsNullOrWhiteSpace(context.OrganizzazioneDenominazione) ? $"Organizzazione #{context.OrganizzazioneId}" : context.OrganizzazioneDenominazione)</MudTd>
+                            <MudTd>@context.Ruolo</MudTd>
+                            <MudTd>@context.StatoIncarico</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Storico eventi">
+                @if (_storicoLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else if (!string.IsNullOrWhiteSpace(_storicoError))
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@_storicoError</MudAlert>
+                }
+                else
+                {
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Persona (@_storicoPersona.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Email (@_storicoEmail.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Telefoni (@_storicoTelefoni.Count)</MudText></MudPaper></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="GDPR"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Sezione GDPR in roadmap.</MudAlert></MudTabPanel>
+            <MudTabPanel Text="Documenti"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Sezione documenti in roadmap.</MudAlert></MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private PersonaDetail? _detail;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private int _activeTabIndex;
+
+    private bool _incarichiLoaded;
+    private bool _incarichiLoading;
+    private string? _incarichiError;
+    private bool _incarichiUnavailable;
+    private IReadOnlyList<PersonaIncaricoItem> _incarichi = Array.Empty<PersonaIncaricoItem>();
+    private bool _incarichiIncludeDeleted;
+
+    private bool _contattiLoaded;
+    private bool _contattiLoading;
+    private string? _contattiError;
+    private bool _contattiIncludeDeleted;
+    private IReadOnlyList<PersonaEmailItem> _emailItems = Array.Empty<PersonaEmailItem>();
+    private IReadOnlyList<PersonaTelefonoItem> _telefonoItems = Array.Empty<PersonaTelefonoItem>();
+    private IReadOnlyList<ContactLookupItem> _emailLookups = Array.Empty<ContactLookupItem>();
+    private IReadOnlyList<ContactLookupItem> _telefonoLookups = Array.Empty<ContactLookupItem>();
+
+    private EmailFormModel _emailForm = new();
+    private int? _emailEditId;
+    private TelefonoFormModel _telefonoForm = new();
+    private int? _telefonoEditId;
+
+    private bool _storicoLoaded;
+    private bool _storicoLoading;
+    private string? _storicoError;
+    private IReadOnlyList<PersonaStoricoEvent> _storicoPersona = Array.Empty<PersonaStoricoEvent>();
+    private IReadOnlyList<PersonaEmailStoricoEvent> _storicoEmail = Array.Empty<PersonaEmailStoricoEvent>();
+    private IReadOnlyList<PersonaTelefonoStoricoEvent> _storicoTelefoni = Array.Empty<PersonaTelefonoStoricoEvent>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _activeTabIndex = 0;
+        _incarichiLoaded = false;
+        _contattiLoaded = false;
+        _storicoLoaded = false;
+        _emailEditId = null;
+        _telefonoEditId = null;
+        _emailForm = new EmailFormModel();
+        _telefonoForm = new TelefonoFormModel();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        var result = await GatewayClient.GetPersonaDetailAsync(Id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare il dettaglio persona.";
+            _detail = null;
+            _isLoading = false;
+            return;
+        }
+
+        _detail = result.Data;
+        await EnsureIncarichiAsync();
+        await EnsureContattiAsync();
+        _isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTabIndex = index;
+        if (index == 1) await EnsureIncarichiAsync();
+        if (index == 2) await EnsureStoricoAsync();
+    }
+
+    private async Task EnsureIncarichiAsync(bool force = false)
+    {
+        if (_incarichiLoaded && !force) return;
+        _incarichiLoading = true;
+        _incarichiError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var result = await GatewayClient.GetPersonaIncarichiAsync(Id, _incarichiIncludeDeleted, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _incarichi = result.Data;
+                _incarichiLoaded = true;
+                return;
+            }
+
+            if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _incarichi = Array.Empty<PersonaIncaricoItem>();
+                _incarichiUnavailable = true;
+                _incarichiLoaded = true;
+                return;
+            }
+
+            _incarichiError = result.Error ?? "Impossibile caricare gli incarichi.";
+        }
+        finally
+        {
+            _incarichiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task OnContattiIncludeDeletedChanged()
+    {
+        _contattiLoaded = false;
+        return EnsureContattiAsync(force: true);
+    }
+
+    private Task ReloadContattiAsync()
+    {
+        _contattiLoaded = false;
+        return EnsureContattiAsync(force: true);
+    }
+
+    private async Task EnsureContattiAsync(bool force = false)
+    {
+        if (_contattiLoaded && !force) return;
+        _contattiLoading = true;
+        _contattiError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var emailLookupsTask = GatewayClient.GetPersonaEmailLookupsAsync(CancellationToken.None);
+            var telLookupsTask = GatewayClient.GetPersonaTelefonoLookupsAsync(CancellationToken.None);
+            var emailTask = GatewayClient.GetPersonaEmailAsync(Id, _contattiIncludeDeleted, CancellationToken.None);
+            var telTask = GatewayClient.GetPersonaTelefoniAsync(Id, _contattiIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(emailLookupsTask, telLookupsTask, emailTask, telTask);
+
+            var emailLookups = await emailLookupsTask;
+            var telLookups = await telLookupsTask;
+            var email = await emailTask;
+            var tel = await telTask;
+
+            if (!emailLookups.IsSuccess || !telLookups.IsSuccess || !email.IsSuccess || !tel.IsSuccess)
+            {
+                _contattiError = emailLookups.Error ?? telLookups.Error ?? email.Error ?? tel.Error ?? "Impossibile caricare contatti.";
+                _contattiLoaded = false;
+                return;
+            }
+
+            _emailLookups = emailLookups.Data ?? Array.Empty<ContactLookupItem>();
+            _telefonoLookups = telLookups.Data ?? Array.Empty<ContactLookupItem>();
+            _emailItems = email.Data ?? Array.Empty<PersonaEmailItem>();
+            _telefonoItems = tel.Data ?? Array.Empty<PersonaTelefonoItem>();
+
+            if (_emailForm.TipoEmailId == 0 && _emailLookups.Count > 0) _emailForm.TipoEmailId = _emailLookups[0].Id;
+            if (_telefonoForm.TipoTelefonoId == 0 && _telefonoLookups.Count > 0) _telefonoForm.TipoTelefonoId = _telefonoLookups[0].Id;
+
+            _contattiLoaded = true;
+        }
+        finally
+        {
+            _contattiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SaveEmailAsync()
+    {
+        if (_emailForm.TipoEmailId <= 0 || string.IsNullOrWhiteSpace(_emailForm.Email))
+        {
+            _contattiError = "Compila tipo email e indirizzo email.";
+            return;
+        }
+
+        var result = _emailEditId.HasValue
+            ? await GatewayClient.UpdatePersonaEmailAsync(Id, _emailEditId.Value, new UpdatePersonaEmailRequest(_emailForm.TipoEmailId, _emailForm.Email.Trim(), false, false, null), CancellationToken.None)
+            : await GatewayClient.CreatePersonaEmailAsync(Id, new CreatePersonaEmailRequest(_emailForm.TipoEmailId, _emailForm.Email.Trim(), false, false, null), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _contattiError = result.Error ?? "Operazione email non riuscita.";
+            return;
+        }
+
+        _emailEditId = null;
+        _emailForm = new EmailFormModel();
+        _contattiLoaded = false;
+        await EnsureContattiAsync(force: true);
+    }
+
+    private void BeginEditEmail(PersonaEmailItem item)
+    {
+        _emailEditId = item.PersonaEmailId;
+        _emailForm = new EmailFormModel { TipoEmailId = item.TipoEmailId, Email = item.Email };
+    }
+
+    private async Task DeleteEmailAsync(int personaEmailId)
+    {
+        var result = await GatewayClient.DeletePersonaEmailAsync(Id, personaEmailId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _contattiError = result.Error ?? "Eliminazione email non riuscita.";
+            return;
+        }
+
+        _contattiLoaded = false;
+        await EnsureContattiAsync(force: true);
+    }
+
+    private async Task SaveTelefonoAsync()
+    {
+        if (_telefonoForm.TipoTelefonoId <= 0 || string.IsNullOrWhiteSpace(_telefonoForm.Numero))
+        {
+            _contattiError = "Compila tipo telefono e numero.";
+            return;
+        }
+
+        var numero = new string(_telefonoForm.Numero.Where(char.IsDigit).ToArray());
+        if (string.IsNullOrWhiteSpace(numero))
+        {
+            _contattiError = "Il numero deve contenere cifre.";
+            return;
+        }
+
+        var result = _telefonoEditId.HasValue
+            ? await GatewayClient.UpdatePersonaTelefonoAsync(Id, _telefonoEditId.Value, new UpdatePersonaTelefonoRequest(_telefonoForm.TipoTelefonoId, NormalizePrefix(_telefonoForm.PrefissoInternazionale), numero, null, false, false, null), CancellationToken.None)
+            : await GatewayClient.CreatePersonaTelefonoAsync(Id, new CreatePersonaTelefonoRequest(_telefonoForm.TipoTelefonoId, NormalizePrefix(_telefonoForm.PrefissoInternazionale), numero, null, false, false, null), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _contattiError = result.Error ?? "Operazione telefono non riuscita.";
+            return;
+        }
+
+        _telefonoEditId = null;
+        _telefonoForm = new TelefonoFormModel();
+        _contattiLoaded = false;
+        await EnsureContattiAsync(force: true);
+    }
+
+    private void BeginEditTelefono(PersonaTelefonoItem item)
+    {
+        _telefonoEditId = item.PersonaTelefonoId;
+        _telefonoForm = new TelefonoFormModel { TipoTelefonoId = item.TipoTelefonoId, PrefissoInternazionale = item.PrefissoInternazionale, Numero = item.Numero };
+    }
+
+    private async Task DeleteTelefonoAsync(int personaTelefonoId)
+    {
+        var result = await GatewayClient.DeletePersonaTelefonoAsync(Id, personaTelefonoId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _contattiError = result.Error ?? "Eliminazione telefono non riuscita.";
+            return;
+        }
+
+        _contattiLoaded = false;
+        await EnsureContattiAsync(force: true);
+    }
+
+    private async Task EnsureStoricoAsync(bool force = false)
+    {
+        if (_storicoLoaded && !force) return;
+        _storicoLoading = true;
+        _storicoError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var pTask = GatewayClient.GetPersonaStoricoAsync(Id, CancellationToken.None);
+            var eTask = GatewayClient.GetPersonaStoricoEmailAsync(Id, CancellationToken.None);
+            var tTask = GatewayClient.GetPersonaStoricoTelefoniAsync(Id, CancellationToken.None);
+            await Task.WhenAll(pTask, eTask, tTask);
+            var p = await pTask; var e = await eTask; var t = await tTask;
+            if (!p.IsSuccess || !e.IsSuccess || !t.IsSuccess)
+            {
+                _storicoError = p.Error ?? e.Error ?? t.Error ?? "Impossibile caricare storico.";
+                _storicoLoaded = false;
+                return;
+            }
+
+            _storicoPersona = p.Data ?? Array.Empty<PersonaStoricoEvent>();
+            _storicoEmail = e.Data ?? Array.Empty<PersonaEmailStoricoEvent>();
+            _storicoTelefoni = t.Data ?? Array.Empty<PersonaTelefonoStoricoEvent>();
+            _storicoLoaded = true;
+        }
+        finally
+        {
+            _storicoLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetIncarichiTabText() => _incarichiLoaded ? $"Incarichi ({_incarichi.Count})" : "Incarichi (...)";
+    private string GetEmailTipoLabel(int id) => _emailLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetTelefonoTipoLabel(int id) => _telefonoLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+
+    private static string FormatTelefono(PersonaTelefonoItem item) => FormatTelefono(item.PrefissoInternazionale, item.Numero, item.Estensione);
+    private static string FormatTelefono(string? prefisso, string numero, string? estensione)
+        => string.Join(" ", new[] { string.IsNullOrWhiteSpace(prefisso) ? null : prefisso.Trim(), numero, string.IsNullOrWhiteSpace(estensione) ? null : $"int. {estensione.Trim()}" }.Where(static x => !string.IsNullOrWhiteSpace(x)));
+
+    private static string? NormalizePrefix(string? prefisso)
+    {
+        if (string.IsNullOrWhiteSpace(prefisso)) return null;
+        var clean = new string(prefisso.Trim().Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
+        return string.IsNullOrWhiteSpace(clean) ? null : clean;
+    }
+
+    private static string GetInitials(PersonaDetail detail)
+    {
+        var c = string.IsNullOrWhiteSpace(detail.Cognome) ? "?" : detail.Cognome.Trim();
+        var n = string.IsNullOrWhiteSpace(detail.Nome) ? string.Empty : detail.Nome.Trim();
+        return string.Concat(c[0], n.Length > 0 ? n[0] : '?').ToUpperInvariant();
+    }
+
+    private sealed class EmailFormModel
+    {
+        public int TipoEmailId { get; set; }
+        public string Email { get; set; } = string.Empty;
+    }
+
+    private sealed class TelefonoFormModel
+    {
+        public int TipoTelefonoId { get; set; }
+        public string? PrefissoInternazionale { get; set; }
+        public string Numero { get; set; } = string.Empty;
+    }
+}

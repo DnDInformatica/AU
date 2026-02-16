@@ -1,0 +1,41 @@
+@namespace Accredia.SIGAD.Web.Components.Shared
+
+@* 
+  ActiveFiltersBar Component
+  Visualizza i filtri attivi come chips rimuovibili
+  Basato su mockup-organizzazioni-redesign.html
+*@
+
+@if (HasActiveFilters)
+{
+    <MudPaper Class="sigad-active-filters-bar" Elevation="0">
+        <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.caption" Class="sigad-active-filters-label">
+                Filtri attivi:
+            </MudText>
+
+            @ChildContent
+
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    /// <summary>
+    /// Contenuto chips (MudChip components)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Se ci sono filtri attivi da mostrare
+    /// </summary>
+    [Parameter]
+    public bool HasActiveFilters { get; set; }
+
+    /// <summary>
+    /// Parametri CSS aggiuntivi
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

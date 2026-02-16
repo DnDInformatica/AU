@@ -1,0 +1,367 @@
+@page "/incarichi"
+@namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex
+@inject GatewayClient GatewayClient
+@inject QuickDrawerService QuickDrawer
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@using System.Text
+@using Microsoft.JSInterop
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Incarichi"
+                Subtitle="Monitoraggio e gestione degli incarichi."
+                Breadcrumbs="Home / Anagrafiche / Incarichi"
+                PrimaryActionLabel="Nuovo incarico"
+                PrimaryActionDisabled="false"
+                OnPrimaryAction="CreateNew" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <IncarichiFilters Query="@_query"
+                     QueryChanged="OnQueryChanged"
+                     ActiveFiltersCount="@_activeFiltersCount"
+                     Expanded="@_filtersExpanded"
+                     ExpandedChanged="OnFiltersExpandedChanged"
+                     OnApply="ApplyFilters"
+                     OnReset="ResetFilters"
+                     QueryFieldRefChanged="OnQueryFieldRefChanged" />
+
+    <IncarichiResults Items="_items"
+                      ServerData="LoadIncarichi"
+                      ResultsHint="@_resultsHint"
+                      IsLoading="@(_table?.Loading == true)"
+                      Query="@_query"
+                      EmptyMessage="@_emptyMessage"
+                      OnRowClick="OnRowClick"
+                      OnQuickPreview="OpenQuickPreview"
+                      OnCreateNew="CreateNew"
+                      OnExportSelected="OnExportSelected"
+                      OnDeleteSelected="OnDeleteSelected"
+                      SelectedItems="@_selectedItems"
+                      SelectedItemsChanged="OnSelectedItemsChanged"
+                      BulkInProgress="@_bulkInProgress"
+                      BulkCurrent="@_bulkCurrent"
+                      BulkTotal="@_bulkTotal"
+                      TableRefChanged="OnTableRefChanged" />
+</MudContainer>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "q")]
+    public string? Q { get; set; }
+
+    private MudTable<IncaricoListItem>? _table;
+    private IEnumerable<IncaricoListItem> _items = Array.Empty<IncaricoListItem>();
+    private string? _errorMessage;
+    private string? _query;
+    private string _emptyMessage = "Inserisci un criterio di ricerca.";
+    private int _totalCount;
+    private bool _queryFromUrlApplied;
+    private bool _filtersExpanded = true;
+    private int _activeFiltersCount;
+    private MudTextField<string>? _queryField;
+    private IReadOnlyCollection<IncaricoListItem> _selectedItems = Array.Empty<IncaricoListItem>();
+    private bool _bulkInProgress;
+    private int _bulkCurrent;
+    private int _bulkTotal;
+    private DateTimeOffset? _bulkStartedAt;
+
+    private string _resultsHint
+        => string.IsNullOrWhiteSpace(_query) || _query.Trim().Length < 2
+            ? "Inserisci almeno 2 caratteri per la ricerca."
+            : $"Totale: {_totalCount}";
+
+    protected override void OnParametersSet()
+    {
+        if (!_queryFromUrlApplied && !string.IsNullOrWhiteSpace(Q))
+        {
+            _queryFromUrlApplied = true;
+            _query = Q;
+            UpdateFiltersCount();
+        }
+    }
+
+    private Task ApplyFilters()
+    {
+        _errorMessage = null;
+        _filtersExpanded = false;
+        UpdateFiltersCount();
+        _table?.ReloadServerData();
+        return Task.CompletedTask;
+    }
+
+    private Task ResetFilters()
+    {
+        _query = null;
+        _totalCount = 0;
+        _filtersExpanded = true;
+        UpdateFiltersCount();
+        _table?.ReloadServerData();
+        _ = FocusQueryAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task OnQueryChanged(string? value)
+    {
+        _query = value;
+        UpdateFiltersCount();
+        return Task.CompletedTask;
+    }
+
+    private void UpdateFiltersCount()
+        => _activeFiltersCount = string.IsNullOrWhiteSpace(_query) ? 0 : 1;
+
+    private void OnQueryFieldRefChanged(MudTextField<string>? field)
+        => _queryField = field;
+
+    private Task OnFiltersExpandedChanged(bool value)
+    {
+        _filtersExpanded = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task FocusQueryAsync()
+    {
+        try
+        {
+            if (_queryField is not null)
+                await _queryField.FocusAsync();
+        }
+        catch
+        {
+            // best effort
+        }
+    }
+
+    private async Task<TableData<IncaricoListItem>> LoadIncarichi(TableState state, CancellationToken cancellationToken)
+    {
+        var page = state.Page + 1;
+        var pageSize = state.PageSize;
+
+        if (string.IsNullOrWhiteSpace(_query) || _query.Trim().Length < 2)
+        {
+            _emptyMessage = "Inserisci almeno 2 caratteri per la ricerca.";
+            return new TableData<IncaricoListItem>
+            {
+                Items = Array.Empty<IncaricoListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        var result = await GatewayClient.SearchIncarichiAsync(_query, page, pageSize, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare gli incarichi.";
+            return new TableData<IncaricoListItem>
+            {
+                Items = Array.Empty<IncaricoListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        _errorMessage = null;
+        _items = result.Data.Items;
+        _totalCount = result.Data.TotalCount;
+
+        return new TableData<IncaricoListItem>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private void OpenQuickPreview(IncaricoListItem item)
+    {
+        QuickDrawer.Open(new QuickDrawerRequest(
+            Title: $"{item.PersonaCognome} {item.PersonaNome}",
+            Subtitle: item.OrganizzazioneDenominazione,
+            Body: @<IncaricoQuickPreview Item="item" />,
+            Actions: @<MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1">
+                        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => QuickDrawer.Close())">
+                            Chiudi
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => NavigateToDetail(item.IncaricoId))">
+                            Apri scheda
+                        </MudButton>
+                     </MudStack>
+        ));
+    }
+
+    private void NavigateToDetail(int incaricoId)
+    {
+        QuickDrawer.Close();
+        Navigation.NavigateTo($"/incarichi/{incaricoId}");
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<IncaricoListItem> args)
+        => OpenQuickPreview(args.Item);
+
+    private void CreateNew()
+        => Navigation.NavigateTo("/incarichi/nuovo");
+
+    private void OnTableRefChanged(MudTable<IncaricoListItem>? table)
+        => _table = table;
+
+    private Task OnSelectedItemsChanged(IReadOnlyCollection<IncaricoListItem> items)
+    {
+        _selectedItems = items;
+        return Task.CompletedTask;
+    }
+
+    private async Task StartBulkProgressAsync()
+    {
+        _bulkInProgress = true;
+        _bulkCurrent = 0;
+        _bulkTotal = _selectedItems.Count;
+        _bulkStartedAt = DateTimeOffset.UtcNow;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(50);
+    }
+
+    private async Task AdvanceBulkProgressAsync()
+    {
+        _bulkCurrent++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task EndBulkProgressAsync()
+    {
+        if (_bulkStartedAt is not null)
+        {
+            var elapsed = DateTimeOffset.UtcNow - _bulkStartedAt.Value;
+            if (elapsed < TimeSpan.FromMilliseconds(500))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(500) - elapsed);
+            }
+        }
+
+        _bulkInProgress = false;
+        _bulkCurrent = 0;
+        _bulkTotal = 0;
+        _bulkStartedAt = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnExportSelected()
+    {
+        if (_selectedItems.Count == 0)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma esportazione",
+            $"Vuoi esportare {_selectedItems.Count} incarichi selezionati?\n\n" +
+            "L'operazione potrebbe richiedere qualche secondo.",
+            yesText: "Esporta",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        await StartBulkProgressAsync();
+
+        var csv = await BuildCsvWithProgressAsync(_selectedItems, AdvanceBulkProgressAsync);
+        var filename = $"incarichi-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+        await JS.InvokeVoidAsync("sigadDownloadFile", filename, csv, "text/csv;charset=utf-8");
+
+        await EndBulkProgressAsync();
+    }
+
+    private async Task OnDeleteSelected()
+    {
+        if (_selectedItems.Count == 0)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            $"Vuoi eliminare {_selectedItems.Count} incarichi selezionati?\n\n" +
+            "Attenzione: l'operazione è irreversibile.",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        var errors = new List<string>();
+        await StartBulkProgressAsync();
+        foreach (var item in _selectedItems)
+        {
+            var result = await GatewayClient.SoftDeleteIncaricoAsync(item.IncaricoId, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                errors.Add(result.Error ?? $"Errore eliminando #{item.IncaricoId}");
+            }
+            await AdvanceBulkProgressAsync();
+        }
+
+        await EndBulkProgressAsync();
+        if (errors.Count > 0)
+        {
+            Snackbar.Add($"Eliminazione parziale: {errors.Count} errori.", Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("Incarichi eliminati.", Severity.Success);
+        }
+
+        _selectedItems = Array.Empty<IncaricoListItem>();
+        _table?.ReloadServerData();
+    }
+
+    private static async Task<string> BuildCsvWithProgressAsync(
+        IReadOnlyCollection<IncaricoListItem> items,
+        Func<Task> onRowAsync)
+    {
+        static string Esc(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "\"\"";
+            }
+
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("IncaricoId;Persona;Organizzazione;Ruolo;DataInizio;DataFine;Stato");
+
+        var index = 0;
+        var yieldEvery = items.Count <= 50 ? 1 : 25;
+        foreach (var item in items)
+        {
+            sb.Append(item.IncaricoId.ToString(CultureInfo.InvariantCulture)).Append(';')
+              .Append(Esc($"{item.PersonaCognome} {item.PersonaNome}")).Append(';')
+              .Append(Esc(item.OrganizzazioneDenominazione)).Append(';')
+              .Append(Esc(item.Ruolo)).Append(';')
+              .Append(item.DataInizio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Append(';')
+              .Append(item.DataFine?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty).Append(';')
+              .Append(Esc(item.StatoIncarico));
+            sb.AppendLine();
+            index++;
+            await onRowAsync();
+            if (index % yieldEvery == 0)
+            {
+                await Task.Yield();
+            }
+        }
+
+        return sb.ToString();
+    }
+}

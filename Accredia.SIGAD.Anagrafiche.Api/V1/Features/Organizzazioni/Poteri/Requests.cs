@@ -1,0 +1,41 @@
+namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.Poteri;
+
+internal sealed record CreateRequest(
+    int IncaricoId,
+    int TipoPotereId,
+    DateTime? DataInizio,
+    DateTime? DataFine,
+    decimal? LimiteImportoSingolo,
+    decimal? LimiteImportoGiornaliero,
+    decimal? LimiteImportoMensile,
+    decimal? LimiteImportoAnnuo,
+    string? Valuta,
+    string? ModalitaFirma,
+    string? AmbitoTerritoriale,
+    string? AmbitoMateriale,
+    bool PuoDelegare,
+    int? DelegatoDa,
+    string? StatoPotere,
+    DateTime? DataRevoca,
+    string? MotivoRevoca,
+    string? Note);
+
+internal sealed record UpdateRequest(
+    int IncaricoId,
+    int TipoPotereId,
+    DateTime? DataInizio,
+    DateTime? DataFine,
+    decimal? LimiteImportoSingolo,
+    decimal? LimiteImportoGiornaliero,
+    decimal? LimiteImportoMensile,
+    decimal? LimiteImportoAnnuo,
+    string? Valuta,
+    string? ModalitaFirma,
+    string? AmbitoTerritoriale,
+    string? AmbitoMateriale,
+    bool PuoDelegare,
+    int? DelegatoDa,
+    string? StatoPotere,
+    DateTime? DataRevoca,
+    string? MotivoRevoca,
+    string? Note);

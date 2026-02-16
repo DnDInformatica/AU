@@ -1,0 +1,493 @@
+/* ================================================================================
+   ACCREDIA SIGAD - Dettaglio Organizzazione
+   File: Dettaglio.razor.css
+   
+   Gestione layout e stili per i tab verticali/orizzontali
+   MudBlazor 8.x compatible
+   ================================================================================ */
+
+/* ===== COLORI CORPORATE ACCREDIA ===== */
+:root {
+    --accredia-grafite: #1a1a2e;
+    --accredia-ocra: #d4a574;
+    --accredia-ecru: #f8f7f5;
+    --accredia-bianco: #ffffff;
+}
+
+/* ===== HERO CARD ===== */
+.det-hero {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.det-hero-main {
+    flex: 1;
+}
+
+.det-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.det-hero-name {
+    font-weight: 600;
+    color: var(--accredia-grafite);
+    margin: 0;
+}
+
+.det-fiscal-ribbon {
+    display: flex;
+    gap: 20px;
+    padding: 16px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-top: 16px;
+}
+
+.det-fiscal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.det-fiscal-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.det-fiscal-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accredia-grafite);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.det-fiscal-sep {
+    width: 1px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.det-hero-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.det-hero-edit-btn {
+    min-width: 120px;
+}
+
+/* ===== TABS WRAPPER ===== */
+.det-tabs-wrap {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.det-tabs-wrap-left {
+    overflow: visible;
+}
+
+.det-tabs-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    background: #fafafa;
+}
+
+.det-tabs-shell {
+    display: block;
+}
+
+.det-tabs-shell-vertical {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.det-side-tabbar {
+    width: 240px;
+    min-width: 240px;
+    max-width: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-self: stretch;
+    padding: 14px 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 1px;
+    background: white;
+}
+
+.det-side-tab-btn {
+    width: 100% !important;
+    flex: 1 1 0;
+    position: relative !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    border-radius: 0 !important;
+    color: var(--accredia-grafite) !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+}
+
+.det-side-tab-btn:hover {
+    background-color: rgba(212, 165, 116, 0.06) !important;
+}
+
+.det-side-tab-btn.is-active {
+    color: var(--accredia-ocra) !important;
+    font-weight: 600 !important;
+    background: rgba(212, 165, 116, 0.08) !important;
+}
+
+.det-side-tab-btn::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    right: 0;
+    width: 0;
+    background: transparent;
+    transition: width 0.15s ease;
+}
+
+.det-side-tab-btn.is-active::after {
+    width: 3px;
+    background: var(--accredia-ocra);
+}
+
+::deep .det-side-tab-btn .mud-button-label {
+    display: flex !important;
+    width: 100%;
+    justify-content: flex-end !important;
+    text-align: right !important;
+}
+
+.det-tabs-main {
+    flex: 1;
+    min-width: 0;
+}
+
+::deep .det-tabs-hide-header .mud-tabs-tabbar {
+    display: none !important;
+}
+
+/* ===== TAB PANELS BASE ===== */
+::deep .det-tab-panel {
+    padding: 24px;
+    min-height: 400px;
+}
+
+/* ===== TABS VERTICALI (Position.Left) - MudBlazor 8.x ===== */
+/* Tab bar a sinistra: solo posizione/stile, senza forzare layout contenuti */
+::deep .det-tabs[data-position="Left"] {
+    position: relative;
+}
+
+::deep .det-tabs[data-position="Left"] .mud-tabs-tabbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: none;
+    z-index: 2;
+    flex-direction: column !important;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 8px;
+}
+
+/* Singolo tab button verticale */
+::deep .det-tabs[data-position="Left"] .mud-tab {
+    min-height: 52px;
+    padding: 12px 16px;
+    margin: 4px 0;
+    border-radius: 8px;
+    justify-content: flex-start !important;
+    text-align: left;
+    color: var(--accredia-grafite);
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+::deep .det-tabs[data-position="Left"] .mud-tab:hover {
+    background-color: rgba(212, 165, 116, 0.12) !important;
+}
+
+/* Tab attivo - stile ACCREDIA */
+::deep .det-tabs[data-position="Left"] .mud-tab.mud-tab-active {
+    background-color: var(--accredia-ocra) !important;
+    color: var(--accredia-grafite) !important;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(212, 165, 116, 0.3);
+}
+
+/* Icone nei tab verticali */
+::deep .det-tabs[data-position="Left"] .mud-tab .mud-icon-root {
+    margin-right: 12px;
+    font-size: 22px;
+}
+
+/* Tab label testo */
+::deep .det-tabs[data-position="Left"] .mud-tab-label {
+    font-size: 15px;
+    letter-spacing: 0.2px;
+}
+
+/* Slider (indicatore) - nascondiamo perché usiamo background */
+::deep .det-tabs[data-position="Left"] .mud-tabs-slider {
+    display: none !important;
+}
+
+/* Area contenuto pannelli - occupa lo spazio rimanente */
+::deep .det-tabs[data-position="Left"] .mud-tabs-panels {
+    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: white;
+}
+
+/* ===== TABS ORIZZONTALI (Position.Top) - MudBlazor 8.x ===== */
+::deep .det-tabs[data-position="Top"] {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tabs-tabbar {
+    flex-direction: row !important;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+    padding: 8px 16px 0 16px;
+    background: white;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tab {
+    min-width: 140px;
+    padding: 12px 20px;
+    margin: 0 4px;
+    border-radius: 8px 8px 0 0;
+    color: var(--accredia-grafite);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tab:hover {
+    background-color: rgba(212, 165, 116, 0.08) !important;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tab.mud-tab-active {
+    background-color: white !important;
+    color: var(--accredia-ocra) !important;
+    font-weight: 600;
+    border-bottom: 3px solid var(--accredia-ocra);
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tab .mud-icon-root {
+    margin-right: 8px;
+    font-size: 20px;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tabs-slider {
+    background-color: var(--accredia-ocra) !important;
+    height: 3px !important;
+}
+
+::deep .det-tabs[data-position="Top"] .mud-tabs-panels {
+    background: white;
+}
+
+/* ===== SECTION CARDS (USATE NEL TAB OVERVIEW) ===== */
+.det-section-card {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.det-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accredia-ocra);
+}
+
+.det-section-icon {
+    color: var(--accredia-ocra);
+}
+
+.det-section-title {
+    font-weight: 600;
+    color: var(--accredia-grafite);
+    margin: 0;
+}
+
+.det-section-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 16px 0;
+}
+
+.det-subsection {
+    margin-top: 12px;
+}
+
+/* ===== DEFINITION LIST STYLING ===== */
+.det-dl {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px 20px;
+    margin: 0;
+}
+
+.det-dl dt {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #666;
+    padding-top: 2px;
+}
+
+.det-dl dd {
+    font-size: 0.9375rem;
+    color: var(--accredia-grafite);
+    margin: 0;
+    word-break: break-word;
+}
+
+.det-oggetto-sociale {
+    margin: 8px 0 0 0;
+    line-height: 1.6;
+    color: var(--accredia-grafite);
+}
+
+/* ===== CHIP LIST ===== */
+.det-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ===== TABLE WRAPPER ===== */
+.sigad-table-wrap {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1264px) {
+    .det-hero {
+        flex-direction: column;
+    }
+    
+    .det-hero-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .det-fiscal-ribbon {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 960px) {
+    ::deep .det-tab-panel {
+        padding: 16px;
+    }
+    
+    .det-dl {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .det-dl dt {
+        font-weight: 600;
+    }
+}
+
+@media (max-width: 600px) {
+    .det-hero {
+        padding: 16px;
+    }
+    
+    .det-fiscal-ribbon {
+        gap: 12px;
+    }
+    
+    .det-fiscal-item {
+        flex: 1 1 45%;
+    }
+    
+    .det-fiscal-sep {
+        display: none;
+    }
+    
+    .det-tabs-toolbar {
+        padding: 8px 12px;
+    }
+}
+
+/* ===== HARD OVERRIDE: Left deve mantenere layout contenuti identico a Top ===== */
+.det-tabs-wrap-left {
+    position: relative;
+    overflow: visible !important;
+}
+
+::deep .det-tabs-wrap-left .det-tabs {
+    position: relative !important;
+    width: 100% !important;
+}
+
+::deep .det-tabs-wrap-left .mud-tabs-tabbar {
+    position: absolute !important;
+    top: 0 !important;
+    left: -252px !important;
+    transform: none !important;
+    width: 240px !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    gap: 4px !important;
+    z-index: 5 !important;
+}
+
+::deep .det-tabs-wrap-left .mud-tabs-panels {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    flex-basis: auto !important;
+    margin-left: 0 !important;
+}
+
+::deep .det-tabs-wrap-left .mud-table,
+::deep .det-tabs-wrap-left .mud-table .mud-table-container {
+    width: 100% !important;
+}
+
+::deep .det-tabs-wrap-left .mud-tab {
+    width: 100% !important;
+    margin: 0 !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+}

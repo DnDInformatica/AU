@@ -1,0 +1,163 @@
+### ACCREDIA SIGAD Identity API - Test Endpoints
+
+@baseUrl = http://localhost:5005
+@adminUsername = admin
+@adminPassword = 
+
+### ============================================
+### 1. LOGIN - Ottieni Access e Refresh Token
+### ============================================
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{adminUsername}}",
+  "password": "{{adminPassword}}"
+}
+
+### Variabile globale per il token (salva il token dalla risposta)
+@accessToken =
+@refreshToken =
+
+### ============================================
+### 2. GET CURRENT USER - Recupera info utente
+### ============================================
+GET {{baseUrl}}/me
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### 3. GET ALL PERMISSIONS - Recupera tutti i permessi
+### ============================================
+GET {{baseUrl}}/permissions
+Authorization: Bearer {{accessToken}}
+
+### Questo endpoint richiede:
+### - Authorization: Bearer token valido
+### - Permesso: Permission:ADMIN.PERMISSIONS.MANAGE
+
+### ============================================
+### 4. GET ALL ROLES - Recupera tutti i ruoli
+### ============================================
+GET {{baseUrl}}/roles
+Authorization: Bearer {{accessToken}}
+
+### Questo endpoint richiede:
+### - Authorization: Bearer token valido
+### - Permesso: Permission:ADMIN.ROLES.MANAGE
+
+### ============================================
+### 5. GET ROLE PERMISSIONS - Recupera permessi di un ruolo
+### ============================================
+### Sostituire {roleId} con l'ID reale da GET /roles
+GET {{baseUrl}}/roles/{roleId}/permissions
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### 6. UPDATE ROLE PERMISSIONS - Aggiorna permessi di un ruolo
+### ============================================
+### Sostituire {roleId} con l'ID reale da GET /roles
+PUT {{baseUrl}}/roles/{roleId}/permissions
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "permissions": [
+    "MODULE.ORG.ACCESS",
+    "ORG.LIST",
+    "ORG.READ",
+    "ORG.CREATE",
+    "ORG.UPDATE"
+  ]
+}
+
+### ============================================
+### 7. REFRESH TOKEN - Rinnova il token di accesso
+### ============================================
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### ============================================
+### TEST SUITE - Errori Attesi
+### ============================================
+
+### TEST: Login con password sbagliata → 401 Unauthorized
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "WrongPassword123!"
+}
+
+### TEST: GET permessi senza token → 401 Unauthorized
+GET {{baseUrl}}/permissions
+
+### TEST: GET permessi con token non valido → 401 Unauthorized
+GET {{baseUrl}}/permissions
+Authorization: Bearer invalid_token_xyz
+
+### TEST: Refresh con token scaduto/invalido → 401 Unauthorized
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "invalid_refresh_token"
+}
+
+### ============================================
+### CONFIGURAZIONE JWT (da appsettings.json)
+### ============================================
+
+### Issuer: Accredia.SIGAD.Identity
+### Audience: Accredia.SIGAD
+### AccessTokenExpiry: 15 minuti
+### RefreshTokenExpiry: 7 giorni
+### Algorithm: HMAC SHA256
+
+### ============================================
+### PERMESSI DISPONIBILI
+### ============================================
+
+### Modulo ORG (Organizzazioni)
+### - MODULE.ORG.ACCESS
+### - ORG.LIST, ORG.READ, ORG.CREATE, ORG.UPDATE, ORG.DELETE
+
+### Modulo PERS (Persone)
+### - MODULE.PERS.ACCESS
+### - PERS.LIST, PERS.READ, PERS.CREATE, PERS.UPDATE, PERS.DELETE
+
+### Modulo INC (Incarichi)
+### - MODULE.INC.ACCESS
+### - INC.LIST, INC.READ, INC.CREATE, INC.UPDATE, INC.DELETE
+
+### Modulo TIPO (Tipologie)
+### - MODULE.TIPO.ACCESS
+### - TIPO.LIST, TIPO.READ, TIPO.CREATE, TIPO.UPDATE, TIPO.DELETE
+
+### Modulo ADMIN (Amministrazione)
+### - MODULE.ADMIN.ACCESS
+### - ADMIN.PERMISSIONS.MANAGE
+### - ADMIN.ROLES.MANAGE
+
+### ============================================
+### RUOLI DISPONIBILI
+### ============================================
+
+### 1. SIGAD_SUPERADMIN - Accesso completo (27/27 permessi)
+### 2. SIGAD_ADMIN - Admin operativo (25 permessi)
+### 3. SIGAD_OPERATORE - Operatore con modifica (16 permessi)
+### 4. SIGAD_LETTURA - Solo lettura (8 permessi)
+
+### ============================================
+### UTENTE TEST DI DEFAULT
+### ============================================
+
+### Username: admin
+### Email: admin@accredia.local
+### Password: Password!12345
+### Ruolo: SIGAD_SUPERADMIN
+### Permessi: Tutti (27)

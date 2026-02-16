@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Accredia.SIGAD.RisorseUmane.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:58219;http://localhost:58220"
+    }
+  }
+}

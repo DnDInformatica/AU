@@ -1,0 +1,186 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@layout Accredia.SIGAD.Web.Components.Layout.AuthLayout
+@inject GatewayClient GatewayClient
+@inject TokenService TokenService
+@inject GatewayAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject ILogger<Login> Logger
+@using Microsoft.AspNetCore.Components.Web
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
+    <MudPaper Class="pa-6" Elevation="0">
+        <MudText Typo="Typo.h5">Accedi</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">Inserisci le credenziali per continuare.</MudText>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+                @_errorMessage
+                <MudDivider Class="my-2" />
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                    Verifica stato servizi
+                </MudButton>
+            </MudAlert>
+        }
+
+        <MudForm @ref="_form">
+            <MudTextField T="string" 
+                          @bind-Value="_model.Username" 
+                          Label="Username" 
+                          Variant="Variant.Outlined" 
+                          Required="true"
+                          RequiredError="Username obbligatorio"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          HelperText="Inserisci il tuo username aziendale"
+                          Immediate="true" 
+                          FullWidth="true" />
+            
+            <MudTextField T="string" 
+                          @bind-Value="_model.Password" 
+                          Label="Password" 
+                          InputType="InputType.Password" 
+                          Variant="Variant.Outlined" 
+                          Required="true"
+                          RequiredError="Password obbligatoria"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Lock"
+                          HelperText="Almeno 8 caratteri"
+                          OnKeyDown="OnPasswordKeyDown"
+                          Immediate="true" 
+                          FullWidth="true" 
+                          Class="mt-3" />
+            
+            @* OPZIONE C: HYBRID STORAGE - Checkbox "Remember Me" *@
+            <MudCheckBox @bind-Value="_model.RememberMe" Label="Ricordami" Color="Color.Primary" Class="mt-2" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                Se selezionato, rimarrai connesso anche dopo aver chiuso il browser. 
+                Non selezionare su computer condivisi.
+            </MudText>
+
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="HandleLoginClicked"
+                       Disabled="@(!_jsAvailable || _isSubmitting)"
+                       Class="mt-4"
+                       FullWidth="true">
+                @_submitLabel
+            </MudButton>
+        </MudForm>
+        
+        @if (!_jsAvailable)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">
+                Inizializzazione in corso...
+            </MudText>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly LoginFormModel _model = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+    private bool _jsAvailable;
+
+    private string _submitLabel => _isSubmitting ? "Accesso in corso..." : "Login";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_jsAvailable)
+        {
+            _jsAvailable = true;
+            TokenService.MarkJsAvailable();
+            // State changes in OnAfterRender require an explicit re-render.
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnPasswordKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await HandleLoginClicked(default);
+        }
+    }
+
+    private async Task HandleLoginClicked(MouseEventArgs _)
+    {
+        await HandleLogin();
+    }
+
+    private async Task HandleLogin()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_form is null)
+            {
+                _errorMessage = "Form non inizializzata. Ricarica la pagina e riprova.";
+                return;
+            }
+
+            await _form.Validate();
+            if (!_form.IsValid)
+            {
+                _errorMessage = "Verifica i campi evidenziati e riprova.";
+                return;
+            }
+
+            _isSubmitting = true;
+            _errorMessage = null;
+            await InvokeAsync(StateHasChanged); // mostra subito "Accesso in corso..."
+
+            var result = await GatewayClient.LoginAsync(new LoginRequest(_model.Username, _model.Password), CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                // Salva i token usando TokenService con supporto RememberMe
+                await TokenService.SaveTokensAsync(
+                    result.Data.AccessToken,
+                    result.Data.RefreshToken,
+                    result.Data.ExpiresInSeconds,
+                    _model.RememberMe);
+
+                // Notifica AuthProvider (per compatibilità)
+                await AuthProvider.SignInAsync(result.Data.AccessToken, result.Data.RefreshToken, result.Data.ExpiresInSeconds);
+
+                // Keep the same circuit so the AuthenticationStateProvider update takes effect immediately.
+                Navigation.NavigateTo("/");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Login non riuscito.";
+        }
+        catch (Exception ex)
+        {
+            // Non loggare mai password/token: qui logghiamo solo il tipo errore + contesto.
+            Logger.LogError(ex, "Errore non gestito durante il login.");
+            _errorMessage = "Errore durante il login. Verifica lo stato dei servizi e riprova.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private sealed class LoginFormModel
+    {
+        public string Username { get; set; } = string.Empty;
+
+        public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// OPZIONE C - HYBRID STORAGE:
+        /// - true: Token salvati in LocalStorage (persistono tra sessioni)
+        /// - false: Token salvati in SessionStorage (cleared on tab close)
+        /// </summary>
+        public bool RememberMe { get; set; }
+    }
+}

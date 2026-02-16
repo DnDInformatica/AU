@@ -1,0 +1,231 @@
+@page "/organizzazioni/nuova"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Organizzazioni
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Nuova organizzazione"
+                Subtitle="Crea una nuova organizzazione in anagrafica."
+                Breadcrumbs="Home / Anagrafiche / Organizzazioni / Nuova" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-4 sigad-card">
+            <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="8">
+                    <MudTextField T="string"
+                                  Label="Denominazione"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Denominazione obbligatoria"
+                                  @bind-Value="_model.Denominazione"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <LookupAutocomplete Label="Stato attività"
+                                        Items="_statiAttivita"
+                                        @bind-Value="_model.StatoAttivita"
+                                        Clearable="false"
+                                        Required="true"
+                                        RequiredError="Stato attività obbligatorio" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Ragione sociale"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.RagioneSociale"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string"
+                                  Label="Partita IVA"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.PartitaIVA"
+                                  Immediate="true"
+                                  FullWidth="true"
+                                  HelperText="11 cifre" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string"
+                                  Label="Codice Fiscale"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.CodiceFiscale"
+                                  Immediate="true"
+                                  FullWidth="true"
+                                  HelperText="16 caratteri" />
+                </MudItem>
+
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string"
+                                  Label="N. registro imprese"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.NRegistroImprese"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="9">
+                    <MudTextField T="string"
+                                  Label="Oggetto sociale"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.OggettoSociale"
+                                  Immediate="true"
+                                  FullWidth="true"
+                                  Lines="3" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker Label="Data iscrizione RI"
+                                   Variant="Variant.Outlined"
+                                   @bind-Date="_model.DataIscrizioneIscrizioneRI"
+                                   Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker Label="Data costituzione"
+                                   Variant="Variant.Outlined"
+                                   @bind-Date="_model.DataCostituzione"
+                                   Clearable="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                    Annulla
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <span class="ml-2">Salvataggio...</span>
+                    }
+                    else
+                    {
+                        <span>Crea</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private sealed class FormModel
+    {
+        public string Denominazione { get; set; } = string.Empty;
+        public string? RagioneSociale { get; set; }
+        public string? PartitaIVA { get; set; }
+        public string? CodiceFiscale { get; set; }
+        public string? NRegistroImprese { get; set; }
+        public string? OggettoSociale { get; set; }
+        public DateTime? DataIscrizioneIscrizioneRI { get; set; }
+        public DateTime? DataCostituzione { get; set; }
+        public LookupItem? StatoAttivita { get; set; }
+    }
+
+    private readonly FormModel _model = new();
+    private readonly List<LookupItem> _statiAttivita = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await GatewayClient.GetOrganizzazioneStatiAttivitaLookupsAsync(CancellationToken.None);
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _statiAttivita.Clear();
+            _statiAttivita.AddRange(result.Data);
+        }
+
+        // Best-effort fallback. If DB has an FK, lookups must exist to avoid runtime SQL errors.
+        if (_statiAttivita.Count == 0)
+        {
+            _statiAttivita.AddRange(new[]
+            {
+                new LookupItem(1, "Attiva"),
+                new LookupItem(2, "Sospesa"),
+                new LookupItem(3, "Cessata"),
+            });
+        }
+
+        _model.StatoAttivita = _statiAttivita[0];
+    }
+
+    private void Cancel()
+        => Navigation.NavigateTo("/organizzazioni");
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        if (_form is null)
+        {
+            _errorMessage = "Form non inizializzata.";
+            return;
+        }
+
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new CreateOrganizzazioneRequest(
+                _model.Denominazione,
+                _model.RagioneSociale,
+                _model.PartitaIVA,
+                _model.CodiceFiscale,
+                (byte?)_model.StatoAttivita?.Id,
+                _model.NRegistroImprese,
+                TipoCodiceNaturaGiuridicaId: null,
+                _model.OggettoSociale,
+                _model.DataIscrizioneIscrizioneRI,
+                _model.DataCostituzione);
+
+            var result = await GatewayClient.CreateOrganizzazioneAsync(payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Organizzazione creata.", Severity.Success);
+                Navigation.NavigateTo($"/organizzazioni/{result.Data.OrganizzazioneId}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Creazione organizzazione non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

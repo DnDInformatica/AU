@@ -1,0 +1,41 @@
+# Claude Code local files
+.claude/local/
+.claude/*.local.json
+
+# Logs
+logs/
+*.log
+*.err
+
+# ASP.NET Data Protection keys (local/dev)
+**/.data-protection-keys/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+.vs/
+*.swp
+*.swo
+
+# Temporary
+*.tmp
+*.bak
+_tmp*
+nul
+*.trx
+**/TestResults/
+
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# Local package/cache folders
+.nuget/packages/
+
+# Test settings (local)
+**/appsettings.Test.json
+**/gateway.appsettings.json

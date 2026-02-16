@@ -1,0 +1,51 @@
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudStack Spacing="2">
+    <MudText Typo="Typo.subtitle2">Dati principali</MudText>
+    <MudDivider />
+
+    <MudGrid Spacing="1">
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Persona</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:800">@($"{Item.PersonaCognome} {Item.PersonaNome}")</MudText>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Organizzazione</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.OrganizzazioneDenominazione)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Ruolo</MudText>
+            <MudText Typo="Typo.body2">@Item.Ruolo</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Stato</MudText>
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Class="sigad-state-chip">
+                @Item.StatoIncarico
+            </MudChip>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Inizio</MudText>
+            <MudText Typo="Typo.body2">@Item.DataInizio.ToString("dd/MM/yyyy")</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Fine</MudText>
+            <MudText Typo="Typo.body2">@FormatDate(Item.DataFine)</MudText>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public IncaricoListItem Item { get; set; } = default!;
+
+    private static string ValueOrDash(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string FormatDate(DateTime? value)
+        => value is null ? "—" : value.Value.ToString("dd/MM/yyyy");
+}
+

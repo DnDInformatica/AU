@@ -1,0 +1,32 @@
+[
+  {
+    "Name": "Nuovo profilo",
+    "Projects": [
+      {
+        "Path": "Accredia.SIGAD.Identity.Api\\Accredia.SIGAD.Identity.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-dev"
+      },
+      {
+        "Path": "Accredia.SIGAD.Tipologiche.Api\\Accredia.SIGAD.Tipologiche.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-dev"
+      },
+      {
+        "Path": "Accredia.SIGAD.Anagrafiche.Api\\Accredia.SIGAD.Anagrafiche.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-dev"
+      },
+      {
+        "Path": "Accredia.SIGAD.Gateway\\Accredia.SIGAD.Gateway.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-dev"
+      },
+      {
+        "Path": "Accredia.SIGAD.Web\\Accredia.SIGAD.Web.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-dev"
+      }
+    ]
+  }
+]

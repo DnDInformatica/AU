@@ -1,0 +1,130 @@
+{
+  "$schema": "https://claude.ai/schemas/claude-code-settings.json",
+  "version": "2.0",
+  "project": {
+    "name": "Accredia.SIGAD",
+    "type": "dotnet",
+    "framework": "net9.0",
+    "architecture": "microservices-vsa"
+  },
+  "workspace": {
+    "root": "C:\\Accredia\\Sviluppo\\AU",
+    "allowedPaths": [
+      "C:\\Accredia\\Sviluppo\\AU"
+    ],
+    "excludePaths": [
+      "**/bin",
+      "**/obj",
+      "**/.git",
+      "**/node_modules"
+    ]
+  },
+  "permissions": {
+    "allowFileWrites": true,
+    "allowFileDeletes": false,
+    "allowCommandExecution": true,
+    "allowedCommands": [
+      "dotnet *",
+      "git *",
+      "curl *",
+      "dir",
+      "type",
+      "findstr"
+    ],
+    "blockedCommands": [
+      "rm -rf",
+      "del /s /q",
+      "format",
+      "shutdown"
+    ]
+  },
+  "behavior": {
+    "preCheckRequired": true,
+    "postCheckRequired": true,
+    "autoRecoveryEnabled": true,
+    "maxRecoveryAttempts": 3,
+    "buildOnSave": true,
+    "validateBeforeEdit": true
+  },
+  "agents": {
+    "enabled": true,
+    "autoInvoke": true,
+    "available": [
+      "sigad-validator",
+      "sigad-dapper",
+      "sigad-vsa",
+      "sigad-debugger"
+    ]
+  },
+  "hooks": {
+    "enabled": true,
+    "preEdit": ".claude/hooks/pre-edit.md",
+    "postEdit": ".claude/hooks/post-edit.md"
+  },
+  "memory": {
+    "enabled": true,
+    "persistPath": ".claude/memory/sigad-context.md",
+    "autoUpdate": true,
+    "trackDecisions": true,
+    "trackErrors": true,
+    "trackProgress": true
+  },
+  "mcp": {
+    "enabled": true,
+    "configPath": "mcp-config/mcp.json"
+  },
+  "codeGeneration": {
+    "enforcePatterns": true,
+    "patterns": {
+      "dataAccess": "dapper-only",
+      "architecture": "vsa",
+      "api": "minimal-api",
+      "validation": "fluent-validation"
+    },
+    "blockedPatterns": [
+      "DbContext",
+      "AddDbContext",
+      "SaveChanges",
+      "ControllerBase",
+      "ApiController"
+    ],
+    "requiredPatterns": [
+      "IDbConnectionFactory",
+      "using var conn",
+      "schema-prefix"
+    ]
+  },
+  "services": {
+    "web": {
+      "name": "Accredia.SIGAD.Web",
+      "port": 7000,
+      "type": "blazor-server",
+      "ui": "mudblazor"
+    },
+    "gateway": {
+      "name": "Accredia.SIGAD.Gateway",
+      "port": 7100,
+      "type": "yarp"
+    },
+    "identity": {
+      "name": "Accredia.SIGAD.Identity.Api",
+      "port": 7001,
+      "schema": "Identity"
+    },
+    "tipologiche": {
+      "name": "Accredia.SIGAD.Tipologiche.Api",
+      "port": 7002,
+      "schema": "Tipologiche"
+    },
+    "anagrafiche": {
+      "name": "Accredia.SIGAD.Anagrafiche.Api",
+      "port": 7003,
+      "schema": "Anagrafiche"
+    }
+  },
+  "diagnostics": {
+    "verboseLogging": false,
+    "trackMetrics": true,
+    "metricsPath": ".claude/memory/metrics.json"
+  }
+}

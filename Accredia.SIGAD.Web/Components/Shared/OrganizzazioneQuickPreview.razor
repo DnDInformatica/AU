@@ -1,0 +1,60 @@
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudStack Spacing="2">
+    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.subtitle2">Dati principali</MudText>
+        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="@GetStatoColor(Item.StatoAttivitaId)">
+            @GetStatoLabel(Item.StatoAttivitaId)
+        </MudChip>
+    </MudStack>
+
+    <MudDivider />
+
+    <MudGrid Spacing="1">
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Denominazione</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:800">@Item.Denominazione</MudText>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Ragione sociale</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.RagioneSociale)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">P.IVA</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.PartitaIVA)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Codice Fiscale</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.CodiceFiscale)</MudText>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public OrganizzazioneListItem Item { get; set; } = default!;
+
+    private static string ValueOrDash(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private static string GetStatoLabel(byte? statoAttivitaId)
+        => statoAttivitaId switch
+        {
+            1 => "Attiva",
+            2 => "Sospesa",
+            3 => "Cessata",
+            null => "N/D",
+            _ => $"Stato {statoAttivitaId}"
+        };
+
+    private static Color GetStatoColor(byte? statoAttivitaId)
+        => statoAttivitaId switch
+        {
+            1 => Color.Success,
+            2 => Color.Warning,
+            3 => Color.Error,
+            _ => Color.Info
+        };
+}

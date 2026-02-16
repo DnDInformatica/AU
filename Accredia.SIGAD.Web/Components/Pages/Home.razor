@@ -1,0 +1,99 @@
+@page "/"
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
+    <PageHeader Title="Dashboard"
+                Subtitle="Accesso rapido alle anagrafiche principali con pattern coerenti."
+                Breadcrumbs="Home / Dashboard" />
+
+    <MudGrid Spacing="3" Class="mb-4">
+        <MudItem xs="12" md="3">
+            <MudPaper Class="sigad-kpi-card" Elevation="0">
+                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Organizzazioni</MudText>
+                <MudText Typo="Typo.h4" Class="sigad-kpi-value">128</MudText>
+                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Attive</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudPaper Class="sigad-kpi-card" Elevation="0">
+                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Persone</MudText>
+                <MudText Typo="Typo.h4" Class="sigad-kpi-value">542</MudText>
+                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Censite</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudPaper Class="sigad-kpi-card" Elevation="0">
+                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Incarichi</MudText>
+                <MudText Typo="Typo.h4" Class="sigad-kpi-value">87</MudText>
+                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Attivi</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudPaper Class="sigad-kpi-card" Elevation="0">
+                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Segnalazioni</MudText>
+                <MudText Typo="Typo.h4" Class="sigad-kpi-value">6</MudText>
+                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Ultime 24h</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Spacing="3">
+        @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card" Elevation="0">
+                    <MudText Typo="Typo.h6">Organizzazioni</MudText>
+                    <MudText Typo="Typo.caption">Stato, tipologie, sedi, incarichi.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/organizzazioni">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+        @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card" Elevation="0">
+                    <MudText Typo="Typo.h6">Persone</MudText>
+                    <MudText Typo="Typo.caption">Ricerca CF/P.IVA con regole smart.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/persone">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+        @if (UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card" Elevation="0">
+                    <MudText Typo="Typo.h6">Admin</MudText>
+                    <MudText Typo="Typo.caption">Ruoli, permessi e audit.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/admin">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudPaper Class="sigad-table-wrap mt-6" Elevation="0">
+        <MudTable Items="_recentItems" Dense="true" Hover="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Attività recenti</MudTh>
+                <MudTh>Data</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Title</MudTd>
+                <MudTd>@context.Date</MudTd>
+                <MudTd Align="Right">Dettagli</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly List<ActivityItem> _recentItems = new()
+    {
+        new ActivityItem("Organizzazione aggiornata", "06/02/2026"),
+        new ActivityItem("Nuova persona collegata", "05/02/2026"),
+        new ActivityItem("Incarico cessato", "04/02/2026")
+    };
+
+    private sealed record ActivityItem(string Title, string Date);
+}

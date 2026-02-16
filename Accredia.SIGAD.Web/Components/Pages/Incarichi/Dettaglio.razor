@@ -1,0 +1,166 @@
+@page "/incarichi/{id:int}"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Incarichi
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Dettaglio incarico"
+                Subtitle="@(_detail is null ? "" : $"{_detail.PersonaCognome} {_detail.PersonaNome}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Incarichi / {Id}")"
+                PrimaryActionLabel="Modifica"
+                PrimaryActionDisabled="@(_detail is null || _detail.DataCancellazione.HasValue)"
+                OnPrimaryAction="GoToEdit"
+                SecondaryActionLabel="Elimina"
+                SecondaryActionDisabled="@(_detail is null || _detail.DataCancellazione.HasValue)"
+                OnSecondaryAction="SoftDeleteAsync" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadAsync">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+            <MudSkeleton Width="40%" Height="18px" Class="mb-2" />
+            <MudSkeleton Width="70%" Height="18px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="48px" Class="mb-2" />
+        </MudPaper>
+    }
+    else if (_detail is not null)
+    {
+        <MudPaper Class="pa-4 sigad-card" Elevation="0">
+            @if (_detail.DataCancellazione.HasValue)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+                    Incarico cancellato (soft delete) il @_detail.DataCancellazione.Value.ToString("dd/MM/yyyy HH:mm").
+                </MudAlert>
+            }
+
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Persona</MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight:800">@($"{_detail.PersonaCognome} {_detail.PersonaNome}")</MudText>
+                    @if (!string.IsNullOrWhiteSpace(_detail.PersonaCodiceFiscale))
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">CF @_detail.PersonaCodiceFiscale</MudText>
+                    }
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Organizzazione</MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight:800">@(_detail.OrganizzazioneDenominazione ?? $"#{_detail.OrganizzazioneId}")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Ruolo</MudText>
+                    <MudText Typo="Typo.body1">@_detail.Ruolo</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Stato</MudText>
+                    <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Class="sigad-state-chip">
+                        @_detail.StatoIncarico
+                    </MudChip>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">UO</MudText>
+                    <MudText Typo="Typo.body1">@(_detail.UnitaOrganizzativaId?.ToString() ?? "—")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Data inizio</MudText>
+                    <MudText Typo="Typo.body1">@_detail.DataInizio.ToString("dd/MM/yyyy")</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Data fine</MudText>
+                    <MudText Typo="Typo.body1">@FormatDate(_detail.DataFine)</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private IncaricoDetail? _detail;
+
+    protected override async Task OnParametersSetAsync()
+        => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _detail = null;
+
+        try
+        {
+            var result = await GatewayClient.GetIncaricoDetailAsync(Id, CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _errorMessage = result.Error ?? "Impossibile caricare il dettaglio incarico.";
+                return;
+            }
+
+            _detail = result.Data;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void GoToEdit()
+        => Navigation.NavigateTo($"/incarichi/{Id}/modifica");
+
+    private async Task SoftDeleteAsync()
+    {
+        if (_detail is null || _detail.DataCancellazione.HasValue)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            "Vuoi eliminare (soft delete) questo incarico?",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        var result = await GatewayClient.SoftDeleteIncaricoAsync(Id, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Incarico eliminato.", Severity.Success);
+            Navigation.NavigateTo("/incarichi");
+            return;
+        }
+
+        _errorMessage = result.Error ?? "Eliminazione incarico non riuscita.";
+    }
+
+    private static string FormatDate(DateTime? value)
+        => value is null ? "—" : value.Value.ToString("dd/MM/yyyy");
+}

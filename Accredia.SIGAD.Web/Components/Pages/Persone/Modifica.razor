@@ -1,0 +1,259 @@
+@page "/persone/{id:int}/modifica"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Persone
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Modifica persona"
+                Subtitle="@(_detail is null ? $"Persona #{Id}" : $"{_detail.Cognome} {_detail.Nome}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Persone / {Id} / Modifica")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 sigad-card d-flex align-center justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="ml-3">Caricamento...</MudText>
+        </MudPaper>
+    }
+    else if (_detail is not null)
+    {
+        <MudPaper Class="pa-4 sigad-card">
+            <MudForm @ref="_form">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Cognome"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Cognome obbligatorio"
+                                      @bind-Value="_model.Cognome"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Nome"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Nome obbligatorio"
+                                      @bind-Value="_model.Nome"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Codice Fiscale"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.CodiceFiscale"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Data nascita"
+                                       Variant="Variant.Outlined"
+                                       Date="@_model.DataNascita"
+                                       DateChanged="OnDateChanged"
+                                       Required="true"
+                                       RequiredError="Data nascita obbligatoria"
+                                       MaxDate="@DateTime.Today"
+                                       Clearable="false" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudStack Direction="Row" Spacing="1" Justify="Justify.SpaceBetween">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="SoftDeleteAsync" Disabled="_isSubmitting">
+                        Elimina (soft)
+                    </MudButton>
+
+                    <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                            Annulla
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                            @if (_isSubmitting)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                <span class="ml-2">Salvataggio...</span>
+                            }
+                            else
+                            {
+                                <span>Salva</span>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private sealed class FormModel
+    {
+        public string Cognome { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
+        public string? CodiceFiscale { get; set; }
+        public DateTime? DataNascita { get; set; }
+    }
+
+    private PersonaDetail? _detail;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private readonly FormModel _model = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+
+    protected override async Task OnParametersSetAsync()
+        => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        var result = await GatewayClient.GetPersonaDetailAsync(Id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare il dettaglio persona.";
+            _detail = null;
+            _isLoading = false;
+            return;
+        }
+
+        _detail = result.Data;
+        _model.Cognome = _detail.Cognome;
+        _model.Nome = _detail.Nome;
+        _model.CodiceFiscale = _detail.CodiceFiscale;
+        _model.DataNascita = _detail.DataNascita;
+
+        _isLoading = false;
+    }
+
+    private Task OnDateChanged(DateTime? date)
+    {
+        _model.DataNascita = date;
+        return Task.CompletedTask;
+    }
+
+    private void Cancel()
+        => Navigation.NavigateTo($"/persone/{Id}");
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        if (_form is null)
+        {
+            _errorMessage = "Form non inizializzata.";
+            return;
+        }
+
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        if (_model.DataNascita is null)
+        {
+            _errorMessage = "Data nascita obbligatoria.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new UpdatePersonaRequest(
+                _model.Cognome,
+                _model.Nome,
+                _model.CodiceFiscale,
+                _model.DataNascita.Value);
+
+            var result = await GatewayClient.UpdatePersonaAsync(Id, payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Persona aggiornata.", Severity.Success);
+                Navigation.NavigateTo($"/persone/{result.Data.PersonaId}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Aggiornamento non riuscito.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SoftDeleteAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            "Vuoi eliminare (soft delete) questa persona?",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var result = await GatewayClient.SoftDeletePersonaAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Persona eliminata (soft).", Severity.Success);
+                Navigation.NavigateTo("/persone");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Eliminazione non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

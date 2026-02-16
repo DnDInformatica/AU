@@ -1,0 +1,738 @@
+﻿@font-face {
+    font-family: "Montserrat";
+    src: url("/brand/fonts/Montserrat-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Temporary: map 800 to existing 700 face until UX team provides ExtraBold asset. */
+@font-face {
+    font-family: "Montserrat";
+    src: url("/brand/fonts/Montserrat-Bold.woff2") format("woff2");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Temporary: let browser synthesize weights until UX team provides 600/700 assets. */
+@font-face {
+    font-family: "Open Sans";
+    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Roboto Mono";
+    src: url("/brand/fonts/RobotoMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --sigad-graphite: #1a1a2e;
+    --sigad-ocra: #d4a574;
+    --sigad-ecru: #f8f7f5;
+    --sigad-white: #ffffff;
+    --sigad-text-secondary: #666666;
+    --sigad-text-disabled: #bdbdbd;
+    --sigad-info: #0277bd;
+    --sigad-success: #2e7d32;
+    --sigad-warning: #f57c00;
+    --sigad-error: #c62828;
+    /* Mockup-inspired primitives */
+    --sigad-line: rgba(26, 26, 46, 0.12);
+    --sigad-shadow: 0 10px 28px rgba(26, 26, 46, 0.10);
+    --sigad-radius: 16px;
+    --sigad-focus: var(--sigad-ocra);
+}
+
+html, body {
+    height: 100%;
+    font-family: "Open Sans", Arial, sans-serif;
+    background-color: var(--sigad-ecru);
+    color: var(--sigad-graphite);
+}
+
+:focus-visible {
+    outline: 3px solid var(--sigad-focus);
+    outline-offset: 2px;
+    border-radius: 10px;
+}
+
+a {
+    color: var(--sigad-graphite);
+}
+
+.sigad-shell {
+    min-height: 100vh;
+}
+
+.sigad-appbar {
+    background: rgba(255, 255, 255, 0.70);
+    border-bottom: 1px solid var(--sigad-line);
+    backdrop-filter: blur(10px);
+}
+
+/* MudAppBar renders content inside a .mud-toolbar container. Style that container, not the header. */
+.sigad-appbar .mud-toolbar {
+    width: 100%;
+    padding-inline: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 12px;
+}
+
+.sigad-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-self: start;
+}
+
+.sigad-topbar-center {
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    justify-self: center;
+}
+
+.sigad-topbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    justify-self: end;
+}
+
+.sigad-topbar-collapse {
+    margin-right: 4px;
+    border: 1px solid rgba(26, 26, 46, 0.12);
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+}
+
+.sigad-logo {
+    height: 36px;
+    width: auto;
+    margin-left: 8px;
+}
+
+.sigad-app-title {
+    font-family: "Montserrat", Arial, sans-serif;
+    letter-spacing: 0.08em;
+    margin-left: 8px;
+}
+
+.sigad-app-subtitle {
+    color: var(--sigad-text-secondary);
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.sigad-search {
+    width: clamp(220px, 32vw, 520px);
+}
+
+.sigad-search-input {
+    width: 100%;
+}
+
+.sigad-search-results {
+    background: var(--sigad-white);
+    width: clamp(280px, 44vw, 560px);
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.sigad-search-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(26, 26, 46, 0.08);
+}
+
+.sigad-search-group-title {
+    color: var(--sigad-text-secondary);
+    letter-spacing: 0.08em;
+}
+
+.sigad-search-group-count {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-search-list {
+    padding: 0;
+}
+
+.sigad-search-item {
+    border-radius: 8px;
+    padding: 8px 6px;
+}
+
+.sigad-search-item:hover {
+    background-color: rgba(26, 26, 46, 0.06);
+}
+
+.sigad-search-subtitle {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-search-muted {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-search-empty {
+    color: var(--sigad-text-disabled);
+    margin-bottom: 4px;
+}
+
+.sigad-search-id-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.sigad-user-button {
+    text-transform: none;
+    border-radius: 999px;
+    padding: 6px 10px;
+    border: 1px solid rgba(26, 26, 46, 0.10);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(8px);
+}
+
+    .sigad-user-button:hover {
+        background: rgba(212, 165, 116, 0.10);
+        border-color: rgba(212, 165, 116, 0.45);
+    }
+
+.sigad-avatar {
+    background-color: var(--sigad-ocra);
+    color: var(--sigad-graphite);
+    font-weight: 600;
+}
+
+/* MudDrawer paints on the internal paper element. */
+.sigad-drawer .mud-drawer-paper {
+    border-right: 1px solid var(--sigad-line);
+    background: radial-gradient(900px 700px at 10% 0%, rgba(212, 165, 116, 0.16), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(248, 249, 252, 1) 100%);
+    overflow: hidden;
+}
+
+.sigad-nav {
+    padding: 12px 8px;
+}
+
+.sigad-nav-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(26, 26, 46, 0.08);
+}
+
+/* Expanded drawer: tighten vertical rhythm and make group separators subtle */
+.sigad-drawer.sigad-drawer-expanded .sigad-nav {
+    padding: 10px 8px 14px;
+}
+
+.sigad-drawer.sigad-drawer-expanded .sigad-nav-brand {
+    padding: 10px 12px 12px;
+    margin-bottom: 10px;
+}
+
+.sigad-drawer.sigad-drawer-expanded .sigad-nav .mud-divider {
+    margin: 10px 16px 8px;
+    opacity: 0.7;
+}
+
+/* When collapsed, center the toggle button (brand-left is hidden in markup). */
+.sigad-drawer.sigad-drawer-collapsed .sigad-nav-brand {
+    justify-content: center;
+    padding: 10px 8px;
+}
+
+.sigad-brand-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.sigad-brand-logo {
+    height: 44px;
+    width: auto;
+}
+
+.sigad-brand-meta {
+    display: grid;
+    line-height: 1.1;
+}
+
+.sigad-brand-title {
+    font-family: "Montserrat", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.sigad-brand-subtitle {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-collapse-btn {
+    border: 1px solid rgba(26, 26, 46, 0.12);
+    border-radius: 16px;
+    width: 44px;
+    height: 44px;
+    background: rgba(26, 26, 46, 0.02);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+}
+
+    .sigad-collapse-btn .mud-icon-root {
+        color: var(--sigad-graphite);
+    }
+
+    .sigad-collapse-btn:hover {
+        background: rgba(212, 165, 116, 0.10);
+        border-color: rgba(212, 165, 116, 0.55);
+    }
+
+.sigad-nav-section {
+    color: var(--sigad-text-secondary);
+    padding: 0 16px;
+    margin-top: 6px;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.sigad-nav-link {
+    border-radius: 14px;
+    margin: 4px 8px;
+    padding: 10px 12px;
+    min-height: 44px;
+}
+
+    .sigad-nav-link.mud-nav-link-active,
+    .sigad-nav-link.sigad-nav-active {
+        background-color: rgba(212, 165, 116, 0.2);
+        outline: 1px solid rgba(212, 165, 116, 0.35);
+        position: relative;
+    }
+
+.sigad-nav-active {
+    background-color: rgba(212, 165, 116, 0.2);
+}
+
+.sigad-nav-link.mud-nav-link-active::before,
+.sigad-nav-link.sigad-nav-active::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 22px;
+    border-radius: 10px;
+    background: var(--sigad-ocra);
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.16);
+}
+
+.sigad-nav-link:hover {
+    background: rgba(212, 165, 116, 0.08);
+}
+
+/* MudNavLink internal layout: make it closer to mockup (no boxed icon, bolder text). */
+.sigad-nav-link .mud-nav-link-icon {
+    color: var(--sigad-text-secondary);
+    min-width: 22px;
+    margin-right: 10px;
+}
+
+.sigad-nav-link .mud-nav-link-text {
+    font-weight: 800;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sigad-nav-link:hover .mud-nav-link-icon {
+    color: var(--sigad-ocra);
+}
+
+.sigad-nav-link.mud-nav-link-active .mud-nav-link-icon,
+.sigad-nav-link.sigad-nav-active .mud-nav-link-icon {
+    color: var(--sigad-ocra);
+}
+
+/* Collapsed drawer: icon tiles */
+.sigad-drawer.sigad-drawer-collapsed .sigad-nav-link {
+    width: 56px;
+    height: 48px;
+    margin: 6px auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.mud-nav-link-active,
+    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.sigad-nav-active {
+        outline: 1px solid rgba(212, 165, 116, 0.35);
+    }
+
+        /* The left active marker doesn't work well in collapsed mode. */
+        .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.mud-nav-link-active::before,
+        .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.sigad-nav-active::before {
+            display: none;
+        }
+
+    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link .mud-nav-link-icon {
+        min-width: auto;
+        margin: 0;
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        line-height: 0;
+    }
+
+.sigad-nav-tooltip .mud-tooltip-content {
+    font-family: "Open Sans", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(26, 26, 46, 0.92);
+    color: var(--sigad-white);
+    box-shadow: var(--sigad-shadow);
+}
+
+/* Admin: role list */
+.sigad-admin-rolelist .mud-list-item {
+    border-radius: 12px;
+}
+
+    .sigad-admin-rolelist .mud-list-item:hover {
+        background: rgba(26, 26, 46, 0.04);
+    }
+
+    .sigad-admin-rolelist .mud-list-item.mud-selected-item {
+        background: rgba(212, 165, 116, 0.18);
+        border: 1px solid rgba(212, 165, 116, 0.55);
+    }
+
+.sigad-auth-layout .mud-appbar {
+    border-bottom: 1px solid rgba(26, 26, 46, 0.08);
+}
+
+.sigad-auth-content {
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px 64px;
+}
+
+.main-content {
+    padding: 24px 32px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.sigad-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.sigad-page-title {
+    font-family: "Montserrat", Arial, sans-serif;
+    font-weight: 800;
+}
+
+.sigad-page-subtitle {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-page-breadcrumbs {
+    color: var(--sigad-text-secondary);
+    margin-top: 4px;
+}
+
+.sigad-table-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 800;
+    color: var(--sigad-graphite);
+    text-decoration: underline;
+    text-decoration-color: rgba(26, 26, 46, 0.25);
+    text-underline-offset: 3px;
+}
+
+    .sigad-table-link:hover {
+        text-decoration-color: rgba(212, 165, 116, 0.9);
+    }
+
+.sigad-table-toolbar {
+    padding: 4px 4px 10px;
+}
+
+.sigad-table-wrap .mud-table thead th {
+    font-family: "Open Sans", Arial, sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(26, 26, 46, 0.70);
+    border-bottom: 1px solid rgba(26, 26, 46, 0.10);
+}
+
+.sigad-table-wrap .mud-table tbody tr:hover {
+    background: rgba(212, 165, 116, 0.06);
+}
+
+.sigad-state-chip {
+    border-radius: 999px;
+}
+
+.sigad-filterbar .mud-input-control {
+    margin-top: 0;
+}
+
+.sigad-filterbar-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ✅ FIX: override Bootstrap flex-column + fix display property */
+.sigad-filterbar-buttons {
+    display: flex !important;
+    flex-direction: row !important; /* override flex-column */
+    flex-wrap: wrap; /* wrap on small screens */
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.sigad-filterbar-chips {
+    display: flex !important;
+    flex-direction: row !important; /* vince su flex-column */
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.sigad-filterbar .mud-expand-panel-header {
+    padding: 0 !important;
+}
+
+.sigad-filter-title {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.sigad-filter-title-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px; /* micro-fix */
+}
+
+.sigad-filter-title-text {
+    line-height: 1.2;
+}
+
+.sigad-filter-title-icon {
+    color: var(--mud-palette-primary);
+}
+
+
+.sigad-results-focus {
+    outline: none;
+    height: 0;
+}
+
+/* 1) Forza il contenitore del TitleContent del MudExpansionPanel a non impilare */
+.sigad-filterbar .mud-expand-panel-header .mud-expand-panel-header-content,
+.sigad-filterbar .mud-expand-panel-header .mud-expand-panel-text {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* 2) Il nostro header: una riga sola, spazio tra titolo e chevron gestito da Mud */
+.sigad-expander-title {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 3) Icona + titolo: sempre inline */
+.sigad-expander-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* 4) micro-fix Material icons */
+.sigad-expander-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+/* 5) evita che il testo vada a capo in modo strano */
+.sigad-expander-title-text {
+    white-space: nowrap;
+}
+
+/* se vuoi permettere ellipsis quando lo spazio è poco */
+@media (max-width: 700px) {
+    .sigad-expander-title-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+
+/* Make filter actions usable on small screens without horizontal overflow */
+@media (max-width: 700px) {
+    .sigad-filterbar-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+        .sigad-filterbar-buttons .mud-button-root {
+            flex: 1 1 160px;
+            min-width: 140px;
+        }
+}
+
+.sigad-page-header-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.sigad-kpi-card {
+    border: 1px solid rgba(26, 26, 46, 0.08);
+    border-radius: var(--sigad-radius);
+    padding: 16px;
+    background: var(--sigad-white);
+    box-shadow: var(--sigad-shadow);
+}
+
+.sigad-kpi-label {
+    color: var(--sigad-text-secondary);
+    letter-spacing: 0.08em;
+}
+
+.sigad-kpi-value {
+    font-family: "Montserrat", Arial, sans-serif;
+    font-weight: 800;
+}
+
+.sigad-kpi-hint {
+    color: var(--sigad-text-secondary);
+}
+
+.sigad-card {
+    border: 1px solid rgba(26, 26, 46, 0.08);
+    border-radius: var(--sigad-radius);
+    padding: 16px;
+    background: var(--sigad-white);
+    box-shadow: var(--sigad-shadow);
+}
+
+.sigad-table-wrap {
+    border: 1px solid rgba(26, 26, 46, 0.08);
+    border-radius: var(--sigad-radius);
+    padding: 8px 12px;
+    background: var(--sigad-white);
+    box-shadow: var(--sigad-shadow);
+}
+
+.sigad-quickdrawer .mud-drawer-paper {
+    border-left: 1px solid var(--sigad-line);
+    background: var(--sigad-white);
+    box-shadow: 0 18px 44px rgba(26, 26, 46, 0.22);
+}
+
+.sigad-quickdrawer-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 10px 16px;
+    border-bottom: 1px solid rgba(26, 26, 46, 0.10);
+}
+
+.sigad-quickdrawer-body {
+    padding: 16px;
+}
+
+.sigad-quickdrawer-actions {
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid rgba(26, 26, 46, 0.10);
+}
+
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+    .blazor-error-boundary::after {
+        content: "An error has occurred.";
+    }
+
+@media (max-width: 960px) {
+    .sigad-search {
+        width: 100%;
+        max-width: 340px;
+    }
+
+    .main-content {
+        padding: 16px 20px 32px;
+    }
+}

@@ -1,0 +1,72 @@
+@using Microsoft.AspNetCore.Authorization
+@inject TokenService TokenService
+@inject GatewayAuthenticationStateProvider AuthProvider
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            @if (IsAllowAnonymous(routeData.PageType))
+            {
+                <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+            }
+            else
+            {
+                <AuthorizeView Context="authState">
+                    <Authorized Context="authState">
+                        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                    </Authorized>
+                    <Authorizing>
+                        <MudContainer Class="mt-6">
+                            <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudProgressCircular Indeterminate="true" Size="Size.Medium" />
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">Inizializzazione in corso...</MudText>
+                            </MudStack>
+                        </MudContainer>
+                    </Authorizing>
+                    <NotAuthorized Context="authState">
+                        <MudContainer Class="mt-6">
+                            @if (authState.User.Identity?.IsAuthenticated == true)
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Lock">
+                                    Non hai i permessi necessari per accedere a questa pagina.
+                                </MudAlert>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" Href="/">Torna alla home</MudButton>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Login">
+                                    Accesso non autorizzato. Effettua il login per continuare.
+                                </MudAlert>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" Href="/login">Vai al login</MudButton>
+                            }
+                        </MudContainer>
+                    </NotAuthorized>
+                </AuthorizeView>
+            }
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <MudContainer Class="mt-6">
+                <MudText Typo="Typo.h5">Pagina non trovata.</MudText>
+            </MudContainer>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@code {
+    private bool _authInitialized;
+
+    private static bool IsAllowAnonymous(Type pageType)
+        => Attribute.IsDefined(pageType, typeof(AllowAnonymousAttribute), inherit: true);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // AuthProvider uses ProtectedSessionStorage which needs JS. Initialize as soon as the app renders.
+        if (firstRender && !_authInitialized)
+        {
+            _authInitialized = true;
+            TokenService.MarkJsAvailable();
+            await AuthProvider.InitializeAsync();
+        }
+    }
+}

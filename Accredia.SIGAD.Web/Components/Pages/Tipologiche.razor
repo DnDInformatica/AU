@@ -1,0 +1,78 @@
+@page "/tipologiche"
+@inject GatewayClient GatewayClient
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <MudText Typo="Typo.h5" Class="mb-2">Tipologiche</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">Elenco delle voci tipologiche disponibili.</MudText>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudTextField T="string" @bind-Value="_query" Label="Filtro" Placeholder="Cerca per codice o descrizione" Immediate="true" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-3" OnClick="Reload">Aggiorna</MudButton>
+    </MudPaper>
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudTable Items="_items" ServerData="LoadTipologiche" Hover="true" Dense="true" Elevation="0" @ref="_table">
+        <HeaderContent>
+            <MudTh>Codice</MudTh>
+            <MudTh>Descrizione</MudTh>
+            <MudTh>Attiva</MudTh>
+            <MudTh>Ordine</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Codice">@context.Code</MudTd>
+            <MudTd DataLabel="Descrizione">@context.Description</MudTd>
+            <MudTd DataLabel="Attiva">@(context.IsActive ? "Si" : "No")</MudTd>
+            <MudTd DataLabel="Ordine">@context.Ordine</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2">Nessuna tipologica disponibile.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private MudTable<TipologicaListItem>? _table;
+    private IEnumerable<TipologicaListItem> _items = Array.Empty<TipologicaListItem>();
+    private string? _query;
+    private string? _errorMessage;
+
+    private async Task<TableData<TipologicaListItem>> LoadTipologiche(TableState state, CancellationToken cancellationToken)
+    {
+        var page = state.Page + 1;
+        var pageSize = state.PageSize;
+
+        var result = await GatewayClient.GetTipologicheAsync(page, pageSize, _query, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare le tipologiche.";
+            return new TableData<TipologicaListItem>
+            {
+                Items = Array.Empty<TipologicaListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        _errorMessage = null;
+        _items = result.Data.Items;
+
+        return new TableData<TipologicaListItem>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private async Task Reload()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+}

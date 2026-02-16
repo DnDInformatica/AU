@@ -1,0 +1,72 @@
+﻿@namespace Accredia.SIGAD.Web.Components.Shared
+
+<MudPaper Class="@PaperClass" @attributes="AdditionalAttributes">
+    <div class="pa-3">
+
+        @* HEADER *@
+        <div class="sigad-expander-title">
+            <div class="sigad-expander-title-left">
+                @if (!string.IsNullOrWhiteSpace(TitleIcon))
+                {
+                    <MudIcon Icon="@TitleIcon" Size="Size.Medium" class="sigad-expander-title-icon" />
+                }
+
+                <MudText Typo="Typo.subtitle2" Class="mb-0 sigad-expander-title-text">
+                    @Title
+                </MudText>
+
+                @if (HeaderContent is not null)
+                {
+                    <div class="sigad-expander-title-template">
+                        @HeaderContent
+                    </div>
+                }
+            </div>
+
+            @if (HeaderActions is not null)
+            {
+                <div class="sigad-expander-title-actions">
+                    @HeaderActions
+                </div>
+            }
+        </div>
+    </div>
+
+    <MudDivider />
+
+    @* BODY *@
+    <div class="@BodyClass">
+        @ChildContent
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Risultati";
+    [Parameter] public string? TitleIcon { get; set; }
+
+    [Parameter] public RenderFragment? HeaderContent { get; set; }   // es: loading + chip conteggio
+    [Parameter] public RenderFragment? HeaderActions { get; set; }   // es: export, refresh, ecc.
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter] public string BodyPaddingClass { get; set; } = "pa-0";
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string PaperClass
+    {
+        get
+        {
+            var extra = string.Empty;
+            if (AdditionalAttributes is not null &&
+                AdditionalAttributes.TryGetValue("class", out var cls) &&
+                cls is not null)
+            {
+                extra = " " + cls.ToString();
+            }
+
+            // usa lo stesso stile “card/table” che già hai
+            return "mb-4 sigad-table-wrap" + extra;
+        }
+    }
+
+    private string BodyClass => BodyPaddingClass;
+}

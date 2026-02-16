@@ -1,0 +1,420 @@
+@page "/admin/utenti"
+@inject AdminClient AdminClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject UserContext UserContext
+@using MudBlazor
+@using Accredia.SIGAD.Web.Models.Admin
+@using Accredia.SIGAD.Web.Components.Shared
+
+<PageTitle>Gestione Utenti - SIGAD</PageTitle>
+
+@if (!UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" md="8">
+            <div class="d-flex align-center mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4">Gestione Utenti</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Gestisci account, ruoli e permessi degli utenti del sistema SIGAD
+                    </MudText>
+                </div>
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-end justify-end">
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@(_isLoading ? null : Icons.Material.Filled.Refresh)"
+                       OnClick="LoadUsersAsync"
+                       Disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    <span class="ml-2">Caricamento...</span>
+                }
+                else
+                {
+                    <span>Ricarica</span>
+                }
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudTextField @bind-Value="_searchTerm"
+                      @bind-Value:after="OnSearchChanged"
+                      Label="Cerca utenti"
+                      Placeholder="Username, email o nome completo..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      HelperText="La ricerca si attiva automaticamente dopo 300ms"
+                      FullWidth="true"
+                      Clearable="true" />
+    </MudPaper>
+
+    @if (_isLoading && !_users.Any())
+    {
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudSkeleton Width="30%" Height="40px" Class="mb-4" />
+            <MudSkeleton Width="100%" Height="60px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="60px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="60px" Class="mb-2" />
+        </MudPaper>
+    }
+    else if (!string.IsNullOrWhiteSpace(_error) && !_users.Any())
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Error">
+            @_error
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="LoadUsersAsync">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+    else if (!_isLoading && _users.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+            Nessun utente disponibile.
+        </MudAlert>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning" Class="mb-3">
+                @_error
+                <MudDivider Class="my-2" />
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="LoadUsersAsync">
+                    Riprova
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                    Verifica stato servizi
+                </MudButton>
+            </MudAlert>
+        }
+
+        <MudPaper Elevation="1">
+            <MudDataGrid T="UserListDto"
+                         Items="@FilteredUsers"
+                         Loading="@_isLoading"
+                         Dense="true"
+                         Hover="true"
+                         MultiSelection="true"
+                         @bind-SelectedItems="_selectedUsers"
+                         Striped="true"
+                         Bordered="false"
+                         RowsPerPage="25"
+                         SortMode="SortMode.Multiple">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Utenti Sistema</MudText>
+                    <MudSpacer />
+                    
+                    @if (_selectedUsers.Any())
+                    {
+                        <MudChip Color="Color.Primary" Size="Size.Medium" Icon="@Icons.Material.Filled.CheckCircle">
+                            @_selectedUsers.Count() selezionati
+                        </MudChip>
+                        
+                        <MudTooltip Text="Disconnetti tutti gli utenti selezionati">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Logout"
+                                       OnClick="ShowBulkLogoutDialogAsync"
+                                       Size="Size.Small"
+                                       Class="ml-2">
+                                Logout Multiplo (@_selectedUsers.Count())
+                            </MudButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @_users.Count utenti totali
+                        </MudText>
+                    }
+                </ToolBarContent>
+                <Columns>
+                    <SelectColumn T="UserListDto" />
+                    
+                    <PropertyColumn Property="@(x => x.Username)" Title="Username" Sortable="true">
+                        <CellTemplate>
+                            <div class="d-flex align-center">
+                                <MudAvatar Size="Size.Small" Color="Color.Primary" Class="mr-2">
+                                    @GetUserInitials(context.Item.Username ?? string.Empty)
+                                </MudAvatar>
+                                <div>
+                                    <MudText Typo="Typo.body2">@context.Item.Username</MudText>
+                                </div>
+                            </div>
+                        </CellTemplate>
+                    </PropertyColumn>
+                    
+                    <PropertyColumn Property="@(x => x.Email)" Title="Email" Sortable="true">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2">@context.Item.Email</MudText>
+                        </CellTemplate>
+                    </PropertyColumn>
+                    
+                    <PropertyColumn Property="@(x => x.Roles)" Title="Ruoli">
+                        <CellTemplate>
+                            @if (context.Item.Roles.Any())
+                            {
+                                @foreach (var role in context.Item.Roles.Take(2))
+                                {
+                                    <MudChip Size="Size.Small" 
+                                             Color="@GetRoleColor(role)" 
+                                             Variant="Variant.Text"
+                                             Icon="@GetRoleIcon(role)">
+                                        @role
+                                    </MudChip>
+                                }
+                                @if (context.Item.Roles.Count > 2)
+                                {
+                                    <MudChip Size="Size.Small" Color="Color.Default">
+                                        +@(context.Item.Roles.Count - 2)
+                                    </MudChip>
+                                }
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Nessun ruolo
+                                </MudText>
+                            }
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <TemplateColumn Title="Stato" Sortable="false">
+                        <CellTemplate>
+                            @if (!context.Item.EmailConfirmed)
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Icon="@Icons.Material.Filled.MarkEmailUnread">
+                                    Email non confermata
+                                </MudChip>
+                            }
+                            else if (IsLocked(context.Item))
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Error" Variant="Variant.Text" Icon="@Icons.Material.Filled.Block">
+                                    Bloccato
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Icon="@Icons.Material.Filled.CheckCircle">
+                                    Attivo
+                                </MudChip>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    
+                    <TemplateColumn Title="Azioni" Sortable="false">
+                        <CellTemplate>
+                            <MudTooltip Text="Modifica ruoli">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ShowEditRolesDialogAsync(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Disconnetti">
+                                <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => LogoutUserAsync(context.Item.UserId))" />
+                            </MudTooltip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="UserListDto" PageSizeOptions="@(new[] { 10, 25, 50, 100 })" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private List<UserListDto> _users = new();
+    private HashSet<UserListDto> _selectedUsers = new();
+    private string _searchTerm = string.Empty;
+    private bool _isLoading;
+    private string? _error;
+    private System.Timers.Timer? _searchDebounceTimer;
+
+    private IEnumerable<UserListDto> FilteredUsers
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_searchTerm))
+                return _users;
+
+            var term = _searchTerm.ToLowerInvariant();
+            return _users.Where(u =>
+                (u.Username?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (u.Email?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || u.Roles.Any(r => r.Contains(term, StringComparison.OrdinalIgnoreCase)));
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsersAsync();
+    }
+
+    private void OnSearchChanged()
+    {
+        _searchDebounceTimer?.Stop();
+        _searchDebounceTimer = new System.Timers.Timer(300);
+        _searchDebounceTimer.Elapsed += async (sender, e) =>
+        {
+            _searchDebounceTimer.Stop();
+            await InvokeAsync(StateHasChanged);
+        };
+        _searchDebounceTimer.Start();
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        _isLoading = true;
+        _error = null;
+        try
+        {
+            var result = await AdminClient.GetAllUsersAsync();
+            if (result.IsSuccess && result.Data != null)
+            {
+                _users = result.Data;
+                _selectedUsers.Clear();
+            }
+            else
+            {
+                _error = result.Error ?? "Errore durante il caricamento degli utenti.";
+                Snackbar.Add(_error, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ShowEditRolesDialogAsync(UserListDto user)
+    {
+        var parameters = new DialogParameters<EditUserDialog>
+        {
+            { x => x.User, user }
+        };
+
+        var dialog = await DialogService.ShowAsync<EditUserDialog>("Modifica Ruoli Utente", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadUsersAsync();
+            Snackbar.Add($"Ruoli di {user.Username} aggiornati con successo", Severity.Success);
+        }
+    }
+
+    private async Task ShowBulkLogoutDialogAsync()
+    {
+        var parameters = new DialogParameters<BulkLogoutDialog>
+        {
+            { x => x.Users, _selectedUsers.ToList() }
+        };
+
+        var dialog = await DialogService.ShowAsync<BulkLogoutDialog>("Logout Multiplo", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadUsersAsync();
+            Snackbar.Add($"{_selectedUsers.Count} utenti disconnessi con successo", Severity.Success);
+        }
+    }
+
+    private async Task LogoutUserAsync(string userId)
+    {
+        var user = _users.FirstOrDefault(u => u.UserId == userId);
+        if (user == null) return;
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma Logout",
+            $"Sei sicuro di voler disconnettere {user.Username}?",
+            yesText: "Conferma", cancelText: "Annulla");
+
+        if (confirm != true) return;
+
+        try
+        {
+            var result = await AdminClient.LogoutUserAsync(userId);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add($"{user.Username} disconnesso con successo", Severity.Success);
+                await LoadUsersAsync();
+            }
+            else
+            {
+                Snackbar.Add($"Errore: {result.Error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static bool IsLocked(UserListDto user)
+    {
+        if (!user.LockoutEnabled)
+        {
+            return false;
+        }
+
+        return user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+    }
+
+    private string GetUserInitials(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username)) return "?";
+        var parts = username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return string.Concat(parts[0][0], parts[^1][0]).ToUpperInvariant();
+    }
+
+    private Color GetRoleColor(string role) => role switch
+    {
+        var r when r.Contains("SUPERADMIN") => Color.Error,
+        var r when r.Contains("ADMIN") => Color.Warning,
+        var r when r.Contains("OPERATORE") => Color.Info,
+        _ => Color.Default
+    };
+
+    private string GetRoleIcon(string role) => role switch
+    {
+        var r when r.Contains("SUPERADMIN") => Icons.Material.Filled.SupervisedUserCircle,
+        var r when r.Contains("ADMIN") => Icons.Material.Filled.AdminPanelSettings,
+        var r when r.Contains("OPERATORE") => Icons.Material.Filled.Work,
+        _ => Icons.Material.Filled.Person
+    };
+
+    public void Dispose()
+    {
+        _searchDebounceTimer?.Dispose();
+    }
+}

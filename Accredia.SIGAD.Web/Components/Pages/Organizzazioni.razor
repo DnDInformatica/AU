@@ -1,0 +1,63 @@
+@page "/organizzazioni"
+@namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex
+
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+
+<MudContainer MaxWidth="MaxWidth.False">
+
+    <PageHeader Title="Organizzazioni"
+                Subtitle="Elenco delle organizzazioni censite."
+                Breadcrumbs="Home / Anagrafiche / Organizzazioni"
+                PrimaryActionLabel="Nuova organizzazione"
+                PrimaryActionDisabled="false"
+                OnPrimaryAction="CreateNew" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <OrganizzazioniFilters Query="@_query"
+                       QueryChanged="OnQueryChanged"
+                       StatoAttivita="@_statoAttivita"
+                       StatoAttivitaChanged="OnStatoChanged"
+                       TipoOrganizzazione="@_tipoOrganizzazione"
+                       TipoOrganizzazioneChanged="OnTipoChanged"
+                       StatiAttivita="@_statiAttivita"
+                       TipiOrganizzazione="@_tipiOrganizzazione"
+                       ActiveFiltersCount="@_activeFiltersCount"
+                       Expanded="@_filtersExpanded"
+                       ExpandedChanged="OnFiltersExpandedChanged"
+                       OnApply="ApplyFilters"
+                       OnReset="ResetFilters"
+                       QueryFieldRefChanged="OnQueryFieldRefChanged" />
+
+    <OrganizzazioniResults Items="@_items"
+                           TableRefChanged="OnTableRefChanged"
+                           ResultsFocusRefChanged="OnResultsFocusRefChanged"
+                           ServerData="LoadOrganizzazioni"
+                           ResultsHint="@_resultsHint"
+                           IsLoading="@(_table?.Loading == true)"
+                           OnRowClick="OnRowClick"
+                           OnQuickPreview="OpenQuickPreview"
+                           GetStatoColor="GetStatoColor"
+                           GetStatoLabel="GetStatoLabel"
+                           Query="@_query"
+                           HasActiveFilters="@HasActiveFilters"
+                           StatiAttivita="@_statiAttivita"
+                           SelectedItems="@_selectedItems"
+                           SelectedItemsChanged="OnSelectedItemsChanged"
+                           OnExportSelected="OnExportSelected"
+                           OnDeleteSelected="OnDeleteSelected"
+                           OnChangeStatusSelected="OnChangeStatusSelected"
+                           BulkInProgress="@_bulkInProgress"
+                           BulkCurrent="@_bulkCurrent"
+                           BulkTotal="@_bulkTotal" />
+
+</MudContainer>
+

@@ -1,0 +1,172 @@
+@page "/persone/nuova"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Persone
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Nuova persona"
+                Subtitle="Crea una nuova persona in anagrafica."
+                Breadcrumbs="Home / Anagrafiche / Persone / Nuova" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-4 sigad-card">
+        <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Cognome"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Cognome obbligatorio"
+                                  @bind-Value="_model.Cognome"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Nome"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Nome obbligatorio"
+                                  @bind-Value="_model.Nome"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Codice Fiscale"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.CodiceFiscale"
+                                  Immediate="true"
+                                  FullWidth="true"
+                                  HelperText="16 caratteri (opzionale)" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Data nascita"
+                                   Variant="Variant.Outlined"
+                                   Date="@_model.DataNascita"
+                                   DateChanged="OnDateChanged"
+                                   Required="true"
+                                   RequiredError="Data nascita obbligatoria"
+                                   MaxDate="@DateTime.Today"
+                                   Clearable="false" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                    Annulla
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <span class="ml-2">Salvataggio...</span>
+                    }
+                    else
+                    {
+                        <span>Crea</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private sealed class FormModel
+    {
+        public string Cognome { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
+        public string? CodiceFiscale { get; set; }
+        public DateTime? DataNascita { get; set; }
+    }
+
+    private readonly FormModel _model = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+
+    private void Cancel()
+        => Navigation.NavigateTo("/persone");
+
+    private Task OnDateChanged(DateTime? date)
+    {
+        _model.DataNascita = date;
+        return Task.CompletedTask;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        if (_form is null)
+        {
+            _errorMessage = "Form non inizializzata.";
+            return;
+        }
+
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        if (_model.DataNascita is null)
+        {
+            _errorMessage = "Data nascita obbligatoria.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new CreatePersonaRequest(
+                _model.Cognome,
+                _model.Nome,
+                _model.CodiceFiscale,
+                _model.DataNascita.Value);
+
+            var result = await GatewayClient.CreatePersonaAsync(payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Persona creata.", Severity.Success);
+                Navigation.NavigateTo($"/persone/{result.Data.PersonaId}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Creazione persona non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

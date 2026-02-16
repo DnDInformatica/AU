@@ -1,0 +1,486 @@
+@page "/admin/roles"
+@inject AdminClient AdminClient
+@inject UserContext UserContext
+@inject ISnackbar Snackbar
+@using MudBlazor
+@using Accredia.SIGAD.Web.Models.Admin
+@using Accredia.SIGAD.Web.Components.Shared
+
+<PageTitle>Gestione Ruoli - SIGAD</PageTitle>
+
+@if (!UserContext.HasPermission("ADMIN.ROLES.MANAGE") && !UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+{
+    <AccessDenied />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" md="8">
+            <div class="d-flex align-center mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4">Gestione Ruoli</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Assegna permessi ai ruoli e verifica le policy applicate.
+                    </MudText>
+                </div>
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-end justify-end">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@(_isLoading ? null : Icons.Material.Filled.Refresh)"
+                       OnClick="ReloadAsync"
+                       Disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    <span class="ml-2">Caricamento...</span>
+                }
+                else
+                {
+                    <span>Ricarica</span>
+                }
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="4" lg="3">
+            <MudPaper Class="sigad-card pa-3" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-2">Ruoli</MudText>
+                <MudTextField @bind-Value="_roleFilter"
+                              Label="Cerca ruolo"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Dense="true"
+                              Clearable="true"
+                              FullWidth="true"
+                              Class="mb-3" />
+
+                @if (_rolesLoading)
+                {
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                }
+                else if (!string.IsNullOrWhiteSpace(_rolesError))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                        @_rolesError
+                        <MudDivider Class="my-2" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadAsync">
+                            Riprova
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                            Verifica stato servizi
+                        </MudButton>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudList T="RoleDto" Dense="true" Class="sigad-admin-rolelist">
+                        @foreach (var r in FilteredRoles)
+                        {
+                            var selected = string.Equals(_selectedRole?.RoleId, r.RoleId, StringComparison.OrdinalIgnoreCase);
+                            <MudListItem T="RoleDto"
+                                         Value="r"
+                                         Class="sigad-admin-roleitem"
+                                         Icon="@Icons.Material.Filled.Badge"
+                                         Selected="@selected"
+                                         OnClick="@(() => SelectRoleAsync(r))">
+                                <MudText Typo="Typo.body2">@r.Name</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+
+                    @if (!FilteredRoles.Any())
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">
+                            Nessun ruolo trovato.
+                        </MudText>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="8" lg="9">
+            <MudPaper Class="sigad-card pa-3" Elevation="0">
+                <div class="d-flex align-center">
+                    <MudText Typo="Typo.h6">
+                        Permessi
+                        @if (_selectedRole is not null)
+                        {
+                            <span class="mud-text-secondary">- @_selectedRole.Name</span>
+                        }
+                    </MudText>
+                    <MudSpacer />
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.Close"
+                               Disabled="@(_selectedRole is null || _isSaving)"
+                               OnClick="ClearSelection">
+                        Chiudi
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@(_isSaving ? null : Icons.Material.Filled.Save)"
+                               Disabled="@(_selectedRole is null || _isSaving || !CanEditPermissions)"
+                               Class="ml-2"
+                               OnClick="SaveAsync">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            <span class="ml-2">Salvataggio...</span>
+                        }
+                        else
+                        {
+                            <span>Salva</span>
+                        }
+                    </MudButton>
+                </div>
+
+                <MudDivider Class="my-3" />
+
+                @if (_selectedRole is null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                        Seleziona un ruolo a sinistra per vedere e modificare i permessi.
+                    </MudAlert>
+                }
+                else if (_permissionsLoading)
+                {
+                    <MudSkeleton Width="40%" Height="18px" Class="mb-2" />
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                    <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                }
+                else if (!string.IsNullOrWhiteSpace(_permissionsError))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                        @_permissionsError
+                        <MudDivider Class="my-2" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => LoadSelectedRolePermissionsAsync(_selectedRole!))">
+                            Riprova
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                            Verifica stato servizi
+                        </MudButton>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTextField @bind-Value="_permissionFilter"
+                                  Label="Cerca permesso"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true"
+                                  Dense="true"
+                                  Clearable="true"
+                                  FullWidth="true"
+                                  HelperText="Filtra per Code, Modulo o Descrizione"
+                                  Class="mb-3" />
+
+                    @if (!CanEditPermissions)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Icon="@Icons.Material.Filled.Lock" Class="mb-2">
+                            Hai accesso in sola lettura: manca il permesso <code>ADMIN.PERMISSIONS.MANAGE</code>.
+                        </MudAlert>
+                    }
+
+                    @if (_allPermissions.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">
+                            Il catalogo permessi non è disponibile. Visualizzo i permessi attualmente assegnati al ruolo.
+                        </MudAlert>
+
+                        <MudGrid Spacing="1" Class="mt-2">
+                            @foreach (var permCode in _selectedPermissions.OrderBy(x => x))
+                            {
+                                var isChecked = _selectedPermissions.Contains(permCode);
+                                <MudItem xs="12" md="6" lg="4">
+                                    <MudCheckBox T="bool"
+                                                 Checked="@isChecked"
+                                                 CheckedChanged="@((bool v) => OnPermissionToggled(permCode, v))"
+                                                 Disabled="@(!CanEditPermissions)"
+                                                 Color="Color.Primary"
+                                                 Dense="true"
+                                                 Label="@permCode" />
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                    else if (GroupedPermissions.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                            Nessun permesso trovato con il filtro corrente.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2">
+                            @foreach (var group in GroupedPermissions)
+                        {
+                            <MudPaper Elevation="0" Class="pa-3" Style="border: 1px solid var(--sigad-line); border-radius: var(--sigad-radius);">
+                                <div class="d-flex align-center">
+                                    <MudText Typo="Typo.subtitle1">@group.Key</MudText>
+                                    <MudSpacer />
+                                    <MudChip T="int" Value="@group.Value.Count" Size="Size.Small" Color="Color.Default">@group.Value.Count</MudChip>
+                                </div>
+                                <MudDivider Class="my-2" />
+
+                                <MudGrid Spacing="1">
+                                    @foreach (var p in group.Value)
+                                    {
+                                        var isChecked = _selectedPermissions.Contains(p.Code);
+                                        <MudItem xs="12" md="6" lg="4">
+                                            <MudCheckBox T="bool"
+                                                         Checked="@isChecked"
+                                                         CheckedChanged="@((bool v) => OnPermissionToggled(p.Code, v))"
+                                                         Disabled="@(!CanEditPermissions)"
+                                                         Color="Color.Primary"
+                                                         Dense="true"
+                                                         Label="@p.Code" />
+                                            @if (!string.IsNullOrWhiteSpace(p.Description))
+                                            {
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-8">
+                                                    @p.Description
+                                                </MudText>
+                                            }
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+                            </MudPaper>
+                        }
+                        </MudStack>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool _isLoading;
+    private bool _isSaving;
+
+    private bool _rolesLoading;
+    private string? _rolesError;
+    private List<RoleDto> _roles = new();
+    private string _roleFilter = string.Empty;
+    private RoleDto? _selectedRole;
+
+    private bool _permissionsLoading;
+    private string? _permissionsError;
+    private List<PermissionDto> _allPermissions = new();
+    private string _permissionFilter = string.Empty;
+    private HashSet<string> _selectedPermissions = new(StringComparer.OrdinalIgnoreCase);
+
+    private bool CanEditPermissions => UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE");
+
+    private IEnumerable<RoleDto> FilteredRoles =>
+        string.IsNullOrWhiteSpace(_roleFilter)
+            ? _roles
+            : _roles.Where(r => r.Name.Contains(_roleFilter, StringComparison.OrdinalIgnoreCase));
+
+    private IReadOnlyDictionary<string, List<PermissionDto>> GroupedPermissions
+    {
+        get
+        {
+            IEnumerable<PermissionDto> source = _allPermissions;
+
+            if (!string.IsNullOrWhiteSpace(_permissionFilter))
+            {
+                var term = _permissionFilter.Trim();
+                source = source.Where(p =>
+                    p.Code.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || p.Module.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || (p.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            return source
+                .GroupBy(p => string.IsNullOrWhiteSpace(p.Module) ? "ALTRO" : p.Module.ToUpperInvariant())
+                .OrderBy(g => g.Key)
+                .ToDictionary(g => g.Key, g => g.OrderBy(p => p.Code).ToList());
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+        => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            await LoadRolesAsync();
+            await LoadAllPermissionsAsync();
+
+            // Keep selection consistent if role still exists.
+            if (_selectedRole is not null)
+            {
+                var stillExists = _roles.FirstOrDefault(r => string.Equals(r.RoleId, _selectedRole.RoleId, StringComparison.OrdinalIgnoreCase));
+                if (stillExists is null)
+                {
+                    ClearSelection();
+                }
+                else
+                {
+                    _selectedRole = stillExists;
+                    await LoadSelectedRolePermissionsAsync(_selectedRole);
+                }
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        _rolesLoading = true;
+        _rolesError = null;
+        try
+        {
+            var result = await AdminClient.GetRolesAsync(CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _roles = result.Data.OrderBy(r => r.Name).ToList();
+            }
+            else
+            {
+                _rolesError = result.Error ?? "Impossibile caricare i ruoli.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _rolesError = ex.Message;
+        }
+        finally
+        {
+            _rolesLoading = false;
+        }
+    }
+
+    private async Task LoadAllPermissionsAsync()
+    {
+        var result = await AdminClient.GetPermissionsAsync(CancellationToken.None);
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _allPermissions = result.Data.OrderBy(p => p.Module).ThenBy(p => p.Code).ToList();
+            return;
+        }
+
+        // Keep the page usable even if permissions list fails; the role permissions call will show assigned codes anyway.
+        _allPermissions = new List<PermissionDto>();
+        Snackbar.Add(result.Error ?? "Impossibile caricare l'elenco permessi.", Severity.Warning);
+    }
+
+    private async Task SelectRoleAsync(RoleDto role)
+    {
+        _selectedRole = role;
+        await LoadSelectedRolePermissionsAsync(role);
+    }
+
+    private async Task LoadSelectedRolePermissionsAsync(RoleDto role)
+    {
+        _permissionsLoading = true;
+        _permissionsError = null;
+        _selectedPermissions.Clear();
+
+        try
+        {
+            var result = await AdminClient.GetRolePermissionsAsync(role.RoleId, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                foreach (var p in result.Data.Permissions)
+                {
+                    if (!string.IsNullOrWhiteSpace(p))
+                    {
+                        _selectedPermissions.Add(p);
+                    }
+                }
+            }
+            else
+            {
+                _permissionsError = result.Error ?? "Impossibile caricare i permessi del ruolo.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _permissionsError = ex.Message;
+        }
+        finally
+        {
+            _permissionsLoading = false;
+        }
+    }
+
+    private void ClearSelection()
+    {
+        _selectedRole = null;
+        _selectedPermissions.Clear();
+        _permissionFilter = string.Empty;
+    }
+
+    private void OnPermissionToggled(string code, bool isChecked)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        if (isChecked)
+        {
+            _selectedPermissions.Add(code);
+        }
+        else
+        {
+            _selectedPermissions.Remove(code);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_selectedRole is null)
+        {
+            return;
+        }
+
+        if (!CanEditPermissions)
+        {
+            Snackbar.Add("Accesso negato: manca il permesso ADMIN.PERMISSIONS.MANAGE.", Severity.Error);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var payload = _selectedPermissions.OrderBy(x => x).ToList();
+            var result = await AdminClient.UpdateRolePermissionsAsync(_selectedRole.RoleId, payload, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Permessi aggiornati.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Errore durante il salvataggio.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

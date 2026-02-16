@@ -1,0 +1,36 @@
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudStack Spacing="2">
+    <MudText Typo="Typo.subtitle2">Dati principali</MudText>
+    <MudDivider />
+
+    <MudGrid Spacing="1">
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Cognome</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:800">@Item.Cognome</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Nome</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:800">@Item.Nome</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Codice Fiscale</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.CodiceFiscale)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Data nascita</MudText>
+            <MudText Typo="Typo.body2">@Item.DataNascita.ToString("dd/MM/yyyy")</MudText>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public PersonaListItem Item { get; set; } = default!;
+
+    private static string ValueOrDash(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "—" : value;
+}
+

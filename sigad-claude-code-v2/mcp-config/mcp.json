@@ -1,0 +1,27 @@
+{
+  "$schema": "https://claude.ai/schemas/mcp-config.json",
+  "mcpServers": {
+    "sigad-db": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-sqlserver"],
+      "env": {
+        "MSSQL_CONNECTION_STRING": "Server=localhost;Database=SIGAD;Trusted_Connection=True;TrustServerCertificate=True;",
+        "MSSQL_ALLOWED_SCHEMAS": "Identity,Tipologiche,Anagrafiche",
+        "MSSQL_READ_ONLY": "false"
+      },
+      "description": "SQL Server MCP per database SIGAD"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-filesystem"],
+      "env": {
+        "ALLOWED_PATHS": "C:\\Accredia\\Sviluppo\\AU"
+      },
+      "description": "Accesso filesystem limitato al workspace"
+    }
+  },
+  "globalSettings": {
+    "timeout": 30000,
+    "retryAttempts": 3
+  }
+}

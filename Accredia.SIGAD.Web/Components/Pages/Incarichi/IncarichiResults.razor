@@ -1,0 +1,288 @@
+@namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex
+
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+
+<MudPaper Class="sigad-table-wrap">
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="sigad-table-toolbar">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Medium" />
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle2">Risultati</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Incarichi</MudText>
+            </MudStack>
+
+            @if (IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+            }
+        </MudStack>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            @if (!string.IsNullOrWhiteSpace(ResultsHint))
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
+                    @ResultsHint
+                </MudChip>
+            }
+
+            @if (_selectedIds.Count > 0)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                    Selezionati: @_selectedIds.Count
+                </MudChip>
+            }
+
+            @if (BulkInProgress)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">
+                    @($"{BulkCurrent}/{BulkTotal}")
+                </MudChip>
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+            }
+
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       Disabled="IsLoading"
+                       StartIcon="@Icons.Material.Outlined.Refresh"
+                       OnClick="RefreshAsync">
+                Aggiorna
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       Size="Size.Small"
+                       Disabled="@(_selectedIds.Count == 0 || BulkInProgress)"
+                       StartIcon="@Icons.Material.Outlined.Delete"
+                       OnClick="OnDeleteSelected">
+                Elimina
+            </MudButton>
+
+            <MudMenu Dense="true"
+                     Color="Color.Inherit"
+                     Variant="Variant.Text"
+                     EndIcon="@Icons.Material.Filled.MoreVert"
+                     Label="Altro...">
+                <MudMenuItem OnClick="OnCreateNew">
+                    <MudIcon Icon="@Icons.Material.Outlined.Add" Size="Size.Small" Class="mr-2" />
+                    Aggiungi
+                </MudMenuItem>
+                <MudMenuItem Disabled="@(_selectedIds.Count == 0 || BulkInProgress)"
+                             OnClick="OnExportSelected">
+                    <MudIcon Icon="@Icons.Material.Outlined.Download" Size="Size.Small" Class="mr-2" />
+                    Esporta
+                </MudMenuItem>
+                @if (MoreActions is not null)
+                {
+                    @MoreActions
+                }
+            </MudMenu>
+        </MudStack>
+    </MudStack>
+
+    @if (BulkInProgress)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mx-4 mb-2">
+            <MudProgressLinear Value="@BulkProgressPercent" Color="Color.Primary" Class="flex-grow-1 sigad-bulk-progress" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@($"{BulkProgressPercent}%")</MudText>
+        </MudStack>
+    }
+
+    <MudTable Items="Items"
+              ServerData="ServerData"
+              Hover="true"
+              Dense="true"
+              Elevation="0"
+              @ref="_table"
+              RowClick="OnRowClick">
+        <HeaderContent>
+            <MudTh Style="width: 36px;">
+                <span style="cursor:pointer;" @onclick="ToggleSelectAllClick" @onclick:stopPropagation="true">
+                    @if (IsAllSelected)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Primary" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="Color.Default" />
+                    }
+                </span>
+            </MudTh>
+            <MudTh>Persona</MudTh>
+            <MudTh>Organizzazione</MudTh>
+            <MudTh>Ruolo</MudTh>
+            <MudTh>Inizio</MudTh>
+            <MudTh>Fine</MudTh>
+            <MudTh>Stato</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd Style="width: 36px;">
+                <span style="cursor:pointer;" @onclick="@(() => ToggleRowSelectionClick(context))" @onclick:stopPropagation="true">
+                    @if (_selectedIds.Contains(context.IncaricoId))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBox" Color="Color.Primary" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" Color="Color.Default" />
+                    }
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Persona">
+                <MudText Typo="Typo.body2" Style="font-weight:800">
+                    @($"{context.PersonaCognome} {context.PersonaNome}")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Organizzazione">@context.OrganizzazioneDenominazione</MudTd>
+            <MudTd DataLabel="Ruolo">@context.Ruolo</MudTd>
+            <MudTd DataLabel="Inizio">@context.DataInizio.ToString("dd/MM/yyyy")</MudTd>
+            <MudTd DataLabel="Fine">@FormatDate(context.DataFine)</MudTd>
+            <MudTd DataLabel="Stato">
+                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Class="sigad-state-chip">
+                    @context.StatoIncarico
+                </MudChip>
+            </MudTd>
+            <MudTd Align="Right" Style="width:1%;white-space:nowrap;">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                               Color="Color.Inherit"
+                               Size="Size.Small"
+                               OnClick="@(() => OnQuickPreview.InvokeAsync(context))"
+                               AriaLabel="Apri anteprima" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2">@EmptyMessage</MudText>
+            @if (string.IsNullOrWhiteSpace(Query))
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
+                    Suggerimento: cerca per cognome/nome, denominazione organizzazione, ruolo, CF o P.IVA.
+                </MudText>
+            }
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" />
+        </PagerContent>
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    [Parameter] public IEnumerable<IncaricoListItem> Items { get; set; } = Array.Empty<IncaricoListItem>();
+
+    [Parameter]
+    public Func<TableState, CancellationToken, Task<TableData<IncaricoListItem>>> ServerData { get; set; }
+        = default!;
+
+    [Parameter] public string ResultsHint { get; set; } = string.Empty;
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string? Query { get; set; }
+    [Parameter] public string EmptyMessage { get; set; } = string.Empty;
+
+    [Parameter] public EventCallback<TableRowClickEventArgs<IncaricoListItem>> OnRowClick { get; set; }
+    [Parameter] public EventCallback<IncaricoListItem> OnQuickPreview { get; set; }
+    [Parameter] public EventCallback OnCreateNew { get; set; }
+    [Parameter] public EventCallback OnExportSelected { get; set; }
+    [Parameter] public EventCallback OnDeleteSelected { get; set; }
+    [Parameter] public RenderFragment? MoreActions { get; set; }
+
+    [Parameter] public bool BulkInProgress { get; set; }
+    [Parameter] public int BulkCurrent { get; set; }
+    [Parameter] public int BulkTotal { get; set; }
+
+    private int BulkProgressPercent => BulkTotal <= 0 ? 0 : (int)Math.Round(BulkCurrent * 100.0 / BulkTotal);
+
+    [Parameter] public EventCallback<MudTable<IncaricoListItem>?> TableRefChanged { get; set; }
+
+    private MudTable<IncaricoListItem>? _table;
+    private HashSet<int> _selectedIds = new();
+    private bool _hasLocalSelectionChange;
+
+    [Parameter] public IReadOnlyCollection<IncaricoListItem> SelectedItems { get; set; } = Array.Empty<IncaricoListItem>();
+    [Parameter] public EventCallback<IReadOnlyCollection<IncaricoListItem>> SelectedItemsChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+        => await TableRefChanged.InvokeAsync(_table);
+
+    private async Task RefreshAsync()
+    {
+        if (_table is null)
+        {
+            return;
+        }
+
+        await _table.ReloadServerData();
+    }
+
+    private Task NotifySelectedItemsChanged()
+    {
+        if (SelectedItemsChanged.HasDelegate)
+        {
+            var selected = Items.Where(x => _selectedIds.Contains(x.IncaricoId)).ToList();
+            return SelectedItemsChanged.InvokeAsync(selected);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void OnRowSelectionChanged(IncaricoListItem item, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedIds.Add(item.IncaricoId);
+        }
+        else
+        {
+            _selectedIds.Remove(item.IncaricoId);
+        }
+
+        _hasLocalSelectionChange = true;
+        _ = NotifySelectedItemsChanged();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleRowSelectionClick(IncaricoListItem item)
+        => OnRowSelectionChanged(item, !_selectedIds.Contains(item.IncaricoId));
+
+    private void ToggleSelectAllClick()
+        => ToggleSelectAll(!IsAllSelected);
+
+    private bool IsAllSelected => Items.Any() && _selectedIds.Count == Items.Count();
+
+    private void ToggleSelectAll(bool isSelected)
+    {
+        _selectedIds = isSelected
+            ? new HashSet<int>(Items.Select(x => x.IncaricoId))
+            : new HashSet<int>();
+
+        _hasLocalSelectionChange = true;
+        _ = NotifySelectedItemsChanged();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_hasLocalSelectionChange)
+        {
+            _hasLocalSelectionChange = false;
+            return;
+        }
+
+        if (SelectedItems.Count == 0 && _selectedIds.Count > 0)
+        {
+            _selectedIds.Clear();
+            return;
+        }
+
+        if (SelectedItems.Count > 0)
+        {
+            _selectedIds = new HashSet<int>(SelectedItems.Select(x => x.IncaricoId));
+        }
+    }
+
+    private static string FormatDate(DateTime? value)
+        => value is null ? "—" : value.Value.ToString("dd/MM/yyyy");
+}

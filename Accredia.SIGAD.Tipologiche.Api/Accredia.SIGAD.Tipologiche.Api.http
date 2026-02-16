@@ -1,0 +1,6 @@
+@Accredia.SIGAD.Tipologiche.Api_HostAddress = http://localhost:7002
+
+GET {{Accredia.SIGAD.Tipologiche.Api_HostAddress}}/health
+Accept: application/json
+
+###

@@ -1,0 +1,198 @@
+﻿@namespace Accredia.SIGAD.Web.Components.Shared
+@using Microsoft.AspNetCore.Components.Web
+
+<MudPaper Class="@PaperClass" @attributes="AdditionalAttributes">
+    <MudExpansionPanels Elevation="0">
+        <MudExpansionPanel Expanded="@Expanded" ExpandedChanged="OnExpandedChanged">
+
+            <TitleContent>
+                <div class="sigad-expander-title">
+                    <div class="sigad-expander-title-left">
+                        @if (!string.IsNullOrWhiteSpace(TitleIcon))
+                        {
+                            <MudIcon Icon="@TitleIcon" Size="Size.Medium" class="sigad-expander-title-icon" />
+                        }
+                        <MudText Typo="Typo.h6" Class="mb-0 sigad-expander-title-text">@PanelTitle</MudText>
+
+                        @if (TitleTemplate is not null && WrapTitleTemplate)
+                        {
+                            <div class="sigad-expander-title-template">@TitleTemplate</div>
+                        }
+                    </div>
+
+                    @if (HeaderActions is not null)
+                    {
+                        <div class="sigad-expander-title-actions">@HeaderActions</div>
+                    }
+                </div>
+            </TitleContent>
+
+
+            <ChildContent>
+
+                @* Se TitleTemplate esiste ma NON lo vuoi in header, lo stampi qui *@
+                @if (TitleTemplate is not null && !WrapTitleTemplate)
+                {
+                    <div class="pa-3">@TitleTemplate</div>
+                }
+
+                @* CONTENT *@
+                @if (ChildContent is not null)
+                {
+                    @ChildContent
+                }
+                else if (Filters is not null && Filters.Count > 0)
+                {
+                    <MudGrid Spacing="2" AlignItems="AlignItems.FlexEnd" Class="pa-4">
+                        @foreach (var filter in Filters)
+                        {
+                            <MudItem xs="12" md="@filter.GridSize">
+                                @filter.Content
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+
+                @* ACTIONS *@
+                @if (ActionContent is not null)
+                {
+                    <div class="pa-4">@ActionContent</div>
+                }
+                else if (Filters is not null && Filters.Count > 0)
+                {
+                    <MudDivider />
+                    <MudStack Direction="Row"
+                              Spacing="1"
+                              AlignItems="AlignItems.Center"
+                              Justify="Justify.FlexEnd"
+                              Class="pa-3 sigad-filterbar-buttons">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   DisableElevation="true"
+                                   OnClick="OnApplyClicked"
+                                   StartIcon="@Icons.Material.Filled.FilterAlt">
+                            Applica
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Inherit"
+                                   Size="Size.Small"
+                                   OnClick="OnResetClicked"
+                                   StartIcon="@Icons.Material.Filled.RestartAlt">
+                            Reset
+                        </MudButton>
+                    </MudStack>
+                }
+
+            </ChildContent>
+
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    @* ACTIVE FILTERS *@
+    @if (HasActiveFilters)
+    {
+        <MudDivider />
+        @if (ActiveChips is not null)
+        {
+            @ActiveChips
+        }
+        else if (ActiveFilterChips is not null && ActiveFilterChips.Count > 0)
+        {
+            <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="pa-3 sigad-filterbar-chips">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Filtri attivi:</MudText>
+                @foreach (var chip in ActiveFilterChips)
+                {
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Variant="Variant.Outlined"
+                             Size="Size.Small"
+                             Closeable="true"
+                             OnClose="() => OnChipRemoved(chip)">
+                        @chip.Label
+                    </MudChip>
+                }
+            </MudStack>
+        }
+        else if (ChipContent is not null)
+        {
+            <div class="pa-3">@ChipContent</div>
+        }
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Filtri";
+    [Parameter] public string? TitleIcon { get; set; }
+    [Parameter] public bool WrapTitleTemplate { get; set; } = true;
+
+    [Parameter] public RenderFragment? TitleTemplate { get; set; }
+    [Parameter] public RenderFragment? HeaderActions { get; set; }
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? ActiveChips { get; set; }
+    [Parameter] public RenderFragment? ChipContent { get; set; }
+    [Parameter] public List<FilterDefinition>? Filters { get; set; }
+    [Parameter] public List<FilterChip>? ActiveFilterChips { get; set; }
+    [Parameter] public EventCallback OnApply { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+    [Parameter] public EventCallback<FilterChip> OnChipRemove { get; set; }
+    [Parameter] public bool Expanded { get; set; }
+    [Parameter] public EventCallback<bool> ExpandedChanged { get; set; }
+    [Parameter] public int ActiveCount { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string PanelTitle => ActiveCount <= 0 ? Title : $"{Title} ({ActiveCount})";
+    private bool HasActiveFilters => ActiveCount > 0 || (ActiveFilterChips?.Count > 0) || ActiveChips is not null || ChipContent is not null;
+
+    private string PaperClass
+    {
+        get
+        {
+            var extra = string.Empty;
+            if (AdditionalAttributes is not null && AdditionalAttributes.TryGetValue("class", out var cls) && cls is not null)
+            {
+                extra = " " + cls.ToString();
+            }
+            return "mb-4 sigad-card sigad-filterbar" + extra;
+        }
+    }
+
+    private async Task OnExpandedChanged(bool value)
+    {
+        Expanded = value;
+        if (ExpandedChanged.HasDelegate)
+        {
+            await ExpandedChanged.InvokeAsync(value);
+        }
+    }
+
+    private async Task OnApplyClicked()
+    {
+        Expanded = false;
+        if (ExpandedChanged.HasDelegate)
+        {
+            await ExpandedChanged.InvokeAsync(false);
+        }
+        if (OnApply.HasDelegate)
+        {
+            await OnApply.InvokeAsync();
+        }
+    }
+
+    private async Task OnResetClicked()
+    {
+        if (OnReset.HasDelegate)
+        {
+            await OnReset.InvokeAsync();
+        }
+    }
+
+    private async Task OnChipRemoved(FilterChip chip)
+    {
+        if (OnChipRemove.HasDelegate)
+        {
+            await OnChipRemove.InvokeAsync(chip);
+        }
+    }
+}

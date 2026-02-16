@@ -1,0 +1,113 @@
+@page "/system-status"
+@attribute [AllowAnonymous]
+@layout Accredia.SIGAD.Web.Components.Layout.AuthLayout
+@inject IHttpClientFactory HttpClientFactory
+@inject IConfiguration Configuration
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-10">
+    <MudPaper Class="pa-6" Elevation="0">
+        <MudText Typo="Typo.h5">Stato servizi</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Diagnostica rapida per capire se Gateway e API sono avviati.
+        </MudText>
+
+        <MudStack Row="true" Spacing="2" Class="mb-4">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ReloadAsync" Disabled="_loading">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/login">
+                Torna al login
+            </MudButton>
+        </MudStack>
+
+        <MudTable Items="_results" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>Servizio</MudTh>
+                <MudTh>URL</MudTh>
+                <MudTh>Stato</MudTh>
+                <MudTh>Dettaglio</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Servizio">@context.Name</MudTd>
+                <MudTd DataLabel="URL">@context.Url</MudTd>
+                <MudTd DataLabel="Stato">
+                    @if (context.Ok)
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">OK</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">KO</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Dettaglio">@context.Detail</MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.body2">
+            Avvio rapido in locale: esegui <MudText Typo="Typo.body2" Inline="true"><code>start_sigad.bat</code></MudText> dalla root della soluzione.
+        </MudText>
+    </MudPaper>
+</MudContainer>
+
+@code
+{
+    private bool _loading;
+    private List<ServiceStatusRow> _results = new();
+
+    protected override async Task OnInitializedAsync()
+        => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _results = new List<ServiceStatusRow>
+            {
+                await CheckAsync("Gateway", GetGatewayBaseUrl().TrimEnd('/') + "/health"),
+                await CheckAsync("Identity API", GetServiceBaseUrl("Services:IdentityBaseUrl", "http://localhost:7001").TrimEnd('/') + "/health"),
+                await CheckAsync("Tipologiche API", GetServiceBaseUrl("Services:TipologicheBaseUrl", "http://localhost:7002").TrimEnd('/') + "/health"),
+                await CheckAsync("Anagrafiche API", GetServiceBaseUrl("Services:AnagraficheBaseUrl", "http://localhost:7003").TrimEnd('/') + "/health")
+            };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetGatewayBaseUrl()
+        => Configuration.GetValue<string>("Gateway:BaseUrl") ?? "http://localhost:7100/";
+
+    private string GetServiceBaseUrl(string key, string fallback)
+        => Configuration.GetValue<string>(key) ?? fallback;
+
+    private async Task<ServiceStatusRow> CheckAsync(string name, string url)
+    {
+        try
+        {
+            using var client = HttpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(2);
+
+            using var response = await client.GetAsync(url);
+            return new ServiceStatusRow(name, url, response.IsSuccessStatusCode, $"HTTP {(int)response.StatusCode}");
+        }
+        catch (TaskCanceledException)
+        {
+            return new ServiceStatusRow(name, url, false, "Timeout");
+        }
+        catch (HttpRequestException ex)
+        {
+            return new ServiceStatusRow(name, url, false, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return new ServiceStatusRow(name, url, false, ex.Message);
+        }
+    }
+
+    private sealed record ServiceStatusRow(string Name, string Url, bool Ok, string Detail);
+}

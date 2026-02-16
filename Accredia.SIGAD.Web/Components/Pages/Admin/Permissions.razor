@@ -1,0 +1,178 @@
+@page "/admin/permissions"
+@inject AdminClient AdminClient
+@inject UserContext UserContext
+@inject ISnackbar Snackbar
+@using MudBlazor
+@using Accredia.SIGAD.Web.Models.Admin
+@using Accredia.SIGAD.Web.Components.Shared
+
+<PageTitle>Permessi - SIGAD</PageTitle>
+
+@if (!UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE") && !UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+{
+    <AccessDenied />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" md="8">
+            <div class="d-flex align-center mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Large" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4">Permessi</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Elenco permessi disponibili nel sistema (catalogo).
+                    </MudText>
+                </div>
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-end justify-end">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@(_isLoading ? null : Icons.Material.Filled.Refresh)"
+                       OnClick="LoadAsync"
+                       Disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    <span class="ml-2">Caricamento...</span>
+                }
+                else
+                {
+                    <span>Ricarica</span>
+                }
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="sigad-card pa-3 mb-3" Elevation="0">
+        <MudTextField @bind-Value="_filter"
+                      Label="Cerca permesso"
+                      Placeholder="Code, Modulo, Scope o Descrizione..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      Dense="true"
+                      Clearable="true"
+                      FullWidth="true" />
+    </MudPaper>
+
+    @if (_isLoading && _permissions.Count == 0)
+    {
+        <MudPaper Elevation="0" Class="sigad-card pa-3">
+            <MudSkeleton Width="30%" Height="32px" Class="mb-3" />
+            <MudSkeleton Width="100%" Height="56px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="56px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="56px" Class="mb-2" />
+        </MudPaper>
+    }
+    else if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Error">
+            @_error
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="LoadAsync">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Class="sigad-table-wrap">
+            <MudTable Items="Filtered" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Codice</MudTh>
+                    <MudTh>Descrizione</MudTh>
+                    <MudTh>Modulo</MudTh>
+                    <MudTh>Scope</MudTh>
+                    <MudTh>Attivo</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Codice">
+                        <MudText Typo="Typo.body2" Style="font-family: 'Roboto Mono', monospace">@context.Code</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Descrizione">
+                        <MudText Typo="Typo.body2">@context.Description</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Modulo">@context.Module</MudTd>
+                    <MudTd DataLabel="Scope">@context.Scope</MudTd>
+                    <MudTd DataLabel="Attivo">
+                        @if (context.Attivo)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Si</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">No</MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+
+        <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">
+            Totale: @_permissions.Count
+        </MudText>
+    }
+</MudContainer>
+
+@code {
+    private bool _isLoading;
+    private string? _error;
+    private string _filter = string.Empty;
+    private List<PermissionDto> _permissions = new();
+
+    private IEnumerable<PermissionDto> Filtered
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_filter))
+            {
+                return _permissions;
+            }
+
+            var term = _filter.Trim();
+            return _permissions.Where(p =>
+                p.Code.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || p.Module.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || p.Scope.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (p.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _error = null;
+        try
+        {
+            var result = await AdminClient.GetPermissionsAsync(CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _permissions = result.Data
+                    .OrderBy(p => p.Module)
+                    .ThenBy(p => p.Code)
+                    .ToList();
+                return;
+            }
+
+            _error = result.Error ?? "Impossibile caricare i permessi.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

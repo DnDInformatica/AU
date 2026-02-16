@@ -1,0 +1,13 @@
+@inherits LayoutComponentBase
+
+<AppProviders />
+
+<MudLayout Class="sigad-shell sigad-auth-layout">
+    <MudAppBar Color="Color.Default" Elevation="0" Class="sigad-appbar">
+        <MudImage Src="/brand/logo-accredia.png" Alt="Accredia" Class="sigad-logo" />
+    </MudAppBar>
+
+    <MudMainContent Class="sigad-auth-content">
+        @Body
+    </MudMainContent>
+</MudLayout>

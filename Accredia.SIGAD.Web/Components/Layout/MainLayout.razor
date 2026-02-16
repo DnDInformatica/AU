@@ -1,0 +1,211 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject GatewayAuthenticationStateProvider AuthProvider
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserContext UserContext
+@inject GatewayClient GatewayClient
+@inject TokenService TokenService
+@inject TokenRefreshService TokenRefreshService
+@inject NavigationManager Navigation
+@inject ILogger<MainLayout> Logger
+
+<AppProviders />
+
+<MudLayout Class="sigad-shell">
+    <MudAppBar Color="Color.Default" Elevation="0" Class="sigad-appbar">
+        <div class="sigad-topbar-left">
+            <MudImage Src="/brand/logo-accredia.png" Alt="Accredia" Class="sigad-logo" />
+        </div>
+
+        <div class="sigad-topbar-center">
+            <AuthorizeView>
+                <Authorized>
+                    <GlobalSearch />
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <div class="sigad-topbar-right">
+            <AuthorizeView>
+                <Authorized>
+                    <MudMenu Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button">
+                                <MudAvatar Size="Size.Small" Class="sigad-avatar">
+                                    @GetUserInitials()
+                                </MudAvatar>
+                                <MudText Typo="Typo.body2" Class="ml-2">@GetUsername()</MudText>
+                            </MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem Disabled="true">
+                                <MudText Typo="Typo.caption">@GetUserRoleSummary()</MudText>
+                            </MudMenuItem>
+                            <MudDivider />
+                            <MudMenuItem OnClick="Logout">Logout</MudMenuItem>
+                        </ChildContent>
+                    </MudMenu>
+                </Authorized>
+                <NotAuthorized>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/login">Login</MudButton>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               Variant="DrawerVariant.Mini"
+               Width="292px"
+               MiniVariantWidth="96px"
+               Elevation="0"
+               ClipMode="DrawerClipMode.Always"
+               Class="@($"sigad-drawer {(_drawerOpen ? "sigad-drawer-expanded" : "sigad-drawer-collapsed")}")">
+        <NavMenu IsCollapsed="!_drawerOpen" OnToggleDrawer="ToggleDrawer" />
+    </MudDrawer>
+
+    <MudMainContent Class="main-content">
+        @Body
+    </MudMainContent>
+
+    <QuickDrawerHost />
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">x</span>
+</div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _authInitialized;
+    private bool _disposed;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+        Logger.LogInformation("Sidebar toggle clicked. Open={Open}", _drawerOpen);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_authInitialized)
+        {
+            _authInitialized = true;
+
+            // NOTE: auth initialization is performed in Routes.razor so it runs even when MainLayout is not rendered.
+            await UserContext.EnsureLoadedAsync();
+            // UserContext is loaded asynchronously after the first paint; trigger a re-render so NavMenu updates immediately.
+            await InvokeAsync(StateHasChanged);
+
+            // AVVIA TokenRefreshService per auto-refresh token
+            // Questo previene logout improvvisi ogni 15 minuti
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                TokenRefreshService.Start();
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        // Ferma il TokenRefreshService
+        TokenRefreshService.Stop();
+
+        // Esegue logout via API
+        var refreshToken = await TokenService.GetRefreshTokenAsync();
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            _ = await GatewayClient.LogoutAsync(refreshToken, CancellationToken.None);
+        }
+
+        // Pulisce token e stato
+        await TokenService.ClearAllAsync();
+        UserContext.Reset();
+        await AuthProvider.SignOutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    protected override void OnInitialized()
+    {
+        AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        UserContext.Reset();
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                await UserContext.EnsureLoadedAsync();
+
+                // Avvia/Ferma TokenRefreshService basato sullo stato auth
+                var authState = await task;
+                if (authState.User.Identity?.IsAuthenticated == true)
+                {
+                    TokenRefreshService.Start();
+                }
+                else
+                {
+                    TokenRefreshService.Stop();
+                }
+
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            // Avoid tearing down the circuit for a late auth change after disconnect.
+            Logger.LogDebug(ex, "AuthenticationStateChanged ignored (layout disposing/disconnected).");
+        }
+    }
+
+    private string GetUsername()
+        => UserContext.Current?.Username ?? "Utente";
+
+    private string GetUserInitials()
+    {
+        var username = GetUsername();
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return "U";
+        }
+
+        var parts = username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+        {
+            return parts[0][..1].ToUpperInvariant();
+        }
+
+        return string.Concat(parts[0][..1], parts[^1][..1]).ToUpperInvariant();
+    }
+
+    private string GetUserRoleSummary()
+    {
+        if (UserContext.Current?.Roles is not { Count: > 0 })
+        {
+            return "Nessun ruolo";
+        }
+
+        return string.Join(", ", UserContext.Current.Roles);
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        TokenRefreshService.Stop();
+    }
+}

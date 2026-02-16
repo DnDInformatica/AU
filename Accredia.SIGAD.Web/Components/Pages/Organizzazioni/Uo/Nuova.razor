@@ -1,0 +1,202 @@
+@page "/organizzazioni/{id:int}/unita-organizzative/nuova"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Organizzazioni.Uo
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Nuova unita organizzativa"
+                Subtitle="@($"Organizzazione #{Id}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Organizzazioni / {Id} / Unita organizzative / Nuova")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_lookupsError))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_lookupsError
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-4 sigad-card">
+        <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="8">
+                    <MudTextField T="string"
+                                  Label="Nome"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.Nome"
+                                  Required="true"
+                                  RequiredError="Nome obbligatorio"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string"
+                                  Label="Codice"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.Codice"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <LookupAutocomplete Label="Tipo unita organizzativa"
+                                        Items="_tipiUnita"
+                                        @bind-Value="_model.TipoUnitaOrganizzativa"
+                                        Required="true"
+                                        RequiredError="Tipo unita organizzativa obbligatorio"
+                                        Disabled="_lookupsLoading" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <LookupAutocomplete Label="Tipo sede"
+                                        Items="_tipiSede"
+                                        @bind-Value="_model.TipoSede"
+                                        Clearable="true"
+                                        Disabled="_lookupsLoading" />
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center">
+                    <MudCheckBox T="bool" @bind-Value="_model.Principale" Label="Principale" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                    Annulla
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <span class="ml-2">Salvataggio...</span>
+                    }
+                    else
+                    {
+                        <span>Crea</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private sealed class FormModel
+    {
+        public string Nome { get; set; } = string.Empty;
+        public string? Codice { get; set; }
+        public bool Principale { get; set; }
+        public LookupItem? TipoUnitaOrganizzativa { get; set; }
+        public LookupItem? TipoSede { get; set; }
+    }
+
+    private readonly FormModel _model = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+    private bool _lookupsLoading = true;
+    private string? _lookupsError;
+    private IReadOnlyList<LookupItem> _tipiUnita = Array.Empty<LookupItem>();
+    private IReadOnlyList<LookupItem> _tipiSede = Array.Empty<LookupItem>();
+
+    protected override async Task OnInitializedAsync()
+        => await LoadLookupsAsync();
+
+    private void Cancel()
+        => Navigation.NavigateTo($"/organizzazioni/{Id}");
+
+    private async Task LoadLookupsAsync()
+    {
+        _lookupsLoading = true;
+        _lookupsError = null;
+
+        try
+        {
+            var result = await GatewayClient.GetUnitaLookupsAsync(CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _lookupsError = result.Error ?? "Impossibile caricare le tipologiche per le unita organizzative.";
+                _tipiUnita = Array.Empty<LookupItem>();
+                _tipiSede = Array.Empty<LookupItem>();
+                return;
+            }
+
+            _tipiUnita = result.Data.TipiUnitaOrganizzativa ?? Array.Empty<LookupItem>();
+            _tipiSede = result.Data.TipiSede ?? Array.Empty<LookupItem>();
+
+            if (_model.TipoUnitaOrganizzativa is null && _tipiUnita.Count > 0)
+            {
+                _model.TipoUnitaOrganizzativa = _tipiUnita[0];
+            }
+        }
+        catch (Exception ex)
+        {
+            _lookupsError = ex.Message;
+            _tipiUnita = Array.Empty<LookupItem>();
+            _tipiSede = Array.Empty<LookupItem>();
+        }
+        finally
+        {
+            _lookupsLoading = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting) return;
+        _errorMessage = null;
+
+        if (_form is not null)
+        {
+            await _form.Validate();
+            if (!_form.IsValid) return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new CreateUnitaOrganizzativaRequest(
+                _model.Nome,
+                _model.Codice,
+                _model.Principale,
+                _model.TipoUnitaOrganizzativa?.Id ?? 0,
+                _model.TipoSede?.Id);
+
+            var result = await GatewayClient.CreateUnitaAsync(Id, payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Unita organizzativa creata.", Severity.Success);
+                Navigation.NavigateTo($"/organizzazioni/{Id}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Creazione unita organizzativa non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

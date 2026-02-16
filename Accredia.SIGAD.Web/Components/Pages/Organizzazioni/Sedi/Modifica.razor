@@ -1,0 +1,305 @@
+@page "/organizzazioni/{id:int}/sedi/{sedeId:int}/modifica"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Organizzazioni.Sedi
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Modifica sede"
+                Subtitle="@($"Organizzazione #{Id} · Sede #{SedeId}")"
+                Breadcrumbs="@($"Home / Anagrafiche / Organizzazioni / {Id} / Sedi / {SedeId} / Modifica")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_lookupsError))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_lookupsError
+        </MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 sigad-card d-flex align-center justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="ml-3">Caricamento...</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Class="pa-4 sigad-card">
+            <MudForm @ref="_form">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string" Label="Denominazione" Variant="Variant.Outlined" @bind-Value="_model.Denominazione" Immediate="true" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string" Label="Stato sede" Variant="Variant.Outlined" @bind-Value="_model.StatoSede" Immediate="true" FullWidth="true" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="8">
+                        <MudTextField T="string" Label="Indirizzo" Variant="Variant.Outlined" @bind-Value="_model.Indirizzo" Immediate="true" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField T="string" Label="Numero civico" Variant="Variant.Outlined" @bind-Value="_model.NumeroCivico" Immediate="true" FullWidth="true" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string" Label="CAP" Variant="Variant.Outlined" @bind-Value="_model.CAP" Immediate="true" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="5">
+                        <MudTextField T="string" Label="Localita" Variant="Variant.Outlined" @bind-Value="_model.Localita" Immediate="true" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField T="string" Label="Provincia" Variant="Variant.Outlined" @bind-Value="_model.Provincia" Immediate="true" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField T="string" Label="Nazione" Variant="Variant.Outlined" @bind-Value="_model.Nazione" Immediate="true" FullWidth="true" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Data apertura" Variant="Variant.Outlined" Date="@_model.DataApertura" DateChanged="OnAperturaChanged" Clearable="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Data cessazione" Variant="Variant.Outlined" Date="@_model.DataCessazione" DateChanged="OnCessazioneChanged" Clearable="true" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudStack Direction="Row" Spacing="2">
+                            <MudCheckBox T="bool" @bind-Value="_model.IsSedePrincipale" Label="Sede principale" Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="_model.IsSedeOperativa" Label="Sede operativa" Color="Color.Primary" />
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <LookupAutocomplete Label="Tipo sede"
+                                            Items="_tipiSede"
+                                            @bind-Value="_model.TipoSede"
+                                            Clearable="true"
+                                            Disabled="_lookupsLoading" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudStack Direction="Row" Spacing="1" Justify="Justify.SpaceBetween">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="SoftDeleteAsync" Disabled="_isSubmitting">
+                        Elimina (soft)
+                    </MudButton>
+
+                    <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                            Annulla
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                            @if (_isSubmitting)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                <span class="ml-2">Salvataggio...</span>
+                            }
+                            else
+                            {
+                                <span>Salva</span>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int SedeId { get; set; }
+
+    private sealed class FormModel
+    {
+        public string? Denominazione { get; set; }
+        public string? Indirizzo { get; set; }
+        public string? NumeroCivico { get; set; }
+        public string? CAP { get; set; }
+        public string? Localita { get; set; }
+        public string? Provincia { get; set; }
+        public string? Nazione { get; set; }
+        public string? StatoSede { get; set; }
+        public bool IsSedePrincipale { get; set; }
+        public bool IsSedeOperativa { get; set; }
+        public DateTime? DataApertura { get; set; }
+        public DateTime? DataCessazione { get; set; }
+        public LookupItem? TipoSede { get; set; }
+    }
+
+    private readonly FormModel _model = new();
+    private MudForm? _form;
+    private bool _isLoading = true;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+    private bool _lookupsLoading = true;
+    private string? _lookupsError;
+    private IReadOnlyList<LookupItem> _tipiSede = Array.Empty<LookupItem>();
+
+    protected override async Task OnInitializedAsync()
+        => await LoadLookupsAsync();
+
+    protected override async Task OnParametersSetAsync()
+        => await ReloadAsync();
+
+    private async Task LoadLookupsAsync()
+    {
+        _lookupsLoading = true;
+        _lookupsError = null;
+
+        try
+        {
+            var result = await GatewayClient.GetSediLookupsAsync(CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _lookupsError = result.Error ?? "Impossibile caricare le tipologiche per le sedi.";
+                _tipiSede = Array.Empty<LookupItem>();
+                return;
+            }
+
+            _tipiSede = result.Data;
+        }
+        catch (Exception ex)
+        {
+            _lookupsError = ex.Message;
+            _tipiSede = Array.Empty<LookupItem>();
+        }
+        finally
+        {
+            _lookupsLoading = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        var result = await GatewayClient.GetOrganizzazioneSedeAsync(Id, SedeId, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare la sede.";
+            _isLoading = false;
+            return;
+        }
+
+        var s = result.Data;
+        _model.Denominazione = s.Denominazione;
+        _model.Indirizzo = s.Indirizzo;
+        _model.NumeroCivico = s.NumeroCivico;
+        _model.CAP = s.CAP;
+        _model.Localita = s.Localita;
+        _model.Provincia = s.Provincia;
+        _model.Nazione = s.Nazione;
+        _model.StatoSede = s.StatoSede;
+        _model.IsSedePrincipale = s.IsSedePrincipale;
+        _model.IsSedeOperativa = s.IsSedeOperativa;
+        _model.DataApertura = s.DataApertura;
+        _model.DataCessazione = s.DataCessazione;
+        _model.TipoSede = s.TipoSedeId.HasValue ? _tipiSede.FirstOrDefault(x => x.Id == s.TipoSedeId.Value) : null;
+
+        _isLoading = false;
+    }
+
+    private void Cancel()
+        => Navigation.NavigateTo($"/organizzazioni/{Id}");
+
+    private Task OnAperturaChanged(DateTime? d) { _model.DataApertura = d; return Task.CompletedTask; }
+    private Task OnCessazioneChanged(DateTime? d) { _model.DataCessazione = d; return Task.CompletedTask; }
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting) return;
+        _errorMessage = null;
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new UpdateSedeRequest(
+                _model.Denominazione,
+                _model.Indirizzo,
+                _model.NumeroCivico,
+                _model.CAP,
+                _model.Localita,
+                _model.Provincia,
+                _model.Nazione,
+                _model.StatoSede,
+                _model.IsSedePrincipale,
+                _model.IsSedeOperativa,
+                _model.DataApertura,
+                _model.DataCessazione,
+                _model.TipoSede?.Id);
+
+            var result = await GatewayClient.UpdateSedeAsync(Id, SedeId, payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Sede aggiornata.", Severity.Success);
+                Navigation.NavigateTo($"/organizzazioni/{Id}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Aggiornamento sede non riuscito.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SoftDeleteAsync()
+    {
+        if (_isSubmitting) return;
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            "Vuoi eliminare (soft delete) questa sede?",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true) return;
+
+        _isSubmitting = true;
+        try
+        {
+            var result = await GatewayClient.SoftDeleteSedeAsync(Id, SedeId, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Sede eliminata (soft).", Severity.Success);
+                Navigation.NavigateTo($"/organizzazioni/{Id}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Eliminazione sede non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

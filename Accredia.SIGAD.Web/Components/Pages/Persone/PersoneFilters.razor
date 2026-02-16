@@ -1,0 +1,164 @@
+@namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex
+
+@using Accredia.SIGAD.Web.Components.Shared
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<SigadFilterPanel Title="Filtri di ricerca"
+                  TitleIcon="@Icons.Material.Filled.FilterList"
+                  ActiveCount="ActiveFiltersCount"
+                  Expanded="@Expanded"
+                  ExpandedChanged="ExpandedChanged"
+                  class="sigad-filters-card">
+
+    <ChildContent>
+        <MudGrid Spacing="2" AlignItems="AlignItems.FlexEnd" Class="pa-4">
+
+            <MudItem xs="12" md="10">
+                <MudTextField T="string"
+                              Label="Cerca per cognome/nome o Codice Fiscale"
+                              Variant="Variant.Outlined"
+                              Value="_localQuery"
+                              ValueChanged="OnLocalQueryChanged"
+                              Immediate="true"
+                              Placeholder="Inserisci almeno 2 caratteri (o CF 16 caratteri)"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              OnKeyDown="OnSearchKeyDown"
+                              FullWidth="true"
+                              @ref="_queryField" />
+            </MudItem>
+
+            <MudItem xs="12" md="2" Class="sigad-filterbar-actions">
+                <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd" Class="sigad-filterbar-buttons">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               DisableElevation="true"
+                               OnClick="ApplyLocalAsync"
+                               StartIcon="@Icons.Material.Filled.FilterAlt">
+                        Applica
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Inherit"
+                               Size="Size.Small"
+                               OnClick="ResetLocalAsync"
+                               StartIcon="@Icons.Material.Filled.RestartAlt">
+                        Reset
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+
+        </MudGrid>
+    </ChildContent>
+
+    <ActiveChips>
+        <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="pa-3 sigad-filterbar-chips">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Filtri attivi:</MudText>
+
+            @if (!string.IsNullOrWhiteSpace(_localQuery))
+            {
+                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Closeable="true"
+                         OnClose="@(() => ClearLocalQuery())">
+                    @($"Ricerca: {BuildShortQueryLabel(_localQuery)}")
+                </MudChip>
+            }
+        </MudStack>
+    </ActiveChips>
+
+</SigadFilterPanel>
+
+@code {
+    [Parameter] public string? Query { get; set; }
+    [Parameter] public EventCallback<string?> QueryChanged { get; set; }
+
+    [Parameter] public int ActiveFiltersCount { get; set; }
+
+    [Parameter] public bool Expanded { get; set; }
+    [Parameter] public EventCallback<bool> ExpandedChanged { get; set; }
+
+    [Parameter] public EventCallback OnApply { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+
+    [Parameter] public EventCallback<MudTextField<string>?> QueryFieldRefChanged { get; set; }
+    private MudTextField<string>? _queryField;
+
+    private string? _localQuery;
+    private bool _hasPendingChanges;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+        => firstRender ? QueryFieldRefChanged.InvokeAsync(_queryField) : Task.CompletedTask;
+
+    protected override void OnParametersSet()
+    {
+        if (_hasPendingChanges)
+        {
+            return;
+        }
+
+        _localQuery = Query;
+    }
+
+    private Task OnLocalQueryChanged(string? value)
+    {
+        _localQuery = value;
+        _hasPendingChanges = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void ClearLocalQuery()
+    {
+        _localQuery = null;
+        _hasPendingChanges = true;
+        _ = HandleLocalClearedAsync();
+    }
+
+    private bool HasLocalFilters()
+        => !string.IsNullOrWhiteSpace(_localQuery);
+
+    private async Task HandleLocalClearedAsync()
+    {
+        if (!HasLocalFilters())
+        {
+            await ResetLocalAsync();
+            return;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyLocalAsync()
+    {
+        _hasPendingChanges = false;
+        await QueryChanged.InvokeAsync(_localQuery);
+
+        if (OnApply.HasDelegate)
+        {
+            await OnApply.InvokeAsync();
+        }
+    }
+
+    private async Task ResetLocalAsync()
+    {
+        _localQuery = null;
+        _hasPendingChanges = false;
+
+        await QueryChanged.InvokeAsync(null);
+
+        if (OnReset.HasDelegate)
+        {
+            await OnReset.InvokeAsync();
+        }
+    }
+
+    private Task OnSearchKeyDown(KeyboardEventArgs args)
+        => args.Key == "Enter" ? ApplyLocalAsync() : Task.CompletedTask;
+
+    private static string BuildShortQueryLabel(string? value)
+    {
+        var v = (value ?? string.Empty).Trim();
+        return v.Length <= 24 ? v : v[..21] + "...";
+    }
+}

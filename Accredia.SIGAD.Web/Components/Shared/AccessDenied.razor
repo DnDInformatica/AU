@@ -1,0 +1,38 @@
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="@($"mt-8 {Class}")">
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Lock">
+        <MudText Typo="Typo.h6">@Title</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            @Message
+        </MudText>
+
+        @if (ShowContactHint)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">
+                Contatta un amministratore di sistema per richiedere l'accesso.
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   Href="@ReturnHref"
+                   StartIcon="@Icons.Material.Filled.Home"
+                   Class="mt-4">
+            @ReturnLabel
+        </MudButton>
+    </MudAlert>
+</MudContainer>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Accesso Negato";
+    [Parameter] public string Message { get; set; } = "Non hai i permessi necessari per accedere a questa pagina.";
+
+    [Parameter] public bool ShowContactHint { get; set; }
+
+    [Parameter] public string ReturnHref { get; set; } = "/";
+    [Parameter] public string ReturnLabel { get; set; } = "Torna alla Home";
+
+    [Parameter] public string? Class { get; set; }
+}
+

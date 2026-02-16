@@ -1,0 +1,61 @@
+@page "/admin"
+@inject UserContext UserContext
+@using MudBlazor
+@using Accredia.SIGAD.Web.Components.Shared
+
+<PageTitle>Admin - SIGAD</PageTitle>
+
+@if (!UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+{
+    <AccessDenied Message="Non hai i permessi necessari per accedere al modulo amministrazione." />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-1">Amministrazione</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+        Accesso rapido alle funzioni di amministrazione.
+    </MudText>
+
+    <MudGrid Spacing="3">
+        @if (UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card pa-4" Elevation="0">
+                    <MudText Typo="Typo.h6">Gestione Utenti</MudText>
+                    <MudText Typo="Typo.caption">Account, ruoli e logout forzato.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/admin/utenti">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+        @if (UserContext.HasPermission("ADMIN.ROLES.MANAGE") || UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card pa-4" Elevation="0">
+                    <MudText Typo="Typo.h6">Gestione Ruoli</MudText>
+                    <MudText Typo="Typo.caption">Assegnazione permessi ai ruoli.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/admin/roles">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+        @if (UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE") || UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Class="sigad-card pa-4" Elevation="0">
+                    <MudText Typo="Typo.h6">Permessi</MudText>
+                    <MudText Typo="Typo.caption">Catalogo permessi.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/admin/permissions">Apri</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    @if (!UserContext.HasPermission("ADMIN.USERS.MANAGE")
+         && !UserContext.HasPermission("ADMIN.ROLES.MANAGE")
+         && !UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info" Class="mt-4">
+            Il modulo Admin è disponibile, ma non hai funzionalità operative assegnate.
+        </MudAlert>
+    }
+</MudContainer>

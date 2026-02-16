@@ -1,0 +1,111 @@
+# sigad.pipeline.yaml - Orchestrazione Prompt SIGAD
+# Usare con run_pipeline.ps1 per esecuzione sequenziale
+
+name: SIGAD Development Pipeline
+version: "1.0"
+workspace: C:\Accredia\Sviluppo\AU
+
+# Configurazione globale
+config:
+  stop_on_error: true
+  pre_check_required: true
+  post_check_required: true
+  reasoning_level: MEDIUM
+
+# Ordine di esecuzione prompt
+stages:
+  - name: Bootstrap
+    command: sigad-bootstrap
+    description: Crea/verifica solution base
+    required: true
+    checks:
+      - type: file
+        path: Accredia.SIGAD.sln
+      - type: build
+        
+  - name: VSA Architecture
+    command: sigad-vsa
+    description: Applica Vertical Slice Architecture
+    required: true
+    depends_on: [Bootstrap]
+    checks:
+      - type: directory
+        path: Accredia.SIGAD.Identity.Api/Features
+      - type: build
+        
+  - name: Database Setup
+    command: sigad-database
+    description: Configura Dapper e schema ownership
+    required: true
+    depends_on: [VSA Architecture]
+    checks:
+      - type: package
+        project: Accredia.SIGAD.Identity.Api
+        package: Dapper
+      - type: build
+        
+  - name: Identity & JWT
+    command: sigad-identity
+    description: Implementa autenticazione JWT
+    required: true
+    depends_on: [Database Setup]
+    checks:
+      - type: health
+        port: 7001
+      - type: endpoint
+        url: http://localhost:7001/auth/login
+        method: POST
+        
+  - name: Tipologiche MVP
+    command: sigad-tipologiche
+    description: Implementa CRUD Tipologiche
+    required: false
+    depends_on: [Database Setup]
+    checks:
+      - type: health
+        port: 7002
+        
+  - name: Anagrafiche MVP
+    command: sigad-anagrafiche
+    description: Implementa CRUD Anagrafiche
+    required: false
+    depends_on: [Database Setup]
+    checks:
+      - type: health
+        port: 7003
+        
+  - name: Gateway Configuration
+    command: sigad-gateway
+    description: Configura YARP routing
+    required: true
+    depends_on: [Identity & JWT]
+    checks:
+      - type: health
+        port: 7100
+      - type: proxy
+        url: http://localhost:7100/identity/health
+        
+  - name: Web Frontend
+    command: sigad-web
+    description: Implementa UI MudBlazor
+    required: true
+    depends_on: [Gateway Configuration]
+    checks:
+      - type: health
+        port: 7000
+        
+  - name: Observability
+    command: sigad-observability
+    description: Configura Serilog e tracing
+    required: false
+    depends_on: [Web Frontend]
+    checks:
+      - type: log_format
+        pattern: CorrelationId
+
+# Post-pipeline verification
+final_checks:
+  - type: sanity_script
+    path: scripts/sanity_checks.ps1
+  - type: integration_test
+    description: Verifica flusso login completo

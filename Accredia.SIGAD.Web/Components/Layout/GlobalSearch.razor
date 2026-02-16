@@ -1,0 +1,291 @@
+@implements IDisposable
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="sigad-search">
+    <MudTextField T="string"
+                  @bind-Value="_query"
+                  @bind-Value:after="OnQueryChanged"
+                  Placeholder="Cerca in tutto SIGAD (organizzazioni, persone, incarichi…)"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Immediate="true"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="sigad-search-input"
+                  @onfocusin="HandleFocus"
+                  @onblur="HandleBlur"
+                  OnKeyDown="HandleKeyDown"
+                  AriaLabel="Ricerca globale SIGAD" />
+
+    <MudPopover Open="_isOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+        <MudPaper Class="pa-3 sigad-search-results" Elevation="2">
+            <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.subtitle2">Risultati</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               Color="Color.Inherit"
+                               OnClick="ClosePopover"
+                               AriaLabel="Chiudi risultati" />
+            </MudStack>
+            <MudDivider Class="my-2" />
+
+            @if (_isLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.caption" Class="mt-2 sigad-search-muted">Ricerca in corso…</MudText>
+            }
+            else if (!string.IsNullOrWhiteSpace(_lastError))
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                    @_lastError
+                </MudAlert>
+                <MudStack Direction="Row" Spacing="1" Class="mt-1">
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="Retry">
+                        Riprova
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                        Verifica stato servizi
+                    </MudButton>
+                </MudStack>
+            }
+            else if (_results is null || _resultsIsEmpty)
+            {
+                @if (_results is not null)
+                {
+                    @SearchGroupBlock("Organizzazioni", "organizzazioni", _results.Organizzazioni)
+                    @SearchGroupBlock("Persone", "persone", _results.Persone)
+                    @SearchGroupBlock("Incarichi", "incarichi", _results.Incarichi)
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="mt-2">Nessun risultato.</MudText>
+                    <MudText Typo="Typo.caption" Class="sigad-search-muted">Prova con un CF, una P.IVA o una parola chiave.</MudText>
+                }
+            }
+            else
+            {
+                @SearchGroupBlock("Organizzazioni", "organizzazioni", _results!.Organizzazioni)
+                @SearchGroupBlock("Persone", "persone", _results!.Persone)
+                @SearchGroupBlock("Incarichi", "incarichi", _results!.Incarichi)
+            }
+        </MudPaper>
+    </MudPopover>
+</div>
+
+@code {
+    private const int DefaultPageSize = 5;
+    private string _query = string.Empty;
+    private bool _isOpen;
+    private bool _isLoading;
+    private bool _resultsIsEmpty;
+    private GlobalSearchResponse? _results;
+    private CancellationTokenSource? _cts;
+    private int _queryVersion;
+    private string? _lastError;
+    private CancellationTokenSource? _blurCts;
+
+    private async Task OnQueryChanged()
+    {
+        // Cancel only the debounce delay. We intentionally avoid cancelling the HTTP request to prevent
+        // TaskCanceledException noise during fast typing (VS may break on thrown exceptions even if caught).
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+        var version = ++_queryVersion;
+
+        var trimmed = _query.Trim();
+        if (trimmed.Length < 2)
+        {
+            _isOpen = false;
+            _results = null;
+            _resultsIsEmpty = false;
+            _lastError = null;
+            StateHasChanged();
+            return;
+        }
+
+        _isOpen = true;
+        _isLoading = true;
+        _resultsIsEmpty = false;
+        _lastError = null;
+        StateHasChanged();
+
+        try
+        {
+            // Debounce per ridurre chiamate al Gateway durante la digitazione.
+            await Task.Delay(350, token);
+
+            // If a newer query arrived while we were waiting, ignore this one.
+            if (version != _queryVersion)
+            {
+                return;
+            }
+
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+            var result = await GatewayClient.SearchGlobalAsync(trimmed, 1, DefaultPageSize, timeoutCts.Token);
+            if (version != _queryVersion)
+            {
+                return;
+            }
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _results = result.Data;
+                _resultsIsEmpty = (_results.Organizzazioni.Items.Count
+                                   + _results.Persone.Items.Count
+                                   + _results.Incarichi.Items.Count) == 0;
+            }
+            else
+            {
+                _results = null;
+                _resultsIsEmpty = true;
+                _lastError = string.IsNullOrWhiteSpace(result.Error) ? null : result.Error;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Debounce cancelled or request timeout.
+            if (version == _queryVersion)
+            {
+                _results = null;
+                _resultsIsEmpty = true;
+                _lastError = "Ricerca non disponibile (timeout).";
+            }
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            // Gateway unavailable: treat as empty and keep UX stable.
+            _results = null;
+            _resultsIsEmpty = true;
+            _lastError = "Ricerca non disponibile (Gateway non raggiungibile).";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Retry()
+    {
+        await OnQueryChanged();
+    }
+
+    private void HandleFocus()
+    {
+        _blurCts?.Cancel();
+        if (_results is not null)
+        {
+            _isOpen = true;
+        }
+    }
+
+    private async Task HandleBlur(FocusEventArgs args)
+    {
+        _blurCts?.Cancel();
+        _blurCts?.Dispose();
+        _blurCts = new CancellationTokenSource();
+        var token = _blurCts.Token;
+
+        try
+        {
+            // Small delay so clicks inside the popover can register.
+            await Task.Delay(200, token);
+            _isOpen = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+            // ignore
+        }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            _isOpen = false;
+        }
+    }
+
+    private RenderFragment SearchGroupBlock(string title, string routeBase, SearchGroup<SearchItem> group) => @<div>
+        <div class="sigad-search-group">
+            <MudText Typo="Typo.overline" Class="sigad-search-group-title">@title</MudText>
+            <MudText Typo="Typo.caption" Class="sigad-search-group-count">@group.TotalCount</MudText>
+        </div>
+
+        @if (group.Items.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Class="sigad-search-empty">Nessun risultato</MudText>
+        }
+        else
+        {
+            <MudList T="SearchItem" Dense="true" Class="sigad-search-list">
+                @foreach (var item in group.Items)
+                {
+                    <MudListItem T="SearchItem"
+                                 OnClick="@((MouseEventArgs _) => NavigateTo(routeBase, item))"
+                                 Class="sigad-search-item">
+                        <MudText Typo="Typo.body2">@item.Title</MudText>
+
+                        @if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                        {
+                            <MudText Typo="Typo.caption" Class="sigad-search-subtitle">@item.Subtitle</MudText>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(item.CodiceFiscale) || !string.IsNullOrWhiteSpace(item.PartitaIVA))
+                        {
+                            <div class="sigad-search-id-grid">
+                                <MudText Typo="Typo.caption" Class="sigad-search-subtitle">CF: @(string.IsNullOrWhiteSpace(item.CodiceFiscale) ? "-" : item.CodiceFiscale)</MudText>
+                                <MudText Typo="Typo.caption" Class="sigad-search-subtitle">P.IVA: @(string.IsNullOrWhiteSpace(item.PartitaIVA) ? "-" : item.PartitaIVA)</MudText>
+                            </div>
+                        }
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </div>;
+
+    private void NavigateTo(string routeBase, SearchItem item)
+    {
+        var target = routeBase switch
+        {
+            "organizzazioni" => $"/organizzazioni/{item.Id}",
+            "persone" => $"/persone?q={Uri.EscapeDataString(BuildListQuery(item))}",
+            "incarichi" => $"/incarichi?q={Uri.EscapeDataString(BuildListQuery(item))}",
+            _ => "/"
+        };
+
+        _isOpen = false;
+        Navigation.NavigateTo(target);
+    }
+
+    private static string BuildListQuery(SearchItem item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.CodiceFiscale))
+        {
+            return item.CodiceFiscale;
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.PartitaIVA))
+        {
+            return item.PartitaIVA;
+        }
+
+        return item.Title;
+    }
+
+    private void ClosePopover(MouseEventArgs _)
+        => _isOpen = false;
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _blurCts?.Cancel();
+        _blurCts?.Dispose();
+    }
+}

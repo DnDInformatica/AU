@@ -1,0 +1,321 @@
+@page "/organizzazioni/{id:int}/modifica"
+@namespace Accredia.SIGAD.Web.Components.Pages.Anagrafiche.Organizzazioni
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Modifica organizzazione"
+                Subtitle="@(_detail is null ? $"Organizzazione #{Id}" : _detail.Denominazione)"
+                Breadcrumbs="@($"Home / Anagrafiche / Organizzazioni / {Id} / Modifica")" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+            <MudDivider Class="my-2" />
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ReloadAsync" Disabled="_isSubmitting">
+                Riprova
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/system-status">
+                Verifica stato servizi
+            </MudButton>
+        </MudAlert>
+    }
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 sigad-card d-flex align-center justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="ml-3">Caricamento...</MudText>
+        </MudPaper>
+    }
+    else if (_detail is not null)
+    {
+        <MudPaper Class="pa-4 sigad-card">
+            <MudForm @ref="_form">
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" md="8">
+                        <MudTextField T="string"
+                                      Label="Denominazione"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Denominazione obbligatoria"
+                                      @bind-Value="_model.Denominazione"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <LookupAutocomplete Label="Stato attività"
+                                            Items="_statiAttivita"
+                                            @bind-Value="_model.StatoAttivita"
+                                            Clearable="false"
+                                            Required="true"
+                                            RequiredError="Stato attività obbligatorio" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Ragione sociale"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.RagioneSociale"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string"
+                                      Label="Partita IVA"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.PartitaIVA"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      HelperText="11 cifre" />
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string"
+                                      Label="Codice Fiscale"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.CodiceFiscale"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      HelperText="16 caratteri" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string"
+                                      Label="N. registro imprese"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.NRegistroImprese"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="9">
+                        <MudTextField T="string"
+                                      Label="Oggetto sociale"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_model.OggettoSociale"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      Lines="3" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker Label="Data iscrizione RI"
+                                       Variant="Variant.Outlined"
+                                       @bind-Date="_model.DataIscrizioneIscrizioneRI"
+                                       Clearable="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker Label="Data costituzione"
+                                       Variant="Variant.Outlined"
+                                       @bind-Date="_model.DataCostituzione"
+                                       Clearable="true" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudStack Direction="Row" Spacing="1" Justify="Justify.SpaceBetween">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="SoftDeleteAsync" Disabled="_isSubmitting">
+                        Elimina (soft)
+                    </MudButton>
+
+                    <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                            Annulla
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                            @if (_isSubmitting)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                <span class="ml-2">Salvataggio...</span>
+                            }
+                            else
+                            {
+                                <span>Salva</span>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private sealed class FormModel
+    {
+        public string Denominazione { get; set; } = string.Empty;
+        public string? RagioneSociale { get; set; }
+        public string? PartitaIVA { get; set; }
+        public string? CodiceFiscale { get; set; }
+        public string? NRegistroImprese { get; set; }
+        public string? OggettoSociale { get; set; }
+        public DateTime? DataIscrizioneIscrizioneRI { get; set; }
+        public DateTime? DataCostituzione { get; set; }
+        public LookupItem? StatoAttivita { get; set; }
+    }
+
+    private OrganizzazioneDetail? _detail;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private readonly FormModel _model = new();
+    private readonly List<LookupItem> _statiAttivita = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+
+    protected override async Task OnParametersSetAsync()
+        => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        if (_statiAttivita.Count == 0)
+        {
+            var lookups = await GatewayClient.GetOrganizzazioneStatiAttivitaLookupsAsync(CancellationToken.None);
+            if (lookups.IsSuccess && lookups.Data is not null)
+            {
+                _statiAttivita.Clear();
+                _statiAttivita.AddRange(lookups.Data);
+            }
+
+            if (_statiAttivita.Count == 0)
+            {
+                _statiAttivita.AddRange(new[]
+                {
+                    new LookupItem(1, "Attiva"),
+                    new LookupItem(2, "Sospesa"),
+                    new LookupItem(3, "Cessata"),
+                });
+            }
+        }
+
+        var result = await GatewayClient.GetOrganizzazioneDetailAsync(Id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare il dettaglio organizzazione.";
+            _detail = null;
+            _isLoading = false;
+            return;
+        }
+
+        _detail = result.Data;
+        _model.Denominazione = _detail.Denominazione;
+        _model.RagioneSociale = _detail.RagioneSociale;
+        _model.PartitaIVA = _detail.PartitaIVA;
+        _model.CodiceFiscale = _detail.CodiceFiscale;
+        _model.NRegistroImprese = _detail.NRegistroImprese;
+        _model.OggettoSociale = _detail.OggettoSociale;
+        _model.DataIscrizioneIscrizioneRI = _detail.DataIscrizioneIscrizioneRI;
+        _model.DataCostituzione = _detail.DataCostituzione;
+        _model.StatoAttivita = _statiAttivita.FirstOrDefault(x => x.Id == _detail.StatoAttivitaId) ?? _statiAttivita.FirstOrDefault();
+
+        _isLoading = false;
+    }
+
+    private void Cancel()
+        => Navigation.NavigateTo($"/organizzazioni/{Id}");
+
+    private async Task SubmitAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        if (_form is null)
+        {
+            _errorMessage = "Form non inizializzata.";
+            return;
+        }
+
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var payload = new UpdateOrganizzazioneRequest(
+                _model.Denominazione,
+                _model.RagioneSociale,
+                _model.PartitaIVA,
+                _model.CodiceFiscale,
+                (byte?)_model.StatoAttivita?.Id,
+                _model.NRegistroImprese,
+                TipoCodiceNaturaGiuridicaId: null,
+                _model.OggettoSociale,
+                _model.DataIscrizioneIscrizioneRI,
+                _model.DataCostituzione);
+
+            var result = await GatewayClient.UpdateOrganizzazioneAsync(Id, payload, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Organizzazione aggiornata.", Severity.Success);
+                Navigation.NavigateTo($"/organizzazioni/{result.Data.OrganizzazioneId}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Aggiornamento non riuscito.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SoftDeleteAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            "Vuoi eliminare (soft delete) questa organizzazione?",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var result = await GatewayClient.SoftDeleteOrganizzazioneAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Organizzazione eliminata (soft).", Severity.Success);
+                Navigation.NavigateTo("/organizzazioni");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Eliminazione non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

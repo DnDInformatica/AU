@@ -1,0 +1,170 @@
+@using MudBlazor
+@using Accredia.SIGAD.Web.Models.Admin
+@inject AdminClient AdminClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <div class="d-flex align-center mb-4">
+            <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-3">
+                @GetUserInitials()
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h6">@User.Username</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@User.Email</MudText>
+            </div>
+        </div>
+
+        <MudDivider Class="mb-4" />
+
+        @if (_isLoadingRoles)
+        {
+            <MudSkeleton Width="100%" Height="40px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="40px" Class="mb-2" />
+            <MudSkeleton Width="100%" Height="40px" Class="mb-2" />
+        }
+        else if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                @_errorMessage
+            </MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle1" Class="mb-3">
+                Seleziona i ruoli da assegnare:
+            </MudText>
+
+            @foreach (var role in _availableRoles)
+            {
+                <div class="mb-3">
+                    <MudCheckBox @bind-Value="@_selectedRoles[role.Name]"
+                                 Label="@role.Name"
+                                 Color="Color.Primary"
+                                 Dense="true" />
+                </div>
+            }
+
+            @if (!_selectedRoles.Any(x => x.Value))
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Text" Icon="@Icons.Material.Filled.Info" Class="mt-4">
+                    L'utente non avrà accesso al sistema senza ruoli assegnati
+                </MudAlert>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Disabled="@_isSaving">
+            Annulla
+        </MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="SaveRolesAsync"
+                   Disabled="@(_isSaving || _isLoadingRoles)"
+                   StartIcon="@(_isSaving ? null : Icons.Material.Filled.Save)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <span class="ml-2">Salvataggio...</span>
+            }
+            else
+            {
+                <span>Salva</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public UserListDto User { get; set; } = null!;
+
+    private List<RoleDto> _availableRoles = new();
+    private Dictionary<string, bool> _selectedRoles = new();
+    private bool _isLoadingRoles;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRolesAsync();
+        InitializeSelectedRoles();
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        _isLoadingRoles = true;
+        try
+        {
+            var result = await AdminClient.GetAllRolesAsync();
+            if (result.IsSuccess && result.Data != null)
+            {
+                _availableRoles = result.Data;
+            }
+            else
+            {
+                _errorMessage = "Impossibile caricare i ruoli disponibili";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore: {ex.Message}";
+        }
+        finally
+        {
+            _isLoadingRoles = false;
+        }
+    }
+
+    private void InitializeSelectedRoles()
+    {
+        foreach (var role in _availableRoles)
+        {
+            _selectedRoles[role.Name] = User.Roles.Contains(role.Name);
+        }
+    }
+
+    private async Task SaveRolesAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            var selectedRoleNames = _selectedRoles
+                .Where(x => x.Value)
+                .Select(x => x.Key)
+                .ToList();
+
+            var request = new UpdateUserRolesRequest(User.UserId, selectedRoleNames);
+            var result = await AdminClient.UpdateUserRolesAsync(request);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Ruoli aggiornati con successo", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add($"Errore: {result.Error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrWhiteSpace(User.Username)) return "?";
+        var parts = User.Username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+            return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return string.Concat(parts[0][0], parts[^1][0]).ToUpperInvariant();
+    }
+}

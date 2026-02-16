@@ -1,0 +1,70 @@
+@implements IDisposable
+@inject QuickDrawerService DrawerService
+
+<MudDrawer Open="@DrawerService.IsOpen"
+           OpenChanged="OnOpenChanged"
+           Anchor="Anchor.Right"
+           Variant="DrawerVariant.Temporary"
+           Elevation="0"
+           Width="440px"
+           ClipMode="DrawerClipMode.Never"
+           Overlay="true"
+           OverlayAutoClose="true"
+           Class="sigad-quickdrawer">
+    @if (DrawerService.Current is not null)
+    {
+        <div class="sigad-quickdrawer-header">
+            <div class="sigad-quickdrawer-headtext">
+                <MudText Typo="Typo.h6">@DrawerService.Current.Title</MudText>
+                @if (!string.IsNullOrWhiteSpace(DrawerService.Current.Subtitle))
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@DrawerService.Current.Subtitle</MudText>
+                }
+            </div>
+
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Color="Color.Inherit"
+                           Size="Size.Medium"
+                           OnClick="Close"
+                           AriaLabel="Chiudi" />
+        </div>
+
+        <div class="sigad-quickdrawer-body">
+            @DrawerService.Current.Body
+        </div>
+
+        @if (DrawerService.Current.Actions is not null)
+        {
+            <div class="sigad-quickdrawer-actions">
+                @DrawerService.Current.Actions
+            </div>
+        }
+    }
+</MudDrawer>
+
+@code {
+    protected override void OnInitialized()
+    {
+        DrawerService.Changed += OnChanged;
+    }
+
+    private void OnChanged()
+        => InvokeAsync(StateHasChanged);
+
+    private void Close()
+        => DrawerService.Close();
+
+    private void OnOpenChanged(bool open)
+    {
+        if (!open)
+        {
+            DrawerService.Close();
+        }
+    }
+
+    public void Dispose()
+    {
+        DrawerService.Changed -= OnChanged;
+    }
+}
+

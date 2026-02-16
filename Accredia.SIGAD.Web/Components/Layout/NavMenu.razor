@@ -1,0 +1,135 @@
+@inject UserContext UserContext
+
+<MudNavMenu Class="sigad-nav">
+    <div class="sigad-nav-brand">
+        @if (!IsCollapsed)
+        {
+            <div class="sigad-brand-left">
+                <div class="sigad-brand-meta">
+                    <MudText Typo="Typo.h6" Class="sigad-brand-title">SIGAD</MudText>
+                    <MudText Typo="Typo.caption" Class="sigad-brand-subtitle">Accredia</MudText>
+                </div>
+            </div>
+        }
+        <MudIconButton Icon="@(_isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                       Color="Color.Inherit"
+                       Size="Size.Small"
+                       Class="sigad-collapse-btn"
+                       OnClick="@(() => OnToggleDrawer.InvokeAsync())" />
+    </div>
+
+    @NavLink("Dashboard", Icons.Material.Filled.Home, "/", NavLinkMatch.All)
+
+    @if (_hasAnagraficheAccess)
+    {
+        @if (!IsCollapsed)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.overline" Class="sigad-nav-section">Anagrafiche</MudText>
+        }
+
+        @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+        {
+            @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
+        }
+        @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
+        {
+            @NavLink("Persone", Icons.Material.Filled.People, "/persone")
+        }
+        @if (UserContext.HasPermission("MODULE.INC.ACCESS"))
+        {
+            @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
+        }
+    }
+
+    @if (UserContext.HasPermission("MODULE.TIPO.ACCESS"))
+    {
+        @if (!IsCollapsed)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.overline" Class="sigad-nav-section">Configurazione</MudText>
+        }
+        @NavLink("Tipologiche", Icons.Material.Filled.List, "/tipologiche")
+    }
+
+    @if (_hasAdminAccess)
+    {
+        @if (!IsCollapsed)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.overline" Class="sigad-nav-section">Amministrazione</MudText>
+        }
+        
+        @if (UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+        {
+            @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
+        }
+        
+        @if (UserContext.HasPermission("ADMIN.ROLES.MANAGE"))
+        {
+            @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
+        }
+        
+        @if (UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+        {
+            @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
+        }
+    }
+
+    @* Login entry is intentionally kept in the topbar; avoid duplicating it in the sidebar. *@
+</MudNavMenu>
+
+@code {
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback OnToggleDrawer { get; set; }
+
+    private bool _isCollapsed => IsCollapsed;
+    
+    private bool _hasAnagraficheAccess =>
+        UserContext.HasPermission("MODULE.ORG.ACCESS")
+        || UserContext.HasPermission("MODULE.PERS.ACCESS")
+        || UserContext.HasPermission("MODULE.INC.ACCESS");
+
+    private bool _hasAdminAccess =>
+        UserContext.IsAdmin && UserContext.HasPermission("MODULE.ADMIN.ACCESS");
+
+    private RenderFragment NavLink(string label, string icon, string href, NavLinkMatch match = NavLinkMatch.Prefix)
+        => builder =>
+        {
+            if (IsCollapsed)
+            {
+                builder.OpenComponent<MudTooltip>(0);
+                builder.AddAttribute(1, "Text", label);
+                builder.AddAttribute(2, "Placement", Placement.Right);
+                builder.AddAttribute(3, "Class", "sigad-nav-tooltip");
+                builder.AddAttribute(4, "ChildContent", (RenderFragment)(tooltipBuilder =>
+                {
+                    tooltipBuilder.OpenComponent<MudNavLink>(10);
+                    tooltipBuilder.AddAttribute(11, "Href", href);
+                    tooltipBuilder.AddAttribute(12, "Icon", icon);
+                    tooltipBuilder.AddAttribute(13, "Match", match);
+                    tooltipBuilder.AddAttribute(14, "ActiveClass", "sigad-nav-active");
+                    tooltipBuilder.AddAttribute(15, "Class", "sigad-nav-link");
+                    tooltipBuilder.AddAttribute(16, "ChildContent", (RenderFragment)(childBuilder =>
+                    {
+                        // Collapsed (mini) menu: icon-only. Tooltip already contains the label.
+                    }));
+                    tooltipBuilder.CloseComponent();
+                }));
+                builder.CloseComponent();
+                return;
+            }
+
+            builder.OpenComponent<MudNavLink>(30);
+            builder.AddAttribute(31, "Href", href);
+            builder.AddAttribute(32, "Icon", icon);
+            builder.AddAttribute(33, "Match", match);
+            builder.AddAttribute(34, "ActiveClass", "sigad-nav-active");
+            builder.AddAttribute(35, "Class", "sigad-nav-link");
+            builder.AddAttribute(36, "ChildContent", (RenderFragment)(childBuilder =>
+            {
+                childBuilder.AddContent(40, label);
+            }));
+            builder.CloseComponent();
+        };
+}
