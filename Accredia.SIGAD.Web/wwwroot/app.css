@@ -470,7 +470,8 @@ a {
 }
 
 .main-content {
-    padding: 24px 32px 40px;
+    /* Keep content below fixed MudAppBar; preserve design spacing. */
+    padding: calc(var(--mud-appbar-height, 64px) + 24px) 32px 40px;
     max-width: 1440px;
     margin: 0 auto;
     width: 100%;
@@ -882,6 +883,6 @@ a {
     }
 
     .main-content {
-        padding: 16px 20px 32px;
+        padding: calc(var(--mud-appbar-height, 56px) + 16px) 20px 32px;
     }
 }

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using OpenTelemetry.Trace;
 using Accredia.SIGAD.Web.Components;
+using MudBlazor;
 using MudBlazor.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -26,6 +27,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+MudGlobal.DialogDefaults.DefaultFocus = DefaultFocus.None;
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ProtectedSessionStorage>();
