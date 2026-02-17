@@ -1,0 +1,1634 @@
+@page "/risorse-umane/dipendenti/{Id:int}"
+@namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.RisorseUmane
+
+@if (!CanReadDipendente)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Dettaglio dipendente"
+                Subtitle="@($"Scheda #{Id}")"
+                Breadcrumbs="Home / Risorse Umane / Dipendenti / Dettaglio" />
+
+    @if (_isLoading)
+    {
+        <MudPaper Class="pa-6 d-flex justify-center">
+            <MudProgressCircular Indeterminate="true" />
+        </MudPaper>
+    }
+    else if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+            @_errorMessage
+        </MudAlert>
+    }
+    else if (_detail is not null)
+    {
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudText Typo="Typo.h6">Dati dipendente</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">Matricola: @_detail.Dipendente.Matricola</MudListItem>
+                        <MudListItem T="string">Stato dipendente ID: @_detail.Dipendente.StatoDipendenteId</MudListItem>
+                        <MudListItem T="string">Data assunzione: @_detail.Dipendente.DataAssunzione.ToString("yyyy-MM-dd")</MudListItem>
+                        <MudListItem T="string">Data cessazione: @(_detail.Dipendente.DataCessazione?.ToString("yyyy-MM-dd") ?? "-")</MudListItem>
+                        <MudListItem T="string">Email aziendale: @(_detail.Dipendente.EmailAziendale ?? "-")</MudListItem>
+                        <MudListItem T="string">Telefono interno: @(_detail.Dipendente.TelefonoInterno ?? "-")</MudListItem>
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudText Typo="Typo.h6">Persona collegata</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">ID Persona: @_detail.Persona.Dettaglio.PersonaId</MudListItem>
+                        <MudListItem T="string">Cognome e nome: @_detail.Persona.Dettaglio.Cognome @_detail.Persona.Dettaglio.Nome</MudListItem>
+                        <MudListItem T="string">Codice fiscale: @(_detail.Persona.Dettaglio.CodiceFiscale ?? "-")</MudListItem>
+                        <MudListItem T="string">Data nascita: @_detail.Persona.Dettaglio.DataNascita.ToString("yyyy-MM-dd")</MudListItem>
+                    </MudList>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Primary"
+                               Href="@($"/persone/{_detail.Persona.Dettaglio.PersonaId}")">
+                        Apri dettaglio persona
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudText Typo="Typo.h6">Anagrafica completa persona (sintesi)</MudText>
+                    <MudGrid Spacing="1" Class="mt-2">
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Email: @_detail.Persona.Email.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Telefoni: @_detail.Persona.Telefoni.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Indirizzi: @_detail.Persona.Indirizzi.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Qualifiche: @_detail.Persona.Qualifiche.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Relazioni personali: @_detail.Persona.RelazioniPersonali.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Consensi: @_detail.Persona.Consensi.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Richieste GDPR: @_detail.Persona.RichiesteGdpr.Count</MudChip></MudItem>
+                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Esercizio diritti: @_detail.Persona.RichiesteEsercizioDiritti.Count</MudChip></MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Azioni dipendente</MudText>
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ToggleEdit" Disabled="@(!CanUpdateDipendente || _isSaving || _isDeleting)">
+                                @(_isEditMode ? "Annulla modifica" : "Modifica")
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteDipendenteAsync" Disabled="@(!CanDeleteDipendente || _isSaving || _isDeleting)">
+                                @(_confirmDelete ? "Conferma eliminazione" : "Elimina")
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                    @if (!CanUpdateDipendente || !CanDeleteDipendente)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-3">
+                            Accesso parziale: modifica richiede <code>HR.DIP.UPDATE</code>, eliminazione richiede <code>HR.DIP.DELETE</code>.
+                        </MudAlert>
+                    }
+
+                    @if (_confirmDelete)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">
+                            Conferma l'eliminazione cliccando di nuovo su "Conferma eliminazione".
+                        </MudAlert>
+                    }
+
+                    @if (_isEditMode)
+                    {
+                        <MudGrid Spacing="2" Class="mt-2">
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Matricola"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_editModel.Matricola"
+                                              Required="true"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Email aziendale"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_editModel.EmailAziendale"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Telefono interno"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_editModel.TelefonoInterno"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int"
+                                                 Label="Stato dipendente ID"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_editModel.StatoDipendenteId"
+                                                 Min="1"
+                                                 Max="999999"
+                                                 Required="true"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data assunzione"
+                                               Variant="Variant.Outlined"
+                                               Date="_editModel.DataAssunzione"
+                                               DateChanged="OnDataAssunzioneChanged"
+                                               Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data cessazione"
+                                               Variant="Variant.Outlined"
+                                               Date="_editModel.DataCessazione"
+                                               DateChanged="OnDataCessazioneChanged"
+                                               Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudSwitch T="bool"
+                                           Label="Abilitato attivita ispettiva"
+                                           Color="Color.Primary"
+                                           @bind-Value="_editModel.AbilitatoAttivitaIspettiva" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Note"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_editModel.Note"
+                                              Lines="3"
+                                              FullWidth="true" />
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="CancelEdit" Disabled="_isSaving">
+                                Annulla
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveDipendenteAsync" Disabled="_isSaving">
+                                @if (_isSaving)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                    <span class="ml-2">Salvataggio...</span>
+                                }
+                                else
+                                {
+                                    <span>Salva</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Contratti</MudText>
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenNewContratto" Disabled="@(!CanCreateContratti || _isSavingContratto || _isLoadingContratti)">
+                                Nuovo contratto
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoadContrattiAsync" Disabled="@(!CanReadContratti || _isLoadingContratti)">
+                                Aggiorna
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                    @if (!CanReadContratti || !CanCreateContratti || !CanUpdateContratti || !CanDeleteContratti)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-3">
+                            Contratti: read <code>HR.CONTRATTI.LIST/READ</code>, create <code>HR.CONTRATTI.CREATE</code>, update <code>HR.CONTRATTI.UPDATE</code>, delete <code>HR.CONTRATTI.DELETE</code>.
+                        </MudAlert>
+                    }
+
+                    @if (_isLoadingContratti)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="mt-2 mb-2" />
+                    }
+                    else if (_contratti.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2">Nessun contratto presente.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable T="ContrattoDto" Items="_contratti" Dense="true" Hover="true" Class="mt-2">
+                            <HeaderContent>
+                                <MudTh>ID</MudTh>
+                                <MudTh>Tipo ID</MudTh>
+                                <MudTh>Data inizio</MudTh>
+                                <MudTh>Data fine</MudTh>
+                                <MudTh>Corrente</MudTh>
+                                <MudTh>RAL</MudTh>
+                                <MudTh>Azioni</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="ID">@context.ContrattoId</MudTd>
+                                <MudTd DataLabel="Tipo ID">@context.TipoContrattoId</MudTd>
+                                <MudTd DataLabel="Data inizio">@context.DataInizio.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd DataLabel="Data fine">@(context.DataFine?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                                <MudTd DataLabel="Corrente">@(context.IsContrattoCorrente ? "Si" : "No")</MudTd>
+                                <MudTd DataLabel="RAL">@(context.RAL?.ToString("0.00") ?? "-")</MudTd>
+                                <MudTd DataLabel="Azioni">
+                                    <MudStack Direction="Row" Spacing="1">
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OpenEditContratto(context))" Disabled="@(!CanUpdateContratti)">
+                                            Modifica
+                                        </MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info" OnClick="@(() => ToggleStoricoContrattoAsync(context.ContrattoId))">
+                                            Storico
+                                        </MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" OnClick="@(() => DeleteContrattoAsync(context.ContrattoId))" Disabled="@(!CanDeleteContratti)">
+                                            @(_confirmDeleteContrattoId == context.ContrattoId ? "Conferma" : "Elimina")
+                                        </MudButton>
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+
+                    @if (_showContrattoForm)
+                    {
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle1">@(_isEditingContratto ? "Modifica contratto" : "Nuovo contratto")</MudText>
+                        <MudGrid Spacing="2" Class="mt-1">
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int"
+                                                 Label="Tipo contratto ID"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_contrattoForm.TipoContrattoId"
+                                                 Min="1"
+                                                 Max="999999"
+                                                 Required="true"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data inizio"
+                                               Variant="Variant.Outlined"
+                                               Date="_contrattoForm.DataInizio"
+                                               DateChanged="OnContrattoDataInizioChanged"
+                                               Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data fine"
+                                               Variant="Variant.Outlined"
+                                               Date="_contrattoForm.DataFine"
+                                               DateChanged="OnContrattoDataFineChanged"
+                                               Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudSwitch T="bool"
+                                           Label="Contratto corrente"
+                                           Color="Color.Primary"
+                                           @bind-Value="_contrattoForm.IsContrattoCorrente" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Livello inquadramento"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_contrattoForm.LivelloInquadramento"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="CCNL applicato"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_contrattoForm.CcnlApplicato"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal?"
+                                                 Label="RAL"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_contrattoForm.Ral"
+                                                 Min="0"
+                                                 Max="999999999"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal?"
+                                                 Label="% Part-time"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_contrattoForm.PercentualePartTime"
+                                                 Min="0"
+                                                 Max="100"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal?"
+                                                 Label="Ore settimanali"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_contrattoForm.OreLavoroSettimanali"
+                                                 Min="0"
+                                                 Max="200"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Note"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_contrattoForm.Note"
+                                              Lines="2"
+                                              FullWidth="true" />
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="CancelContrattoEdit" Disabled="_isSavingContratto">
+                                Annulla
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveContrattoAsync" Disabled="@((!CanCreateContratti && !_isEditingContratto) || (!CanUpdateContratti && _isEditingContratto) || _isSavingContratto)">
+                                @if (_isSavingContratto)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                    <span class="ml-2">Salvataggio...</span>
+                                }
+                                else
+                                {
+                                    <span>Salva contratto</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    }
+
+                    @if (_showStoricoContratto && _contrattoStorico.Count > 0)
+                    {
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle1">Storico contratto #@_storicoContrattoId</MudText>
+                        <MudTable T="ContrattoStoricoDto" Items="_contrattoStorico" Dense="true" Hover="true" Class="mt-2">
+                            <HeaderContent>
+                                <MudTh>Inizio validita</MudTh>
+                                <MudTh>Fine validita</MudTh>
+                                <MudTh>Tipo ID</MudTh>
+                                <MudTh>Data inizio</MudTh>
+                                <MudTh>Data fine</MudTh>
+                                <MudTh>Corrente</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Inizio validita">@context.DataInizioValidita.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                <MudTd DataLabel="Fine validita">@context.DataFineValidita.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                <MudTd DataLabel="Tipo ID">@context.TipoContrattoId</MudTd>
+                                <MudTd DataLabel="Data inizio">@context.DataInizio.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd DataLabel="Data fine">@(context.DataFine?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                                <MudTd DataLabel="Corrente">@(context.IsContrattoCorrente ? "Si" : "No")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Dotazioni</MudText>
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenNewDotazione" Disabled="@(!CanCreateDotazioni || _isSavingDotazione || _isLoadingDotazioni)">
+                                Nuova dotazione
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoadDotazioniAsync" Disabled="@(!CanReadDotazioni || _isLoadingDotazioni)">
+                                Aggiorna
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                    @if (!CanReadDotazioni || !CanCreateDotazioni || !CanUpdateDotazioni || !CanDeleteDotazioni)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-3">
+                            Dotazioni: read <code>HR.DOTAZIONI.LIST/READ</code>, create <code>HR.DOTAZIONI.CREATE</code>, update <code>HR.DOTAZIONI.UPDATE</code>, delete <code>HR.DOTAZIONI.DELETE</code>.
+                        </MudAlert>
+                    }
+
+                    @if (_isLoadingDotazioni)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="mt-2 mb-2" />
+                    }
+                    else if (_dotazioni.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2">Nessuna dotazione presente.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable T="DotazioneDto" Items="_dotazioni" Dense="true" Hover="true" Class="mt-2">
+                            <HeaderContent>
+                                <MudTh>ID</MudTh>
+                                <MudTh>Tipo ID</MudTh>
+                                <MudTh>Descrizione</MudTh>
+                                <MudTh>Inventario</MudTh>
+                                <MudTh>Assegnazione</MudTh>
+                                <MudTh>Restituito</MudTh>
+                                <MudTh>Azioni</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="ID">@context.DotazioneId</MudTd>
+                                <MudTd DataLabel="Tipo ID">@context.TipoDotazioneId</MudTd>
+                                <MudTd DataLabel="Descrizione">@context.Descrizione</MudTd>
+                                <MudTd DataLabel="Inventario">@(context.NumeroInventario ?? "-")</MudTd>
+                                <MudTd DataLabel="Assegnazione">@context.DataAssegnazione.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd DataLabel="Restituito">@(context.IsRestituito ? "Si" : "No")</MudTd>
+                                <MudTd DataLabel="Azioni">
+                                    <MudStack Direction="Row" Spacing="1">
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OpenEditDotazione(context))" Disabled="@(!CanUpdateDotazioni)">
+                                            Modifica
+                                        </MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" OnClick="@(() => DeleteDotazioneAsync(context.DotazioneId))" Disabled="@(!CanDeleteDotazioni)">
+                                            @(_confirmDeleteDotazioneId == context.DotazioneId ? "Conferma" : "Elimina")
+                                        </MudButton>
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+
+                    @if (_showDotazioneForm)
+                    {
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle1">@(_isEditingDotazione ? "Modifica dotazione" : "Nuova dotazione")</MudText>
+                        <MudGrid Spacing="2" Class="mt-1">
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int"
+                                                 Label="Tipo dotazione ID"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_dotazioneForm.TipoDotazioneId"
+                                                 Min="1"
+                                                 Max="999999"
+                                                 Required="true"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="Descrizione"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_dotazioneForm.Descrizione"
+                                              Required="true"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudSwitch T="bool"
+                                           Label="Restituito"
+                                           Color="Color.Primary"
+                                           @bind-Value="_dotazioneForm.IsRestituito" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Numero inventario"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_dotazioneForm.NumeroInventario"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Numero serie"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_dotazioneForm.NumeroSerie"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudDatePicker Label="Data assegnazione"
+                                               Variant="Variant.Outlined"
+                                               Date="_dotazioneForm.DataAssegnazione"
+                                               DateChanged="OnDotazioneDataAssegnazioneChanged"
+                                               Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudDatePicker Label="Data restituzione"
+                                               Variant="Variant.Outlined"
+                                               Date="_dotazioneForm.DataRestituzione"
+                                               DateChanged="OnDotazioneDataRestituzioneChanged"
+                                               Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Note"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_dotazioneForm.Note"
+                                              Lines="2"
+                                              FullWidth="true" />
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="CancelDotazioneEdit" Disabled="_isSavingDotazione">
+                                Annulla
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveDotazioneAsync" Disabled="@((!CanCreateDotazioni && !_isEditingDotazione) || (!CanUpdateDotazioni && _isEditingDotazione) || _isSavingDotazione)">
+                                @if (_isSavingDotazione)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                    <span class="ml-2">Salvataggio...</span>
+                                }
+                                else
+                                {
+                                    <span>Salva dotazione</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Formazione obbligatoria</MudText>
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenNewFormazione" Disabled="@(!CanCreateFormazione || _isSavingFormazione || _isLoadingFormazione)">
+                                Nuova formazione
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoadFormazioneAsync" Disabled="@(!CanReadFormazione || _isLoadingFormazione)">
+                                Aggiorna
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                    @if (!CanReadFormazione || !CanCreateFormazione || !CanUpdateFormazione || !CanDeleteFormazione)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-3">
+                            Formazione: read <code>HR.FORM.LIST/READ</code>, create <code>HR.FORM.CREATE</code>, update <code>HR.FORM.UPDATE</code>, delete <code>HR.FORM.DELETE</code>.
+                        </MudAlert>
+                    }
+
+                    @if (_isLoadingFormazione)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="mt-2 mb-2" />
+                    }
+                    else if (_formazioni.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2">Nessun record formazione presente.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable T="FormazioneObbligatoriaDto" Items="_formazioni" Dense="true" Hover="true" Class="mt-2">
+                            <HeaderContent>
+                                <MudTh>ID</MudTh>
+                                <MudTh>Tipo ID</MudTh>
+                                <MudTh>Completamento</MudTh>
+                                <MudTh>Scadenza</MudTh>
+                                <MudTh>Ente</MudTh>
+                                <MudTh>Ore</MudTh>
+                                <MudTh>Azioni</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="ID">@context.FormazioneObbligatoriaId</MudTd>
+                                <MudTd DataLabel="Tipo ID">@context.TipoFormazioneObbligatoriaId</MudTd>
+                                <MudTd DataLabel="Completamento">@context.DataCompletamento.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd DataLabel="Scadenza">@(context.DataScadenza?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                                <MudTd DataLabel="Ente">@(context.EnteFormatore ?? "-")</MudTd>
+                                <MudTd DataLabel="Ore">@(context.DurataOreCorso?.ToString() ?? "-")</MudTd>
+                                <MudTd DataLabel="Azioni">
+                                    <MudStack Direction="Row" Spacing="1">
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OpenEditFormazione(context))" Disabled="@(!CanUpdateFormazione)">
+                                            Modifica
+                                        </MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" OnClick="@(() => DeleteFormazioneAsync(context.FormazioneObbligatoriaId))" Disabled="@(!CanDeleteFormazione)">
+                                            @(_confirmDeleteFormazioneId == context.FormazioneObbligatoriaId ? "Conferma" : "Elimina")
+                                        </MudButton>
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+
+                    @if (_showFormazioneForm)
+                    {
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle1">@(_isEditingFormazione ? "Modifica formazione" : "Nuova formazione")</MudText>
+                        <MudGrid Spacing="2" Class="mt-1">
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int"
+                                                 Label="Tipo formazione ID"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_formazioneForm.TipoFormazioneObbligatoriaId"
+                                                 Min="1"
+                                                 Max="999999"
+                                                 Required="true"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data completamento"
+                                               Variant="Variant.Outlined"
+                                               Date="_formazioneForm.DataCompletamento"
+                                               DateChanged="OnFormazioneDataCompletamentoChanged"
+                                               Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Data scadenza"
+                                               Variant="Variant.Outlined"
+                                               Date="_formazioneForm.DataScadenza"
+                                               DateChanged="OnFormazioneDataScadenzaChanged"
+                                               Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int?"
+                                                 Label="Durata ore"
+                                                 Variant="Variant.Outlined"
+                                                 @bind-Value="_formazioneForm.DurataOreCorso"
+                                                 Min="0"
+                                                 Max="1000"
+                                                 FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="Ente formatore"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_formazioneForm.EnteFormatore"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string"
+                                              Label="Estremi attestato"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_formazioneForm.EstremiAttestato"
+                                              FullWidth="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Note"
+                                              Variant="Variant.Outlined"
+                                              @bind-Value="_formazioneForm.Note"
+                                              Lines="2"
+                                              FullWidth="true" />
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="CancelFormazioneEdit" Disabled="_isSavingFormazione">
+                                Annulla
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveFormazioneAsync" Disabled="@((!CanCreateFormazione && !_isEditingFormazione) || (!CanUpdateFormazione && _isEditingFormazione) || _isSavingFormazione)">
+                                @if (_isSavingFormazione)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                                    <span class="ml-2">Salvataggio...</span>
+                                }
+                                else
+                                {
+                                    <span>Salva formazione</span>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+
+    <MudStack Direction="Row" Justify="Justify.FlexEnd" Class="mt-4">
+        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("/risorse-umane/dipendenti"))">
+            Torna alla lista
+        </MudButton>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool CanReadDipendente =>
+        (UserContext.HasPermission("HR.DIP.LIST") || UserContext.HasPermission("HR.DIP.READ"))
+        && UserContext.HasPermission("HR.PERSONA.READ");
+    private bool CanUpdateDipendente => UserContext.HasPermission("HR.DIP.UPDATE");
+    private bool CanDeleteDipendente => UserContext.HasPermission("HR.DIP.DELETE");
+
+    private bool CanCreateContratti => UserContext.HasPermission("HR.CONTRATTI.CREATE");
+    private bool CanReadContratti => UserContext.HasPermission("HR.CONTRATTI.LIST") || UserContext.HasPermission("HR.CONTRATTI.READ");
+    private bool CanUpdateContratti => UserContext.HasPermission("HR.CONTRATTI.UPDATE");
+    private bool CanDeleteContratti => UserContext.HasPermission("HR.CONTRATTI.DELETE");
+
+    private bool CanCreateDotazioni => UserContext.HasPermission("HR.DOTAZIONI.CREATE");
+    private bool CanReadDotazioni => UserContext.HasPermission("HR.DOTAZIONI.LIST") || UserContext.HasPermission("HR.DOTAZIONI.READ");
+    private bool CanUpdateDotazioni => UserContext.HasPermission("HR.DOTAZIONI.UPDATE");
+    private bool CanDeleteDotazioni => UserContext.HasPermission("HR.DOTAZIONI.DELETE");
+
+    private bool CanCreateFormazione => UserContext.HasPermission("HR.FORM.CREATE");
+    private bool CanReadFormazione => UserContext.HasPermission("HR.FORM.LIST") || UserContext.HasPermission("HR.FORM.READ");
+    private bool CanUpdateFormazione => UserContext.HasPermission("HR.FORM.UPDATE");
+    private bool CanDeleteFormazione => UserContext.HasPermission("HR.FORM.DELETE");
+
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private bool _isEditMode;
+    private bool _confirmDelete;
+    private bool _isLoadingContratti;
+    private bool _isSavingContratto;
+    private bool _showContrattoForm;
+    private bool _isEditingContratto;
+    private bool _showStoricoContratto;
+    private int? _editingContrattoId;
+    private int? _confirmDeleteContrattoId;
+    private int? _storicoContrattoId;
+    private bool _isLoadingDotazioni;
+    private bool _isSavingDotazione;
+    private bool _showDotazioneForm;
+    private bool _isEditingDotazione;
+    private int? _editingDotazioneId;
+    private int? _confirmDeleteDotazioneId;
+    private bool _isLoadingFormazione;
+    private bool _isSavingFormazione;
+    private bool _showFormazioneForm;
+    private bool _isEditingFormazione;
+    private int? _editingFormazioneId;
+    private int? _confirmDeleteFormazioneId;
+    private string? _errorMessage;
+    private DipendenteDettaglioCompletoDto? _detail;
+    private IReadOnlyList<ContrattoDto> _contratti = Array.Empty<ContrattoDto>();
+    private IReadOnlyList<ContrattoStoricoDto> _contrattoStorico = Array.Empty<ContrattoStoricoDto>();
+    private IReadOnlyList<DotazioneDto> _dotazioni = Array.Empty<DotazioneDto>();
+    private IReadOnlyList<FormazioneObbligatoriaDto> _formazioni = Array.Empty<FormazioneObbligatoriaDto>();
+    private EditModel _editModel = new();
+    private ContrattoFormModel _contrattoForm = new();
+    private DotazioneFormModel _dotazioneForm = new();
+    private FormazioneFormModel _formazioneForm = new();
+
+    private sealed class EditModel
+    {
+        public string Matricola { get; set; } = string.Empty;
+        public string? EmailAziendale { get; set; }
+        public string? TelefonoInterno { get; set; }
+        public DateTime? DataAssunzione { get; set; }
+        public DateTime? DataCessazione { get; set; }
+        public int StatoDipendenteId { get; set; }
+        public bool AbilitatoAttivitaIspettiva { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class ContrattoFormModel
+    {
+        public int TipoContrattoId { get; set; } = 1;
+        public DateTime? DataInizio { get; set; } = DateTime.Today;
+        public DateTime? DataFine { get; set; }
+        public string? LivelloInquadramento { get; set; }
+        public string? CcnlApplicato { get; set; }
+        public decimal? Ral { get; set; }
+        public decimal? PercentualePartTime { get; set; }
+        public decimal? OreLavoroSettimanali { get; set; }
+        public bool IsContrattoCorrente { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class DotazioneFormModel
+    {
+        public int TipoDotazioneId { get; set; } = 1;
+        public string Descrizione { get; set; } = string.Empty;
+        public string? NumeroInventario { get; set; }
+        public string? NumeroSerie { get; set; }
+        public DateTime? DataAssegnazione { get; set; } = DateTime.Today;
+        public DateTime? DataRestituzione { get; set; }
+        public bool IsRestituito { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class FormazioneFormModel
+    {
+        public int TipoFormazioneObbligatoriaId { get; set; } = 1;
+        public DateTime? DataCompletamento { get; set; } = DateTime.Today;
+        public DateTime? DataScadenza { get; set; }
+        public string? EstremiAttestato { get; set; }
+        public string? EnteFormatore { get; set; }
+        public int? DurataOreCorso { get; set; }
+        public string? Note { get; set; }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!CanReadDipendente)
+        {
+            _isLoading = false;
+            return;
+        }
+
+        _isLoading = true;
+        _errorMessage = null;
+        _detail = null;
+        _isEditMode = false;
+        _confirmDelete = false;
+        _confirmDeleteContrattoId = null;
+        _showStoricoContratto = false;
+
+        var result = await GatewayClient.GetDipendenteDettaglioCompletoAsync(Id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare il dettaglio dipendente.";
+        }
+        else
+        {
+            _detail = result.Data;
+            _editModel = new EditModel
+            {
+                Matricola = _detail.Dipendente.Matricola,
+                EmailAziendale = _detail.Dipendente.EmailAziendale,
+                TelefonoInterno = _detail.Dipendente.TelefonoInterno,
+                DataAssunzione = _detail.Dipendente.DataAssunzione.ToDateTime(TimeOnly.MinValue),
+                DataCessazione = _detail.Dipendente.DataCessazione?.ToDateTime(TimeOnly.MinValue),
+                StatoDipendenteId = _detail.Dipendente.StatoDipendenteId,
+                AbilitatoAttivitaIspettiva = _detail.Dipendente.AbilitatoAttivitaIspettiva,
+                Note = _detail.Dipendente.Note
+            };
+
+            await LoadContrattiAsync();
+            await LoadDotazioniAsync();
+            await LoadFormazioneAsync();
+        }
+
+        _isLoading = false;
+    }
+
+    private void ToggleEdit()
+    {
+        if (!CanUpdateDipendente)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DIP.UPDATE mancante.";
+            return;
+        }
+
+        _confirmDelete = false;
+        _isEditMode = !_isEditMode;
+    }
+
+    private void CancelEdit()
+    {
+        if (_detail is null)
+        {
+            _isEditMode = false;
+            return;
+        }
+
+        _editModel.Matricola = _detail.Dipendente.Matricola;
+        _editModel.EmailAziendale = _detail.Dipendente.EmailAziendale;
+        _editModel.TelefonoInterno = _detail.Dipendente.TelefonoInterno;
+        _editModel.DataAssunzione = _detail.Dipendente.DataAssunzione.ToDateTime(TimeOnly.MinValue);
+        _editModel.DataCessazione = _detail.Dipendente.DataCessazione?.ToDateTime(TimeOnly.MinValue);
+        _editModel.StatoDipendenteId = _detail.Dipendente.StatoDipendenteId;
+        _editModel.AbilitatoAttivitaIspettiva = _detail.Dipendente.AbilitatoAttivitaIspettiva;
+        _editModel.Note = _detail.Dipendente.Note;
+        _isEditMode = false;
+    }
+
+    private Task OnDataAssunzioneChanged(DateTime? value)
+    {
+        _editModel.DataAssunzione = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnDataCessazioneChanged(DateTime? value)
+    {
+        _editModel.DataCessazione = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveDipendenteAsync()
+    {
+        if (!CanUpdateDipendente)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DIP.UPDATE mancante.";
+            return;
+        }
+
+        if (_detail is null || _isSaving)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_editModel.Matricola))
+        {
+            _errorMessage = "Matricola obbligatoria.";
+            return;
+        }
+
+        if (_editModel.DataAssunzione is null)
+        {
+            _errorMessage = "Data assunzione obbligatoria.";
+            return;
+        }
+
+        _isSaving = true;
+        _errorMessage = null;
+        try
+        {
+            var request = new UpdateDipendenteRequest(
+                _detail.Dipendente.PersonaId,
+                _editModel.Matricola.Trim(),
+                _editModel.EmailAziendale,
+                _editModel.TelefonoInterno,
+                _detail.Dipendente.UnitaOrganizzativaId,
+                _detail.Dipendente.ResponsabileDirettoId,
+                DateOnly.FromDateTime(_editModel.DataAssunzione.Value.Date),
+                _editModel.DataCessazione.HasValue ? DateOnly.FromDateTime(_editModel.DataCessazione.Value.Date) : null,
+                _editModel.StatoDipendenteId,
+                _editModel.AbilitatoAttivitaIspettiva,
+                _editModel.Note);
+
+            var result = await GatewayClient.UpdateDipendenteAsync(Id, request, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                _errorMessage = result.Error ?? "Aggiornamento dipendente non riuscito.";
+                return;
+            }
+
+            Snackbar.Add("Dipendente aggiornato.", Severity.Success);
+            _isEditMode = false;
+            await OnParametersSetAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteDipendenteAsync()
+    {
+        if (!CanDeleteDipendente)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DIP.DELETE mancante.";
+            return;
+        }
+
+        if (_detail is null || _isDeleting)
+        {
+            return;
+        }
+
+        if (!_confirmDelete)
+        {
+            _confirmDelete = true;
+            return;
+        }
+
+        _isDeleting = true;
+        _errorMessage = null;
+        try
+        {
+            var result = await GatewayClient.DeleteDipendenteAsync(Id, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                _errorMessage = result.Error ?? "Eliminazione dipendente non riuscita.";
+                return;
+            }
+
+            Snackbar.Add("Dipendente eliminato.", Severity.Success);
+            Navigation.NavigateTo("/risorse-umane/dipendenti");
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private async Task LoadContrattiAsync()
+    {
+        if (!CanReadContratti)
+        {
+            _contratti = Array.Empty<ContrattoDto>();
+            _contrattoStorico = Array.Empty<ContrattoStoricoDto>();
+            _showStoricoContratto = false;
+            _storicoContrattoId = null;
+            return;
+        }
+
+        _isLoadingContratti = true;
+        try
+        {
+            var result = await GatewayClient.GetContrattiByDipendenteAsync(Id, includeDeleted: false, CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _errorMessage = result.Error ?? "Impossibile caricare i contratti.";
+                _contratti = Array.Empty<ContrattoDto>();
+            }
+            else
+            {
+                _contratti = result.Data;
+            }
+        }
+        finally
+        {
+            _isLoadingContratti = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OpenNewContratto()
+    {
+        if (!CanCreateContratti)
+        {
+            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.CREATE mancante.";
+            return;
+        }
+
+        _isEditingContratto = false;
+        _editingContrattoId = null;
+        _confirmDeleteContrattoId = null;
+        _showStoricoContratto = false;
+        _contrattoForm = new ContrattoFormModel();
+        _showContrattoForm = true;
+    }
+
+    private void OpenEditContratto(ContrattoDto contratto)
+    {
+        if (!CanUpdateContratti)
+        {
+            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.UPDATE mancante.";
+            return;
+        }
+
+        _isEditingContratto = true;
+        _editingContrattoId = contratto.ContrattoId;
+        _confirmDeleteContrattoId = null;
+        _showStoricoContratto = false;
+        _contrattoForm = new ContrattoFormModel
+        {
+            TipoContrattoId = contratto.TipoContrattoId,
+            DataInizio = contratto.DataInizio.ToDateTime(TimeOnly.MinValue),
+            DataFine = contratto.DataFine?.ToDateTime(TimeOnly.MinValue),
+            LivelloInquadramento = contratto.LivelloInquadramento,
+            CcnlApplicato = contratto.CCNLApplicato,
+            Ral = contratto.RAL,
+            PercentualePartTime = contratto.PercentualePartTime,
+            OreLavoroSettimanali = contratto.OreLavoroSettimanali,
+            IsContrattoCorrente = contratto.IsContrattoCorrente,
+            Note = contratto.Note
+        };
+        _showContrattoForm = true;
+    }
+
+    private void CancelContrattoEdit()
+    {
+        _showContrattoForm = false;
+        _isEditingContratto = false;
+        _editingContrattoId = null;
+        _contrattoForm = new ContrattoFormModel();
+    }
+
+    private Task OnContrattoDataInizioChanged(DateTime? value)
+    {
+        _contrattoForm.DataInizio = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnContrattoDataFineChanged(DateTime? value)
+    {
+        _contrattoForm.DataFine = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveContrattoAsync()
+    {
+        if ((!_isEditingContratto && !CanCreateContratti) || (_isEditingContratto && !CanUpdateContratti))
+        {
+            _errorMessage = _isEditingContratto
+                ? "Accesso negato: permesso HR.CONTRATTI.UPDATE mancante."
+                : "Accesso negato: permesso HR.CONTRATTI.CREATE mancante.";
+            return;
+        }
+
+        if (_isSavingContratto)
+        {
+            return;
+        }
+
+        if (_contrattoForm.TipoContrattoId <= 0)
+        {
+            _errorMessage = "Tipo contratto non valido.";
+            return;
+        }
+
+        if (_contrattoForm.DataInizio is null)
+        {
+            _errorMessage = "Data inizio contratto obbligatoria.";
+            return;
+        }
+
+        if (_contrattoForm.DataFine.HasValue && _contrattoForm.DataFine.Value.Date < _contrattoForm.DataInizio.Value.Date)
+        {
+            _errorMessage = "Data fine non puo essere precedente a data inizio.";
+            return;
+        }
+
+        _isSavingContratto = true;
+        _errorMessage = null;
+        try
+        {
+            if (_isEditingContratto && _editingContrattoId.HasValue)
+            {
+                var updateRequest = new UpdateContrattoRequest(
+                    _contrattoForm.TipoContrattoId,
+                    DateOnly.FromDateTime(_contrattoForm.DataInizio.Value.Date),
+                    _contrattoForm.DataFine.HasValue ? DateOnly.FromDateTime(_contrattoForm.DataFine.Value.Date) : null,
+                    _contrattoForm.LivelloInquadramento,
+                    _contrattoForm.CcnlApplicato,
+                    _contrattoForm.Ral,
+                    _contrattoForm.PercentualePartTime,
+                    _contrattoForm.OreLavoroSettimanali,
+                    _contrattoForm.IsContrattoCorrente,
+                    _contrattoForm.Note);
+
+                var updateResult = await GatewayClient.UpdateContrattoAsync(Id, _editingContrattoId.Value, updateRequest, CancellationToken.None);
+                if (!updateResult.IsSuccess)
+                {
+                    _errorMessage = updateResult.Error ?? "Aggiornamento contratto non riuscito.";
+                    return;
+                }
+
+                Snackbar.Add("Contratto aggiornato.", Severity.Success);
+            }
+            else
+            {
+                var createRequest = new CreateContrattoRequest(
+                    _contrattoForm.TipoContrattoId,
+                    DateOnly.FromDateTime(_contrattoForm.DataInizio.Value.Date),
+                    _contrattoForm.DataFine.HasValue ? DateOnly.FromDateTime(_contrattoForm.DataFine.Value.Date) : null,
+                    _contrattoForm.LivelloInquadramento,
+                    _contrattoForm.CcnlApplicato,
+                    _contrattoForm.Ral,
+                    _contrattoForm.PercentualePartTime,
+                    _contrattoForm.OreLavoroSettimanali,
+                    _contrattoForm.IsContrattoCorrente,
+                    _contrattoForm.Note);
+
+                var createResult = await GatewayClient.CreateContrattoAsync(Id, createRequest, CancellationToken.None);
+                if (!createResult.IsSuccess)
+                {
+                    _errorMessage = createResult.Error ?? "Creazione contratto non riuscita.";
+                    return;
+                }
+
+                Snackbar.Add("Contratto creato.", Severity.Success);
+            }
+
+            CancelContrattoEdit();
+            await LoadContrattiAsync();
+        }
+        finally
+        {
+            _isSavingContratto = false;
+        }
+    }
+
+    private async Task DeleteContrattoAsync(int contrattoId)
+    {
+        if (!CanDeleteContratti)
+        {
+            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.DELETE mancante.";
+            return;
+        }
+
+        if (_confirmDeleteContrattoId != contrattoId)
+        {
+            _confirmDeleteContrattoId = contrattoId;
+            return;
+        }
+
+        _errorMessage = null;
+        var result = await GatewayClient.DeleteContrattoAsync(Id, contrattoId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione contratto non riuscita.";
+            return;
+        }
+
+        _confirmDeleteContrattoId = null;
+        _showStoricoContratto = false;
+        _storicoContrattoId = null;
+        Snackbar.Add("Contratto eliminato.", Severity.Success);
+        await LoadContrattiAsync();
+    }
+
+    private async Task ToggleStoricoContrattoAsync(int contrattoId)
+    {
+        if (!CanReadContratti)
+        {
+            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.LIST/READ mancante.";
+            return;
+        }
+
+        if (_showStoricoContratto && _storicoContrattoId == contrattoId)
+        {
+            _showStoricoContratto = false;
+            _storicoContrattoId = null;
+            _contrattoStorico = Array.Empty<ContrattoStoricoDto>();
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        _errorMessage = null;
+        var result = await GatewayClient.GetContrattoStoricoAsync(contrattoId, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare storico contratto.";
+            return;
+        }
+
+        _storicoContrattoId = contrattoId;
+        _contrattoStorico = result.Data;
+        _showStoricoContratto = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadDotazioniAsync()
+    {
+        if (!CanReadDotazioni)
+        {
+            _dotazioni = Array.Empty<DotazioneDto>();
+            return;
+        }
+
+        _isLoadingDotazioni = true;
+        try
+        {
+            var result = await GatewayClient.GetDotazioniByDipendenteAsync(Id, includeDeleted: false, CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _errorMessage = result.Error ?? "Impossibile caricare le dotazioni.";
+                _dotazioni = Array.Empty<DotazioneDto>();
+            }
+            else
+            {
+                _dotazioni = result.Data;
+            }
+        }
+        finally
+        {
+            _isLoadingDotazioni = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OpenNewDotazione()
+    {
+        if (!CanCreateDotazioni)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.CREATE mancante.";
+            return;
+        }
+
+        _isEditingDotazione = false;
+        _editingDotazioneId = null;
+        _confirmDeleteDotazioneId = null;
+        _dotazioneForm = new DotazioneFormModel();
+        _showDotazioneForm = true;
+    }
+
+    private void OpenEditDotazione(DotazioneDto dotazione)
+    {
+        if (!CanUpdateDotazioni)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.UPDATE mancante.";
+            return;
+        }
+
+        _isEditingDotazione = true;
+        _editingDotazioneId = dotazione.DotazioneId;
+        _confirmDeleteDotazioneId = null;
+        _dotazioneForm = new DotazioneFormModel
+        {
+            TipoDotazioneId = dotazione.TipoDotazioneId,
+            Descrizione = dotazione.Descrizione,
+            NumeroInventario = dotazione.NumeroInventario,
+            NumeroSerie = dotazione.NumeroSerie,
+            DataAssegnazione = dotazione.DataAssegnazione.ToDateTime(TimeOnly.MinValue),
+            DataRestituzione = dotazione.DataRestituzione?.ToDateTime(TimeOnly.MinValue),
+            IsRestituito = dotazione.IsRestituito,
+            Note = dotazione.Note
+        };
+        _showDotazioneForm = true;
+    }
+
+    private void CancelDotazioneEdit()
+    {
+        _showDotazioneForm = false;
+        _isEditingDotazione = false;
+        _editingDotazioneId = null;
+        _dotazioneForm = new DotazioneFormModel();
+    }
+
+    private Task OnDotazioneDataAssegnazioneChanged(DateTime? value)
+    {
+        _dotazioneForm.DataAssegnazione = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnDotazioneDataRestituzioneChanged(DateTime? value)
+    {
+        _dotazioneForm.DataRestituzione = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveDotazioneAsync()
+    {
+        if ((!_isEditingDotazione && !CanCreateDotazioni) || (_isEditingDotazione && !CanUpdateDotazioni))
+        {
+            _errorMessage = _isEditingDotazione
+                ? "Accesso negato: permesso HR.DOTAZIONI.UPDATE mancante."
+                : "Accesso negato: permesso HR.DOTAZIONI.CREATE mancante.";
+            return;
+        }
+
+        if (_isSavingDotazione)
+        {
+            return;
+        }
+
+        if (_dotazioneForm.TipoDotazioneId <= 0 || string.IsNullOrWhiteSpace(_dotazioneForm.Descrizione))
+        {
+            _errorMessage = "Tipo dotazione e descrizione sono obbligatori.";
+            return;
+        }
+
+        if (_dotazioneForm.DataAssegnazione is null)
+        {
+            _errorMessage = "Data assegnazione obbligatoria.";
+            return;
+        }
+
+        if (_dotazioneForm.DataRestituzione.HasValue &&
+            _dotazioneForm.DataRestituzione.Value.Date < _dotazioneForm.DataAssegnazione.Value.Date)
+        {
+            _errorMessage = "Data restituzione non puo essere precedente a data assegnazione.";
+            return;
+        }
+
+        _isSavingDotazione = true;
+        _errorMessage = null;
+        try
+        {
+            if (_isEditingDotazione && _editingDotazioneId.HasValue)
+            {
+                var updateRequest = new UpdateDotazioneRequest(
+                    _dotazioneForm.TipoDotazioneId,
+                    _dotazioneForm.Descrizione.Trim(),
+                    _dotazioneForm.NumeroInventario,
+                    _dotazioneForm.NumeroSerie,
+                    DateOnly.FromDateTime(_dotazioneForm.DataAssegnazione.Value.Date),
+                    _dotazioneForm.DataRestituzione.HasValue ? DateOnly.FromDateTime(_dotazioneForm.DataRestituzione.Value.Date) : null,
+                    _dotazioneForm.IsRestituito,
+                    _dotazioneForm.Note);
+
+                var updateResult = await GatewayClient.UpdateDotazioneAsync(Id, _editingDotazioneId.Value, updateRequest, CancellationToken.None);
+                if (!updateResult.IsSuccess)
+                {
+                    _errorMessage = updateResult.Error ?? "Aggiornamento dotazione non riuscito.";
+                    return;
+                }
+
+                Snackbar.Add("Dotazione aggiornata.", Severity.Success);
+            }
+            else
+            {
+                var createRequest = new CreateDotazioneRequest(
+                    _dotazioneForm.TipoDotazioneId,
+                    _dotazioneForm.Descrizione.Trim(),
+                    _dotazioneForm.NumeroInventario,
+                    _dotazioneForm.NumeroSerie,
+                    DateOnly.FromDateTime(_dotazioneForm.DataAssegnazione.Value.Date),
+                    _dotazioneForm.DataRestituzione.HasValue ? DateOnly.FromDateTime(_dotazioneForm.DataRestituzione.Value.Date) : null,
+                    _dotazioneForm.IsRestituito,
+                    _dotazioneForm.Note);
+
+                var createResult = await GatewayClient.CreateDotazioneAsync(Id, createRequest, CancellationToken.None);
+                if (!createResult.IsSuccess)
+                {
+                    _errorMessage = createResult.Error ?? "Creazione dotazione non riuscita.";
+                    return;
+                }
+
+                Snackbar.Add("Dotazione creata.", Severity.Success);
+            }
+
+            CancelDotazioneEdit();
+            await LoadDotazioniAsync();
+        }
+        finally
+        {
+            _isSavingDotazione = false;
+        }
+    }
+
+    private async Task DeleteDotazioneAsync(int dotazioneId)
+    {
+        if (!CanDeleteDotazioni)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.DELETE mancante.";
+            return;
+        }
+
+        if (_confirmDeleteDotazioneId != dotazioneId)
+        {
+            _confirmDeleteDotazioneId = dotazioneId;
+            return;
+        }
+
+        _errorMessage = null;
+        var result = await GatewayClient.DeleteDotazioneAsync(Id, dotazioneId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione dotazione non riuscita.";
+            return;
+        }
+
+        _confirmDeleteDotazioneId = null;
+        Snackbar.Add("Dotazione eliminata.", Severity.Success);
+        await LoadDotazioniAsync();
+    }
+
+    private async Task LoadFormazioneAsync()
+    {
+        if (!CanReadFormazione)
+        {
+            _formazioni = Array.Empty<FormazioneObbligatoriaDto>();
+            return;
+        }
+
+        _isLoadingFormazione = true;
+        try
+        {
+            var result = await GatewayClient.GetFormazioneByDipendenteAsync(Id, includeDeleted: false, CancellationToken.None);
+            if (!result.IsSuccess || result.Data is null)
+            {
+                _errorMessage = result.Error ?? "Impossibile caricare la formazione obbligatoria.";
+                _formazioni = Array.Empty<FormazioneObbligatoriaDto>();
+            }
+            else
+            {
+                _formazioni = result.Data;
+            }
+        }
+        finally
+        {
+            _isLoadingFormazione = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OpenNewFormazione()
+    {
+        if (!CanCreateFormazione)
+        {
+            _errorMessage = "Accesso negato: permesso HR.FORM.CREATE mancante.";
+            return;
+        }
+
+        _isEditingFormazione = false;
+        _editingFormazioneId = null;
+        _confirmDeleteFormazioneId = null;
+        _formazioneForm = new FormazioneFormModel();
+        _showFormazioneForm = true;
+    }
+
+    private void OpenEditFormazione(FormazioneObbligatoriaDto formazione)
+    {
+        if (!CanUpdateFormazione)
+        {
+            _errorMessage = "Accesso negato: permesso HR.FORM.UPDATE mancante.";
+            return;
+        }
+
+        _isEditingFormazione = true;
+        _editingFormazioneId = formazione.FormazioneObbligatoriaId;
+        _confirmDeleteFormazioneId = null;
+        _formazioneForm = new FormazioneFormModel
+        {
+            TipoFormazioneObbligatoriaId = formazione.TipoFormazioneObbligatoriaId,
+            DataCompletamento = formazione.DataCompletamento.ToDateTime(TimeOnly.MinValue),
+            DataScadenza = formazione.DataScadenza?.ToDateTime(TimeOnly.MinValue),
+            EstremiAttestato = formazione.EstremiAttestato,
+            EnteFormatore = formazione.EnteFormatore,
+            DurataOreCorso = formazione.DurataOreCorso,
+            Note = formazione.Note
+        };
+        _showFormazioneForm = true;
+    }
+
+    private void CancelFormazioneEdit()
+    {
+        _showFormazioneForm = false;
+        _isEditingFormazione = false;
+        _editingFormazioneId = null;
+        _formazioneForm = new FormazioneFormModel();
+    }
+
+    private Task OnFormazioneDataCompletamentoChanged(DateTime? value)
+    {
+        _formazioneForm.DataCompletamento = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnFormazioneDataScadenzaChanged(DateTime? value)
+    {
+        _formazioneForm.DataScadenza = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveFormazioneAsync()
+    {
+        if ((!_isEditingFormazione && !CanCreateFormazione) || (_isEditingFormazione && !CanUpdateFormazione))
+        {
+            _errorMessage = _isEditingFormazione
+                ? "Accesso negato: permesso HR.FORM.UPDATE mancante."
+                : "Accesso negato: permesso HR.FORM.CREATE mancante.";
+            return;
+        }
+
+        if (_isSavingFormazione)
+        {
+            return;
+        }
+
+        if (_formazioneForm.TipoFormazioneObbligatoriaId <= 0 || _formazioneForm.DataCompletamento is null)
+        {
+            _errorMessage = "Tipo formazione e data completamento sono obbligatori.";
+            return;
+        }
+
+        if (_formazioneForm.DataScadenza.HasValue &&
+            _formazioneForm.DataScadenza.Value.Date < _formazioneForm.DataCompletamento.Value.Date)
+        {
+            _errorMessage = "Data scadenza non puo essere precedente a data completamento.";
+            return;
+        }
+
+        _isSavingFormazione = true;
+        _errorMessage = null;
+        try
+        {
+            if (_isEditingFormazione && _editingFormazioneId.HasValue)
+            {
+                var updateRequest = new UpdateFormazioneObbligatoriaRequest(
+                    _formazioneForm.TipoFormazioneObbligatoriaId,
+                    DateOnly.FromDateTime(_formazioneForm.DataCompletamento.Value.Date),
+                    _formazioneForm.DataScadenza.HasValue ? DateOnly.FromDateTime(_formazioneForm.DataScadenza.Value.Date) : null,
+                    _formazioneForm.EstremiAttestato,
+                    _formazioneForm.EnteFormatore,
+                    _formazioneForm.DurataOreCorso,
+                    _formazioneForm.Note);
+
+                var updateResult = await GatewayClient.UpdateFormazioneAsync(Id, _editingFormazioneId.Value, updateRequest, CancellationToken.None);
+                if (!updateResult.IsSuccess)
+                {
+                    _errorMessage = updateResult.Error ?? "Aggiornamento formazione non riuscito.";
+                    return;
+                }
+
+                Snackbar.Add("Formazione aggiornata.", Severity.Success);
+            }
+            else
+            {
+                var createRequest = new CreateFormazioneObbligatoriaRequest(
+                    _formazioneForm.TipoFormazioneObbligatoriaId,
+                    DateOnly.FromDateTime(_formazioneForm.DataCompletamento.Value.Date),
+                    _formazioneForm.DataScadenza.HasValue ? DateOnly.FromDateTime(_formazioneForm.DataScadenza.Value.Date) : null,
+                    _formazioneForm.EstremiAttestato,
+                    _formazioneForm.EnteFormatore,
+                    _formazioneForm.DurataOreCorso,
+                    _formazioneForm.Note);
+
+                var createResult = await GatewayClient.CreateFormazioneAsync(Id, createRequest, CancellationToken.None);
+                if (!createResult.IsSuccess)
+                {
+                    _errorMessage = createResult.Error ?? "Creazione formazione non riuscita.";
+                    return;
+                }
+
+                Snackbar.Add("Formazione creata.", Severity.Success);
+            }
+
+            CancelFormazioneEdit();
+            await LoadFormazioneAsync();
+        }
+        finally
+        {
+            _isSavingFormazione = false;
+        }
+    }
+
+    private async Task DeleteFormazioneAsync(int formazioneObbligatoriaId)
+    {
+        if (!CanDeleteFormazione)
+        {
+            _errorMessage = "Accesso negato: permesso HR.FORM.DELETE mancante.";
+            return;
+        }
+
+        if (_confirmDeleteFormazioneId != formazioneObbligatoriaId)
+        {
+            _confirmDeleteFormazioneId = formazioneObbligatoriaId;
+            return;
+        }
+
+        _errorMessage = null;
+        var result = await GatewayClient.DeleteFormazioneAsync(Id, formazioneObbligatoriaId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione formazione non riuscita.";
+            return;
+        }
+
+        _confirmDeleteFormazioneId = null;
+        Snackbar.Add("Formazione eliminata.", Severity.Success);
+        await LoadFormazioneAsync();
+    }
+}

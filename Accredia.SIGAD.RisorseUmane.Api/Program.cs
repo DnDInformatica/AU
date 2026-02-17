@@ -4,8 +4,6 @@ using Accredia.SIGAD.RisorseUmane.Api.Services;
 using Accredia.SIGAD.Shared.Middleware;
 using Accredia.SIGAD.Shared.Versioning;
 
-AppContext.SetSwitch("Switch.Microsoft.Data.SqlClient.UseManagedNetworkingOnWindows", true);
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Serilog: logging strutturato con CorrelationId

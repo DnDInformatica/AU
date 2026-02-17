@@ -10,9 +10,16 @@ internal interface IRisorseUmaneClient
     Task<(HttpStatusCode StatusCode, PagedResponse<DipendenteDto>? Value)> ListDipendentiAsync(
         int? personaId,
         string? matricola,
+        string? q,
+        int? statoDipendenteId,
         bool? includeDeleted,
         int? page,
         int? pageSize,
+        CancellationToken cancellationToken);
+    Task<(HttpStatusCode StatusCode, IReadOnlyCollection<FormazioneInScadenzaDto>? Value)> GetFormazioneInScadenzaAsync(
+        int days,
+        CancellationToken cancellationToken);
+    Task<(HttpStatusCode StatusCode, IReadOnlyCollection<DotazioneNonRestituitaCessatoDto>? Value)> GetDotazioniNonRestituiteCessatiAsync(
         CancellationToken cancellationToken);
 }
 
@@ -39,6 +46,8 @@ internal sealed class RisorseUmaneClient(IHttpClientFactory httpClientFactory) :
     public async Task<(HttpStatusCode StatusCode, PagedResponse<DipendenteDto>? Value)> ListDipendentiAsync(
         int? personaId,
         string? matricola,
+        string? q,
+        int? statoDipendenteId,
         bool? includeDeleted,
         int? page,
         int? pageSize,
@@ -53,6 +62,16 @@ internal sealed class RisorseUmaneClient(IHttpClientFactory httpClientFactory) :
         if (!string.IsNullOrWhiteSpace(matricola))
         {
             query.Add($"matricola={Uri.EscapeDataString(matricola)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query.Add($"q={Uri.EscapeDataString(q)}");
+        }
+
+        if (statoDipendenteId is not null && statoDipendenteId > 0)
+        {
+            query.Add($"statoDipendenteId={statoDipendenteId.Value}");
         }
 
         if (includeDeleted is not null)
@@ -83,6 +102,37 @@ internal sealed class RisorseUmaneClient(IHttpClientFactory httpClientFactory) :
         var dto = await response.Content.ReadFromJsonAsync<PagedResponse<DipendenteDto>>(JsonOptions, cancellationToken);
         return (response.StatusCode, dto);
     }
+
+    public async Task<(HttpStatusCode StatusCode, IReadOnlyCollection<FormazioneInScadenzaDto>? Value)> GetFormazioneInScadenzaAsync(
+        int days,
+        CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient("RisorseUmane");
+        using var response = await client.GetAsync($"/v1/report/formazione-in-scadenza?days={days}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return (response.StatusCode, null);
+        }
+
+        var dto = await response.Content.ReadFromJsonAsync<FormazioneInScadenzaDto[]>(JsonOptions, cancellationToken);
+        return (response.StatusCode, dto);
+    }
+
+    public async Task<(HttpStatusCode StatusCode, IReadOnlyCollection<DotazioneNonRestituitaCessatoDto>? Value)> GetDotazioniNonRestituiteCessatiAsync(
+        CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient("RisorseUmane");
+        using var response = await client.GetAsync("/v1/report/dotazioni-non-restituite-cessati", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return (response.StatusCode, null);
+        }
+
+        var dto = await response.Content.ReadFromJsonAsync<DotazioneNonRestituitaCessatoDto[]>(JsonOptions, cancellationToken);
+        return (response.StatusCode, dto);
+    }
 }
 
 internal sealed record DipendenteDto(
@@ -107,3 +157,21 @@ internal sealed record PagedResponse<T>(
     int Page,
     int PageSize,
     int TotalCount);
+
+internal sealed record FormazioneInScadenzaDto(
+    int FormazioneObbligatoriaId,
+    int DipendenteId,
+    int TipoFormazioneObbligatoriaId,
+    DateOnly DataCompletamento,
+    DateOnly DataScadenza,
+    int GiorniAllaScadenza);
+
+internal sealed record DotazioneNonRestituitaCessatoDto(
+    int DipendenteId,
+    DateOnly DataCessazione,
+    int DotazioneId,
+    int TipoDotazioneId,
+    string Descrizione,
+    DateOnly DataAssegnazione,
+    DateOnly? DataRestituzione,
+    bool IsRestituito);

@@ -33,10 +33,10 @@ WHERE DotazioneId = @Id
 """;
 
         await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
-        var dto = await connection.QuerySingleOrDefaultAsync<DotazioneDto>(
+        var row = await connection.QuerySingleOrDefaultAsync<DotazioneDbRow>(
             new CommandDefinition(sql, new { Id = id, IncludeDeleted = includeDeleted ? 1 : 0 }, cancellationToken: cancellationToken));
 
-        return dto is null ? Results.NotFound() : Results.Ok(dto);
+        return row is null ? Results.NotFound() : Results.Ok(Map(row));
     }
 
     public static async Task<IResult> ListByDipendenteAsync(
@@ -67,10 +67,10 @@ ORDER BY DataAssegnazione DESC, DotazioneId DESC;
 """;
 
         await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
-        var items = (await connection.QueryAsync<DotazioneDto>(
+        var rows = (await connection.QueryAsync<DotazioneDbRow>(
             new CommandDefinition(sql, new { DipendenteId = dipendenteId, IncludeDeleted = includeDeleted ? 1 : 0 }, cancellationToken: cancellationToken))).ToArray();
 
-        return Results.Ok(items);
+        return Results.Ok(rows.Select(Map).ToArray());
     }
 
     public static async Task<IResult> CreateAsync(
@@ -110,6 +110,19 @@ VALUES
         try
         {
             await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+            var validationResult = await ValidateTipoDotazioneRulesAsync(
+                connection,
+                request.TipoDotazioneId,
+                request.NumeroInventario,
+                request.DataRestituzione,
+                request.IsRestituito ?? false,
+                cancellationToken);
+            if (validationResult is not null)
+            {
+                return validationResult;
+            }
+
             var id = await connection.ExecuteScalarAsync<int>(
                 new CommandDefinition(sql, new
                 {
@@ -118,8 +131,8 @@ VALUES
                     Descrizione = request.Descrizione.Trim(),
                     request.NumeroInventario,
                     request.NumeroSerie,
-                    request.DataAssegnazione,
-                    request.DataRestituzione,
+                    DataAssegnazione = request.DataAssegnazione.ToDateTime(TimeOnly.MinValue),
+                    DataRestituzione = request.DataRestituzione?.ToDateTime(TimeOnly.MinValue),
                     IsRestituito = request.IsRestituito ?? false,
                     request.Note
                 }, cancellationToken: cancellationToken));
@@ -161,6 +174,19 @@ SELECT @@ROWCOUNT;
         try
         {
             await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+            var validationResult = await ValidateTipoDotazioneRulesAsync(
+                connection,
+                request.TipoDotazioneId,
+                request.NumeroInventario,
+                request.DataRestituzione,
+                request.IsRestituito ?? false,
+                cancellationToken);
+            if (validationResult is not null)
+            {
+                return validationResult;
+            }
+
             var rows = await connection.ExecuteScalarAsync<int>(
                 new CommandDefinition(sql, new
                 {
@@ -170,8 +196,8 @@ SELECT @@ROWCOUNT;
                     Descrizione = request.Descrizione.Trim(),
                     request.NumeroInventario,
                     request.NumeroSerie,
-                    request.DataAssegnazione,
-                    request.DataRestituzione,
+                    DataAssegnazione = request.DataAssegnazione.ToDateTime(TimeOnly.MinValue),
+                    DataRestituzione = request.DataRestituzione?.ToDateTime(TimeOnly.MinValue),
                     IsRestituito = request.IsRestituito ?? false,
                     request.Note
                 }, cancellationToken: cancellationToken));
@@ -208,7 +234,90 @@ SELECT @@ROWCOUNT;
 
         return rows == 0 ? Results.NotFound() : Results.NoContent();
     }
+
+    private static DotazioneDto Map(DotazioneDbRow row)
+        => new(
+            row.DotazioneId,
+            row.DipendenteId,
+            row.TipoDotazioneId,
+            row.Descrizione,
+            row.NumeroInventario,
+            row.NumeroSerie,
+            DateOnly.FromDateTime(row.DataAssegnazione),
+            row.DataRestituzione.HasValue ? DateOnly.FromDateTime(row.DataRestituzione.Value) : null,
+            row.IsRestituito,
+            row.Note,
+            row.DataCreazione,
+            row.DataModifica,
+            row.DataCancellazione);
+
+    private static async Task<IResult?> ValidateTipoDotazioneRulesAsync(
+        SqlConnection connection,
+        int tipoDotazioneId,
+        string? numeroInventario,
+        DateOnly? dataRestituzione,
+        bool isRestituito,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+SELECT
+  RichiedeNumeroInventario,
+  RichiedeRestituzione
+FROM [Tipologica].[TipoDotazione]
+WHERE TipoDotazioneId = @TipoDotazioneId
+  AND DataCancellazione IS NULL
+  AND Attivo = 1;
+""";
+
+        var tipo = await connection.QuerySingleOrDefaultAsync<TipoDotazioneRegola>(
+            new CommandDefinition(sql, new { TipoDotazioneId = tipoDotazioneId }, cancellationToken: cancellationToken));
+
+        if (tipo is null)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["tipoDotazioneId"] = ["TipoDotazione non valido o non attivo."]
+            });
+        }
+
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+
+        if (tipo.RichiedeNumeroInventario && string.IsNullOrWhiteSpace(numeroInventario))
+        {
+            errors["numeroInventario"] = ["NumeroInventario obbligatorio per il tipo dotazione selezionato."];
+        }
+
+        if (isRestituito && dataRestituzione is null)
+        {
+            errors["dataRestituzione"] = ["DataRestituzione obbligatoria quando IsRestituito = true."];
+        }
+
+        if (!isRestituito && dataRestituzione is not null)
+        {
+            errors["isRestituito"] = ["IsRestituito deve essere true se DataRestituzione e valorizzata."];
+        }
+
+        return errors.Count > 0 ? Results.ValidationProblem(errors) : null;
+    }
 }
 
 internal sealed record ErrorResponse(string Error);
 
+internal sealed record DotazioneDbRow(
+    int DotazioneId,
+    int DipendenteId,
+    int TipoDotazioneId,
+    string Descrizione,
+    string? NumeroInventario,
+    string? NumeroSerie,
+    DateTime DataAssegnazione,
+    DateTime? DataRestituzione,
+    bool IsRestituito,
+    string? Note,
+    DateTime DataCreazione,
+    DateTime? DataModifica,
+    DateTime? DataCancellazione);
+
+internal sealed record TipoDotazioneRegola(
+    bool RichiedeNumeroInventario,
+    bool RichiedeRestituzione);

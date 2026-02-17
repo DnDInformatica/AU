@@ -1,0 +1,393 @@
+@page "/risorse-umane/dipendenti/nuovo"
+@page "/dipendenti/nuovo"
+@namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.RisorseUmane
+
+@if (!CanCreateDipendente)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Nuovo dipendente"
+                Subtitle="Seleziona persona e completa i dati dipendente."
+                Breadcrumbs="Home / Risorse Umane / Dipendenti / Nuovo" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-4 sigad-card">
+        <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudSwitch T="bool"
+                               Color="Color.Primary"
+                               Label="Crea nuova persona inline"
+                               Value="_createPersonaInline"
+                               ValueChanged="OnCreatePersonaInlineChanged" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    @if (!_createPersonaInline)
+                    {
+                        <MudAutocomplete T="PersonaLookupItem"
+                                         Label="Persona"
+                                         Variant="Variant.Outlined"
+                                         Value="_model.Persona"
+                                         ValueChanged="OnPersonaChanged"
+                                         SearchFunc="SearchPersoneAsync"
+                                         ToStringFunc="@(p => p is null ? string.Empty : $"{p.Cognome} {p.Nome} ({p.CodiceFiscale ?? "N/A"})")"
+                                         MinCharacters="2"
+                                         Immediate="true"
+                                         ResetValueOnEmptyText="true"
+                                         Clearable="true"
+                                         Required="true"
+                                         RequiredError="Persona obbligatoria"
+                                         FullWidth="true" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mb-2">
+                            Compila i dati della nuova persona; verra creata automaticamente.
+                        </MudText>
+                        <MudTextField T="string"
+                                      Label="Cognome"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_inlinePersona.Cognome"
+                                      Required="_createPersonaInline"
+                                      RequiredError="Cognome obbligatorio"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    }
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Matricola"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.Matricola"
+                                  Required="true"
+                                  RequiredError="Matricola obbligatoria"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+
+                @if (_createPersonaInline)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Nome"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_inlinePersona.Nome"
+                                      Required="_createPersonaInline"
+                                      RequiredError="Nome obbligatorio"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Codice fiscale"
+                                      Variant="Variant.Outlined"
+                                      @bind-Value="_inlinePersona.CodiceFiscale"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      HelperText="Opzionale" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Data nascita persona"
+                                       Variant="Variant.Outlined"
+                                       Date="_inlinePersona.DataNascita"
+                                       DateChanged="OnInlineDataNascitaChanged"
+                                       Required="_createPersonaInline"
+                                       RequiredError="Data nascita obbligatoria"
+                                       MaxDate="@DateTime.Today"
+                                       Clearable="false" />
+                    </MudItem>
+                }
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="int"
+                                     Label="Stato dipendente ID"
+                                     Variant="Variant.Outlined"
+                                     @bind-Value="_model.StatoDipendenteId"
+                                     Min="1"
+                                     Max="999999"
+                                     Required="true"
+                                     FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker Label="Data assunzione"
+                                   Variant="Variant.Outlined"
+                                   Date="_dataAssunzione"
+                                   DateChanged="OnDataAssunzioneChanged"
+                                   Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker Label="Data cessazione"
+                                   Variant="Variant.Outlined"
+                                   Date="_dataCessazione"
+                                   DateChanged="OnDataCessazioneChanged"
+                                   Clearable="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Email aziendale"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.EmailAziendale"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Telefono interno"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_model.TelefonoInterno"
+                                  Immediate="true"
+                                  FullWidth="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudStack Direction="Row" Spacing="1" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Cancel" Disabled="_isSubmitting">
+                    Annulla
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_isSubmitting">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <span class="ml-2">Salvataggio...</span>
+                    }
+                    else
+                    {
+                        <span>Crea</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool CanCreateDipendente => UserContext.HasPermission("HR.DIP.CREATE");
+
+    private sealed class FormModel
+    {
+        public PersonaLookupItem? Persona { get; set; }
+        public string Matricola { get; set; } = string.Empty;
+        public int StatoDipendenteId { get; set; } = 1;
+        public string? EmailAziendale { get; set; }
+        public string? TelefonoInterno { get; set; }
+    }
+
+    private sealed class InlinePersonaModel
+    {
+        public string Cognome { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
+        public string? CodiceFiscale { get; set; }
+        public DateTime? DataNascita { get; set; }
+    }
+
+    private readonly FormModel _model = new();
+    private readonly InlinePersonaModel _inlinePersona = new();
+    private MudForm? _form;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+    private DateTime? _dataAssunzione = DateTime.Today;
+    private DateTime? _dataCessazione;
+    private bool _createPersonaInline;
+
+    private Task OnPersonaChanged(PersonaLookupItem? value)
+    {
+        _model.Persona = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnCreatePersonaInlineChanged(bool value)
+    {
+        _createPersonaInline = value;
+        _errorMessage = null;
+        if (_createPersonaInline)
+        {
+            _model.Persona = null;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnDataAssunzioneChanged(DateTime? value)
+    {
+        _dataAssunzione = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnDataCessazioneChanged(DateTime? value)
+    {
+        _dataCessazione = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnInlineDataNascitaChanged(DateTime? value)
+    {
+        _inlinePersona.DataNascita = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<PersonaLookupItem>> SearchPersoneAsync(string text, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Trim().Length < 2)
+        {
+            _errorMessage = null;
+            return Array.Empty<PersonaLookupItem>();
+        }
+
+        var query = text.Trim();
+        var result = await GatewayClient.SearchPersoneRuLookupAsync(query, 1, 10, cancellationToken);
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _errorMessage = null;
+            return result.Data.Items;
+        }
+
+        // Fallback: in caso di indisponibilita lookup RU, usa la ricerca Anagrafiche diretta.
+        var fallback = await GatewayClient.SearchPersoneAsync(query, 1, 10, cancellationToken);
+        if (fallback.IsSuccess && fallback.Data is not null)
+        {
+            _errorMessage = null;
+            return fallback.Data.Items.Select(p => new PersonaLookupItem(
+                p.PersonaId,
+                p.Cognome,
+                p.Nome,
+                p.CodiceFiscale,
+                p.DataNascita));
+        }
+
+        _errorMessage = "Ricerca persona temporaneamente non disponibile. Verifica Gateway/BFF/Anagrafiche.";
+        return Array.Empty<PersonaLookupItem>();
+    }
+
+    private void Cancel()
+        => Navigation.NavigateTo("/risorse-umane/dipendenti");
+
+    private async Task SubmitAsync()
+    {
+        if (!CanCreateDipendente)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DIP.CREATE mancante.";
+            return;
+        }
+
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        if (_form is not null)
+        {
+            await _form.Validate();
+            if (!_form.IsValid)
+            {
+                return;
+            }
+        }
+
+        var personaId = _model.Persona?.PersonaId;
+        if (_createPersonaInline)
+        {
+            if (string.IsNullOrWhiteSpace(_inlinePersona.Cognome) || string.IsNullOrWhiteSpace(_inlinePersona.Nome))
+            {
+                _errorMessage = "Nome e cognome della persona sono obbligatori.";
+                return;
+            }
+
+            if (_inlinePersona.DataNascita is null)
+            {
+                _errorMessage = "Data nascita persona obbligatoria.";
+                return;
+            }
+        }
+        else if (personaId is null)
+        {
+            _errorMessage = "Persona obbligatoria.";
+            return;
+        }
+
+        if (_dataAssunzione is null)
+        {
+            _errorMessage = "Data assunzione obbligatoria.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            if (_createPersonaInline)
+            {
+                var personaPayload = new CreatePersonaRequest(
+                    _inlinePersona.Cognome.Trim(),
+                    _inlinePersona.Nome.Trim(),
+                    string.IsNullOrWhiteSpace(_inlinePersona.CodiceFiscale) ? null : _inlinePersona.CodiceFiscale.Trim(),
+                    _inlinePersona.DataNascita!.Value.Date);
+
+                var personaResult = await GatewayClient.CreatePersonaAsync(personaPayload, CancellationToken.None);
+                if (!personaResult.IsSuccess || personaResult.Data is null)
+                {
+                    _errorMessage = personaResult.Error ?? "Creazione persona inline non riuscita.";
+                    return;
+                }
+
+                personaId = personaResult.Data.PersonaId;
+                _model.Persona = new PersonaLookupItem(
+                    personaResult.Data.PersonaId,
+                    personaResult.Data.Cognome,
+                    personaResult.Data.Nome,
+                    personaResult.Data.CodiceFiscale,
+                    personaResult.Data.DataNascita);
+            }
+
+            var request = new CreateDipendenteRequest(
+                personaId!.Value,
+                _model.Matricola.Trim(),
+                _model.EmailAziendale,
+                _model.TelefonoInterno,
+                UnitaOrganizzativaId: null,
+                ResponsabileDirettoId: null,
+                DataAssunzione: DateOnly.FromDateTime(_dataAssunzione.Value.Date),
+                DataCessazione: _dataCessazione.HasValue ? DateOnly.FromDateTime(_dataCessazione.Value.Date) : null,
+                StatoDipendenteId: _model.StatoDipendenteId,
+                AbilitatoAttivitaIspettiva: false,
+                Note: null);
+
+            var result = await GatewayClient.CreateDipendenteAsync(request, CancellationToken.None);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                Snackbar.Add("Dipendente creato.", Severity.Success);
+                Navigation.NavigateTo($"/risorse-umane/dipendenti/{result.Data.DipendenteId}");
+                return;
+            }
+
+            _errorMessage = result.Error ?? "Creazione dipendente non riuscita.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

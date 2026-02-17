@@ -15,6 +15,20 @@ internal static class Validator
         {
             errors["matricola"] = ["Matricola obbligatoria."];
         }
+        else if (request.Matricola.Trim().Length > 20)
+        {
+            errors["matricola"] = ["Matricola non puo superare 20 caratteri."];
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.EmailAziendale) && request.EmailAziendale.Trim().Length > 100)
+        {
+            errors["emailAziendale"] = ["EmailAziendale non puo superare 100 caratteri."];
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.TelefonoInterno) && request.TelefonoInterno.Trim().Length > 10)
+        {
+            errors["telefonoInterno"] = ["TelefonoInterno non puo superare 10 caratteri."];
+        }
 
         if (request.DataCessazione.HasValue && request.DataCessazione.Value < request.DataAssunzione)
         {
@@ -43,4 +57,3 @@ internal static class Validator
             request.AbilitatoAttivitaIspettiva,
             request.Note));
 }
-

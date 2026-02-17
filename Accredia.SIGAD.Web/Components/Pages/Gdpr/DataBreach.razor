@@ -1,0 +1,394 @@
+@page "/gdpr/data-breach"
+@inject GatewayClient GatewayClient
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Data Breach"
+                Subtitle="Gestione incidenti sicurezza (CRUD)"
+                Breadcrumbs="Home / GDPR / Data Breach" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="2">
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-4 sigad-card mb-3">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.subtitle2">Filtri</MudText>
+                    <MudSpacer />
+                    <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_loading" />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_loading" OnClick="LoadAsync">Applica</MudButton>
+                </MudStack>
+                <MudGrid Spacing="1" Class="mt-1">
+                    <MudItem xs="12" sm="6"><MudTextField T="string" Label="Stato" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterStato" /></MudItem>
+                    <MudItem xs="12" sm="6"><MudTextField T="string" Label="Tipo violazione" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterTipo" /></MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 sigad-card">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.subtitle2">Elenco (@FilteredItems.Count)</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanCreate" OnClick="BeginCreate">Nuovo</MudButton>
+                </MudStack>
+                @if (_loading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    <MudTable Items="FilteredItems" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Codice</MudTh><MudTh>Titolo</MudTh><MudTh>Tipo</MudTh><MudTh>Stato</MudTh><MudTh>Scoperta</MudTh><MudTh Align="Right"></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Codice</MudTd>
+                            <MudTd>@context.Titolo</MudTd>
+                            <MudTd>@context.TipoViolazione</MudTd>
+                            <MudTd>@context.Stato</MudTd>
+                            <MudTd>@context.DataScoperta.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.DataBreachId))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.DataBreachId))" />
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent><MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" /></PagerContent>
+                    </MudTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-4 sigad-card">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">@(_editId.HasValue ? $"Modifica #{_editId}" : "Nuovo Data Breach")</MudText>
+                @if (!string.IsNullOrWhiteSpace(_formMessage))
+                {
+                    <MudAlert Severity="@(_formSuccess ? Severity.Success : Severity.Warning)" Variant="Variant.Outlined" Dense="true" Class="mb-2">@_formMessage</MudAlert>
+                }
+                <MudGrid Spacing="1">
+                    <MudItem xs="12"><MudTextField T="string" Label="Codice *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Codice" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Titolo *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Titolo" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Descrizione *" Dense="true" Variant="Variant.Outlined" Lines="2" @bind-Value="_form.Descrizione" /></MudItem>
+                    <MudItem xs="6"><MudDatePicker Label="Data scoperta *" Variant="Variant.Outlined" @bind-Date="_form.DataScoperta" /></MudItem>
+                    <MudItem xs="6"><MudTextField T="string" Label="Stato *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Stato" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Tipo violazione *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.TipoViolazione" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Causa *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CausaViolazione" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Categorie dati *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CategorieDatiCoinvolti" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Categorie interessati *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CategorieInteressati" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Rischio *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.RischioPerInteressati" /></MudItem>
+                    <MudItem xs="12">
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanSave" OnClick="SaveAsync">@(_editId.HasValue ? "Salva" : "Crea")</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="_loading" OnClick="BeginCreate">Annulla</MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool _loading;
+    private string? _errorMessage;
+    private string? _formMessage;
+    private bool _formSuccess;
+    private bool _includeDeleted;
+    private string? _filterStato;
+    private string? _filterTipo;
+    private int? _editId;
+
+    private IReadOnlyList<DataBreachItem> _items = Array.Empty<DataBreachItem>();
+    private DataBreachFormModel _form = DataBreachFormModel.CreateDefault();
+    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
+    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
+    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
+    private bool CanSave => _editId.HasValue ? CanUpdate : CanCreate;
+
+    private IReadOnlyList<DataBreachItem> FilteredItems
+    {
+        get
+        {
+            IEnumerable<DataBreachItem> query = _items;
+            if (!string.IsNullOrWhiteSpace(_filterStato)) query = query.Where(x => x.Stato.Contains(_filterStato.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(_filterTipo)) query = query.Where(x => x.TipoViolazione.Contains(_filterTipo.Trim(), StringComparison.OrdinalIgnoreCase));
+            return query.OrderByDescending(x => x.DataScoperta).ToArray();
+        }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (!CanRead)
+        {
+            _errorMessage = "Accesso negato: permesso di lettura mancante.";
+            return;
+        }
+
+        _loading = true;
+        _errorMessage = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var result = await GatewayClient.GetDataBreachAsync(_includeDeleted, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                _errorMessage = result.Error ?? "Impossibile caricare data breach.";
+                return;
+            }
+
+            _items = result.Data ?? Array.Empty<DataBreachItem>();
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginCreate()
+    {
+        if (!CanCreate)
+        {
+            _formMessage = "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = null;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = DataBreachFormModel.CreateDefault();
+    }
+
+    private void BeginEdit(DataBreachItem item)
+    {
+        if (!CanUpdate)
+        {
+            _formMessage = "Accesso negato: permesso di modifica mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = item.DataBreachId;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = DataBreachFormModel.FromItem(item);
+    }
+
+    private async Task LoadByIdAsync(int id)
+    {
+        if (!CanRead)
+        {
+            _formMessage = "Accesso negato: permesso di lettura mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        var result = await GatewayClient.GetDataBreachByIdAsync(id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _formMessage = result.Error ?? "Impossibile caricare dettaglio.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = id;
+        _form = DataBreachFormModel.FromItem(result.Data);
+        _formMessage = $"Dettaglio #{id} caricato.";
+        _formSuccess = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave)
+        {
+            _formMessage = _editId.HasValue
+                ? "Accesso negato: permesso di modifica mancante."
+                : "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.Codice) || string.IsNullOrWhiteSpace(_form.Titolo) || string.IsNullOrWhiteSpace(_form.Descrizione) || _form.DataScoperta is null)
+        {
+            _formMessage = "Compila i campi obbligatori.";
+            _formSuccess = false;
+            return;
+        }
+
+        var result = _editId.HasValue
+            ? await GatewayClient.UpdateDataBreachAsync(_editId.Value, _form.ToUpdateRequest(), CancellationToken.None)
+            : await GatewayClient.CreateDataBreachAsync(_form.ToCreateRequest(), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _formMessage = result.Error ?? "Operazione non riuscita.";
+            _formSuccess = false;
+            return;
+        }
+
+        _formMessage = _editId.HasValue ? "Data breach aggiornato." : "Data breach creato.";
+        _formSuccess = true;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        if (!CanDelete)
+        {
+            _errorMessage = "Accesso negato: permesso di eliminazione mancante.";
+            return;
+        }
+
+        var result = await GatewayClient.DeleteDataBreachAsync(id, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione non riuscita.";
+            return;
+        }
+
+        if (_editId == id) BeginCreate();
+        await LoadAsync();
+    }
+
+    private sealed class DataBreachFormModel
+    {
+        public string Codice { get; set; } = string.Empty;
+        public string Titolo { get; set; } = string.Empty;
+        public string Descrizione { get; set; } = string.Empty;
+        public DateTime? DataScoperta { get; set; } = DateTime.Today;
+        public DateTime? DataInizioViolazione { get; set; }
+        public DateTime? DataFineViolazione { get; set; }
+        public string TipoViolazione { get; set; } = "Accesso non autorizzato";
+        public string CausaViolazione { get; set; } = "Errore umano";
+        public string CategorieDatiCoinvolti { get; set; } = "Dati identificativi";
+        public bool DatiParticolariCoinvolti { get; set; }
+        public int? NumeroInteressatiStimato { get; set; }
+        public string CategorieInteressati { get; set; } = "Clienti";
+        public string RischioPerInteressati { get; set; } = "Medio";
+        public string? DescrizioneRischio { get; set; }
+        public bool NotificaGaranteRichiesta { get; set; }
+        public DateTime? DataNotificaGarante { get; set; }
+        public string? ProtocolloGarante { get; set; }
+        public DateTime? TermineNotificaGarante { get; set; }
+        public bool ComunicazioneInteressatiRichiesta { get; set; }
+        public DateTime? DataComunicazioneInteressati { get; set; }
+        public string? ModalitaComunicazione { get; set; }
+        public string? MisureContenimento { get; set; } = "Contenimento standard";
+        public string? MisurePrevenzione { get; set; } = "Prevenzione standard";
+        public int? ResponsabileGestioneId { get; set; }
+        public bool DPOCoinvolto { get; set; }
+        public string Stato { get; set; } = "Aperto";
+        public DateTime? DataChiusura { get; set; }
+
+        public static DataBreachFormModel CreateDefault() => new();
+
+        public static DataBreachFormModel FromItem(DataBreachItem item)
+            => new()
+            {
+                Codice = item.Codice,
+                Titolo = item.Titolo,
+                Descrizione = item.Descrizione,
+                DataScoperta = item.DataScoperta,
+                DataInizioViolazione = item.DataInizioViolazione,
+                DataFineViolazione = item.DataFineViolazione,
+                TipoViolazione = item.TipoViolazione,
+                CausaViolazione = item.CausaViolazione,
+                CategorieDatiCoinvolti = item.CategorieDatiCoinvolti,
+                DatiParticolariCoinvolti = item.DatiParticolariCoinvolti,
+                NumeroInteressatiStimato = item.NumeroInteressatiStimato,
+                CategorieInteressati = item.CategorieInteressati,
+                RischioPerInteressati = item.RischioPerInteressati,
+                DescrizioneRischio = item.DescrizioneRischio,
+                NotificaGaranteRichiesta = item.NotificaGaranteRichiesta,
+                DataNotificaGarante = item.DataNotificaGarante,
+                ProtocolloGarante = item.ProtocolloGarante,
+                TermineNotificaGarante = item.TermineNotificaGarante,
+                ComunicazioneInteressatiRichiesta = item.ComunicazioneInteressatiRichiesta,
+                DataComunicazioneInteressati = item.DataComunicazioneInteressati,
+                ModalitaComunicazione = item.ModalitaComunicazione,
+                MisureContenimento = item.MisureContenimento,
+                MisurePrevenzione = item.MisurePrevenzione,
+                ResponsabileGestioneId = item.ResponsabileGestioneId,
+                DPOCoinvolto = item.DPOCoinvolto,
+                Stato = item.Stato,
+                DataChiusura = item.DataChiusura
+            };
+
+        public CreateDataBreachRequest ToCreateRequest()
+            => new(
+                Codice.Trim(),
+                Titolo.Trim(),
+                Descrizione.Trim(),
+                DataScoperta!.Value,
+                DataInizioViolazione,
+                DataFineViolazione,
+                TipoViolazione.Trim(),
+                CausaViolazione.Trim(),
+                CategorieDatiCoinvolti.Trim(),
+                DatiParticolariCoinvolti,
+                NumeroInteressatiStimato,
+                CategorieInteressati.Trim(),
+                RischioPerInteressati.Trim(),
+                NullIfWhiteSpace(DescrizioneRischio),
+                NotificaGaranteRichiesta,
+                DataNotificaGarante,
+                NullIfWhiteSpace(ProtocolloGarante),
+                TermineNotificaGarante,
+                ComunicazioneInteressatiRichiesta,
+                DataComunicazioneInteressati,
+                NullIfWhiteSpace(ModalitaComunicazione),
+                NullIfWhiteSpace(MisureContenimento),
+                NullIfWhiteSpace(MisurePrevenzione),
+                ResponsabileGestioneId,
+                DPOCoinvolto,
+                Stato.Trim(),
+                DataChiusura);
+
+        public UpdateDataBreachRequest ToUpdateRequest()
+            => new(
+                Codice.Trim(),
+                Titolo.Trim(),
+                Descrizione.Trim(),
+                DataScoperta!.Value,
+                DataInizioViolazione,
+                DataFineViolazione,
+                TipoViolazione.Trim(),
+                CausaViolazione.Trim(),
+                CategorieDatiCoinvolti.Trim(),
+                DatiParticolariCoinvolti,
+                NumeroInteressatiStimato,
+                CategorieInteressati.Trim(),
+                RischioPerInteressati.Trim(),
+                NullIfWhiteSpace(DescrizioneRischio),
+                NotificaGaranteRichiesta,
+                DataNotificaGarante,
+                NullIfWhiteSpace(ProtocolloGarante),
+                TermineNotificaGarante,
+                ComunicazioneInteressatiRichiesta,
+                DataComunicazioneInteressati,
+                NullIfWhiteSpace(ModalitaComunicazione),
+                NullIfWhiteSpace(MisureContenimento),
+                NullIfWhiteSpace(MisurePrevenzione),
+                ResponsabileGestioneId,
+                DPOCoinvolto,
+                Stato.Trim(),
+                DataChiusura);
+
+        private static string? NullIfWhiteSpace(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+}

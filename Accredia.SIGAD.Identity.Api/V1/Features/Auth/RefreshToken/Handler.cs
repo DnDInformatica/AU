@@ -46,6 +46,23 @@ FROM [Identity].[AspNetUsers]
 WHERE [Id] = @UserId;
 ";
 
+        const string rolesSql = @"
+SELECT r.[Name]
+FROM [Identity].[AspNetUserRoles] ur WITH (NOLOCK)
+INNER JOIN [Identity].[AspNetRoles] r WITH (NOLOCK) ON ur.[RoleId] = r.[Id]
+WHERE ur.[UserId] = @UserId;
+";
+
+        const string permissionsSql = @"
+SELECT DISTINCT p.[Code]
+FROM [Identity].[AspNetUserRoles] ur WITH (NOLOCK)
+INNER JOIN [Identity].[RolePermission] rp WITH (NOLOCK) ON rp.[RoleId] = ur.[RoleId]
+INNER JOIN [Identity].[Permission] p WITH (NOLOCK) ON p.[PermissionId] = rp.[PermissionId]
+WHERE ur.[UserId] = @UserId
+  AND p.[IsDeleted] = 0
+  AND p.[Attivo] = 1;
+";
+
         await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         var refreshToken = await connection.QuerySingleOrDefaultAsync<RefreshTokenRecord>(
@@ -69,6 +86,11 @@ WHERE [Id] = @UserId;
         if (user is null)
             return null;
 
+        var roles = await connection.QueryAsync<string>(
+            new CommandDefinition(rolesSql, new { UserId = user.Id }, cancellationToken: cancellationToken));
+        var permissions = await connection.QueryAsync<string>(
+            new CommandDefinition(permissionsSql, new { UserId = user.Id }, cancellationToken: cancellationToken));
+
         var jwt = jwtOptions.Value;
         var claims = new List<Claim>
         {
@@ -78,6 +100,14 @@ WHERE [Id] = @UserId;
             new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+        foreach (var permission in permissions)
+        {
+            claims.Add(new Claim("perm", permission));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -4,8 +4,15 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanUpdate)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica persona"
@@ -82,7 +89,7 @@
                 <MudDivider Class="my-4" />
 
                 <MudStack Direction="Row" Spacing="1" Justify="Justify.SpaceBetween">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="SoftDeleteAsync" Disabled="_isSubmitting">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="SoftDeleteAsync" Disabled="_isSubmitting || !CanDelete">
                         Elimina (soft)
                     </MudButton>
 
@@ -120,6 +127,8 @@
     }
 
     private PersonaDetail? _detail;
+    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
     private bool _isLoading = true;
     private string? _errorMessage;
     private readonly FormModel _model = new();
@@ -218,6 +227,12 @@
 
     private async Task SoftDeleteAsync()
     {
+        if (!CanDelete)
+        {
+            Snackbar.Add("Accesso negato: permesso di eliminazione mancante.", Severity.Error);
+            return;
+        }
+
         if (_isSubmitting)
         {
             return;

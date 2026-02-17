@@ -1,0 +1,384 @@
+@page "/gdpr/registro-trattamenti"
+@inject GatewayClient GatewayClient
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Registro Trattamenti"
+                Subtitle="Gestione registro trattamenti (CRUD)"
+                Breadcrumbs="Home / GDPR / Registro Trattamenti" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="2">
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-4 sigad-card mb-3">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.subtitle2">Filtri</MudText>
+                    <MudSpacer />
+                    <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_loading" />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_loading" OnClick="LoadAsync">Applica</MudButton>
+                </MudStack>
+                <MudGrid Spacing="1" Class="mt-1">
+                    <MudItem xs="12" sm="4"><MudTextField T="string" Label="Stato" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterStato" /></MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 sigad-card">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.subtitle2">Elenco (@FilteredItems.Count)</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanCreate" OnClick="BeginCreate">Nuovo</MudButton>
+                </MudStack>
+                @if (_loading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    <MudTable Items="FilteredItems" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Codice</MudTh><MudTh>Nome</MudTh><MudTh>Finalita</MudTh><MudTh>Stato</MudTh><MudTh>Inizio</MudTh><MudTh Align="Right"></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Codice</MudTd>
+                            <MudTd>@context.NomeTrattamento</MudTd>
+                            <MudTd>@GetFinalitaLabel(context.TipoFinalitaTrattamentoId)</MudTd>
+                            <MudTd>@context.Stato</MudTd>
+                            <MudTd>@context.DataInizioTrattamento.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RegistroTrattamentiId))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RegistroTrattamentiId))" />
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent><MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" /></PagerContent>
+                    </MudTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-4 sigad-card">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">@(_editId.HasValue ? $"Modifica #{_editId}" : "Nuovo trattamento")</MudText>
+                @if (!string.IsNullOrWhiteSpace(_formMessage))
+                {
+                    <MudAlert Severity="@(_formSuccess ? Severity.Success : Severity.Warning)" Variant="Variant.Outlined" Dense="true" Class="mb-2">@_formMessage</MudAlert>
+                }
+                <MudGrid Spacing="1">
+                    <MudItem xs="12"><MudTextField T="string" Label="Codice *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Codice" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Nome trattamento *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.NomeTrattamento" /></MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="int" Label="Finalita *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.TipoFinalitaTrattamentoId">
+                            @foreach (var f in _lookups)
+                            {
+                                <MudSelectItem T="int" Value="@f.Id">@f.Description</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Base giuridica *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.BaseGiuridica" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Categorie dati *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CategorieDati" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Categorie interessati *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CategorieInteressati" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Termine conservazione *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.TermineConservazione" /></MudItem>
+                    <MudItem xs="6"><MudTextField T="string" Label="Stato *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Stato" /></MudItem>
+                    <MudItem xs="6"><MudDatePicker Label="Data inizio *" Variant="Variant.Outlined" @bind-Date="_form.DataInizioTrattamento" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Descrizione" Dense="true" Variant="Variant.Outlined" Lines="2" @bind-Value="_form.Descrizione" /></MudItem>
+                    <MudItem xs="12">
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanSave" OnClick="SaveAsync">@(_editId.HasValue ? "Salva" : "Crea")</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="_loading" OnClick="BeginCreate">Annulla</MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool _loading;
+    private string? _errorMessage;
+    private string? _formMessage;
+    private bool _formSuccess;
+    private bool _includeDeleted;
+    private string? _filterStato;
+    private int? _editId;
+
+    private IReadOnlyList<TipoFinalitaRegistroTrattamentiLookupItem> _lookups = Array.Empty<TipoFinalitaRegistroTrattamentiLookupItem>();
+    private IReadOnlyList<RegistroTrattamentiItem> _items = Array.Empty<RegistroTrattamentiItem>();
+    private RegistroFormModel _form = RegistroFormModel.CreateDefault();
+    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
+    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
+    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
+    private bool CanSave => _editId.HasValue ? CanUpdate : CanCreate;
+
+    private IReadOnlyList<RegistroTrattamentiItem> FilteredItems
+        => string.IsNullOrWhiteSpace(_filterStato)
+            ? _items.OrderByDescending(x => x.DataInizioTrattamento).ToArray()
+            : _items.Where(x => x.Stato.Contains(_filterStato.Trim(), StringComparison.OrdinalIgnoreCase)).OrderByDescending(x => x.DataInizioTrattamento).ToArray();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (!CanRead)
+        {
+            _errorMessage = "Accesso negato: permesso di lettura mancante.";
+            return;
+        }
+
+        _loading = true;
+        _errorMessage = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetRegistroTrattamentiLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetRegistroTrattamentiAsync(_includeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _errorMessage = lookups.Error ?? list.Error ?? "Impossibile caricare registro trattamenti.";
+                return;
+            }
+
+            _lookups = lookups.Data ?? Array.Empty<TipoFinalitaRegistroTrattamentiLookupItem>();
+            _items = list.Data ?? Array.Empty<RegistroTrattamentiItem>();
+            if (_form.TipoFinalitaTrattamentoId == 0 && _lookups.Count > 0) _form.TipoFinalitaTrattamentoId = _lookups[0].Id;
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginCreate()
+    {
+        if (!CanCreate)
+        {
+            _formMessage = "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = null;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = RegistroFormModel.CreateDefault();
+        if (_lookups.Count > 0) _form.TipoFinalitaTrattamentoId = _lookups[0].Id;
+    }
+
+    private void BeginEdit(RegistroTrattamentiItem item)
+    {
+        if (!CanUpdate)
+        {
+            _formMessage = "Accesso negato: permesso di modifica mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = item.RegistroTrattamentiId;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = RegistroFormModel.FromItem(item);
+    }
+
+    private async Task LoadByIdAsync(int id)
+    {
+        if (!CanRead)
+        {
+            _formMessage = "Accesso negato: permesso di lettura mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        var result = await GatewayClient.GetRegistroTrattamentiByIdAsync(id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _formMessage = result.Error ?? "Impossibile caricare dettaglio.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = id;
+        _form = RegistroFormModel.FromItem(result.Data);
+        _formMessage = $"Dettaglio #{id} caricato.";
+        _formSuccess = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave)
+        {
+            _formMessage = _editId.HasValue
+                ? "Accesso negato: permesso di modifica mancante."
+                : "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_form.Codice) || string.IsNullOrWhiteSpace(_form.NomeTrattamento) || _form.TipoFinalitaTrattamentoId <= 0 || _form.DataInizioTrattamento is null)
+        {
+            _formMessage = "Compila i campi obbligatori.";
+            _formSuccess = false;
+            return;
+        }
+
+        var result = _editId.HasValue
+            ? await GatewayClient.UpdateRegistroTrattamentiAsync(_editId.Value, _form.ToUpdateRequest(), CancellationToken.None)
+            : await GatewayClient.CreateRegistroTrattamentiAsync(_form.ToCreateRequest(), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _formMessage = result.Error ?? "Operazione non riuscita.";
+            _formSuccess = false;
+            return;
+        }
+
+        _formMessage = _editId.HasValue ? "Trattamento aggiornato." : "Trattamento creato.";
+        _formSuccess = true;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        if (!CanDelete)
+        {
+            _errorMessage = "Accesso negato: permesso di eliminazione mancante.";
+            return;
+        }
+
+        var result = await GatewayClient.DeleteRegistroTrattamentiAsync(id, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione non riuscita.";
+            return;
+        }
+
+        if (_editId == id) BeginCreate();
+        await LoadAsync();
+    }
+
+    private string GetFinalitaLabel(int id)
+        => _lookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+
+    private sealed class RegistroFormModel
+    {
+        public string Codice { get; set; } = string.Empty;
+        public string NomeTrattamento { get; set; } = string.Empty;
+        public string? Descrizione { get; set; }
+        public int TipoFinalitaTrattamentoId { get; set; }
+        public string BaseGiuridica { get; set; } = "Consenso";
+        public string CategorieDati { get; set; } = "Dati identificativi";
+        public string CategorieInteressati { get; set; } = "Clienti";
+        public bool DatiParticolari { get; set; }
+        public bool DatiGiudiziari { get; set; }
+        public string? CategorieDestinatari { get; set; }
+        public bool TrasferimentoExtraUE { get; set; }
+        public string? PaesiExtraUE { get; set; }
+        public string? GaranzieExtraUE { get; set; }
+        public string TermineConservazione { get; set; } = "10 anni";
+        public int? TermineConservazioneGiorni { get; set; }
+        public string? MisureSicurezza { get; set; } = "Misure standard";
+        public int? ResponsabileTrattamentoId { get; set; }
+        public int? ContitolareId { get; set; }
+        public bool DPONotificato { get; set; }
+        public string Stato { get; set; } = "Attivo";
+        public DateTime? DataInizioTrattamento { get; set; } = DateTime.Today;
+        public DateTime? DataFineTrattamento { get; set; }
+
+        public static RegistroFormModel CreateDefault() => new();
+
+        public static RegistroFormModel FromItem(RegistroTrattamentiItem item)
+            => new()
+            {
+                Codice = item.Codice,
+                NomeTrattamento = item.NomeTrattamento,
+                Descrizione = item.Descrizione,
+                TipoFinalitaTrattamentoId = item.TipoFinalitaTrattamentoId,
+                BaseGiuridica = item.BaseGiuridica,
+                CategorieDati = item.CategorieDati,
+                CategorieInteressati = item.CategorieInteressati,
+                DatiParticolari = item.DatiParticolari,
+                DatiGiudiziari = item.DatiGiudiziari,
+                CategorieDestinatari = item.CategorieDestinatari,
+                TrasferimentoExtraUE = item.TrasferimentoExtraUE,
+                PaesiExtraUE = item.PaesiExtraUE,
+                GaranzieExtraUE = item.GaranzieExtraUE,
+                TermineConservazione = item.TermineConservazione,
+                TermineConservazioneGiorni = item.TermineConservazioneGiorni,
+                MisureSicurezza = item.MisureSicurezza,
+                ResponsabileTrattamentoId = item.ResponsabileTrattamentoId,
+                ContitolareId = item.ContitolareId,
+                DPONotificato = item.DPONotificato,
+                Stato = item.Stato,
+                DataInizioTrattamento = item.DataInizioTrattamento,
+                DataFineTrattamento = item.DataFineTrattamento
+            };
+
+        public CreateRegistroTrattamentiRequest ToCreateRequest()
+            => new(
+                Codice.Trim(),
+                NomeTrattamento.Trim(),
+                NullIfWhiteSpace(Descrizione),
+                TipoFinalitaTrattamentoId,
+                BaseGiuridica.Trim(),
+                CategorieDati.Trim(),
+                CategorieInteressati.Trim(),
+                DatiParticolari,
+                DatiGiudiziari,
+                NullIfWhiteSpace(CategorieDestinatari),
+                TrasferimentoExtraUE,
+                NullIfWhiteSpace(PaesiExtraUE),
+                NullIfWhiteSpace(GaranzieExtraUE),
+                TermineConservazione.Trim(),
+                TermineConservazioneGiorni,
+                NullIfWhiteSpace(MisureSicurezza),
+                ResponsabileTrattamentoId,
+                ContitolareId,
+                DPONotificato,
+                Stato.Trim(),
+                DataInizioTrattamento!.Value,
+                DataFineTrattamento);
+
+        public UpdateRegistroTrattamentiRequest ToUpdateRequest()
+            => new(
+                Codice.Trim(),
+                NomeTrattamento.Trim(),
+                NullIfWhiteSpace(Descrizione),
+                TipoFinalitaTrattamentoId,
+                BaseGiuridica.Trim(),
+                CategorieDati.Trim(),
+                CategorieInteressati.Trim(),
+                DatiParticolari,
+                DatiGiudiziari,
+                NullIfWhiteSpace(CategorieDestinatari),
+                TrasferimentoExtraUE,
+                NullIfWhiteSpace(PaesiExtraUE),
+                NullIfWhiteSpace(GaranzieExtraUE),
+                TermineConservazione.Trim(),
+                TermineConservazioneGiorni,
+                NullIfWhiteSpace(MisureSicurezza),
+                ResponsabileTrattamentoId,
+                ContitolareId,
+                DPONotificato,
+                Stato.Trim(),
+                DataInizioTrattamento!.Value,
+                DataFineTrattamento);
+
+        private static string? NullIfWhiteSpace(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+}

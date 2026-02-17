@@ -15,9 +15,9 @@ internal static class Endpoints
                 .Produces(StatusCodes.Status404NotFound));
 
         ApiVersioning.MapVersionedGet(app, "/dipendenti", "ListDipendenti",
-            async (int? personaId, string? matricola, bool? includeDeleted, int? page, int? pageSize,
+            async (int? personaId, string? matricola, string? q, int? statoDipendenteId, bool? includeDeleted, int? page, int? pageSize,
                     ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
-                => await Handler.ListAsync(personaId, matricola, includeDeleted == true, page ?? 1, pageSize ?? 20, connectionFactory, cancellationToken),
+                => await Handler.ListAsync(personaId, matricola, q, statoDipendenteId, includeDeleted == true, page ?? 1, pageSize ?? 20, connectionFactory, cancellationToken),
             builder => builder
                 .Produces<PagedResponse<DipendenteDto>>(StatusCodes.Status200OK));
 
@@ -107,4 +107,3 @@ internal static class Endpoints
                 .Produces<IReadOnlyCollection<DipendenteStoricoDto>>(StatusCodes.Status200OK));
     }
 }
-

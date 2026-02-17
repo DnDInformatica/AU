@@ -42,13 +42,13 @@ builder.Services
             if (context.HttpContext.Request.Headers.TryGetValue(correlationHeader, out var correlationId))
             {
                 context.ProxyRequest.Headers.Remove(correlationHeader);
-                context.ProxyRequest.Headers.TryAddWithoutValidation(correlationHeader, (string[])correlationId);
+                context.ProxyRequest.Headers.TryAddWithoutValidation(correlationHeader, correlationId.ToArray());
             }
 
             if (context.HttpContext.Request.Headers.TryGetValue("Authorization", out var authorization))
             {
                 context.ProxyRequest.Headers.Remove("Authorization");
-                context.ProxyRequest.Headers.TryAddWithoutValidation("Authorization", (string[])authorization);
+                context.ProxyRequest.Headers.TryAddWithoutValidation("Authorization", authorization.ToArray());
             }
 
             return ValueTask.CompletedTask;
@@ -169,6 +169,129 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
     options.AddPolicy("Admin", policy => policy.RequireRole("SIGAD_ADMIN", "SIGAD_SUPERADMIN"));
+    options.AddPolicy(
+        "PersRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "PERS.LIST")
+                || context.User.HasClaim("perm", "PERS.READ")));
+    options.AddPolicy(
+        "PersCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "PERS.CREATE"));
+    options.AddPolicy(
+        "PersUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "PERS.UPDATE"));
+    options.AddPolicy(
+        "PersDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "PERS.DELETE"));
+    options.AddPolicy(
+        "HrPersonaRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.PERSONA.READ"));
+    options.AddPolicy(
+        "HrDipRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "HR.DIP.LIST")
+                || context.User.HasClaim("perm", "HR.DIP.READ")));
+    options.AddPolicy(
+        "HrDipCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DIP.CREATE"));
+    options.AddPolicy(
+        "HrDipUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DIP.UPDATE"));
+    options.AddPolicy(
+        "HrDipDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DIP.DELETE"));
+    options.AddPolicy(
+        "HrContrattiRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "HR.CONTRATTI.LIST")
+                || context.User.HasClaim("perm", "HR.CONTRATTI.READ")));
+    options.AddPolicy(
+        "HrContrattiCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.CONTRATTI.CREATE"));
+    options.AddPolicy(
+        "HrContrattiUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.CONTRATTI.UPDATE"));
+    options.AddPolicy(
+        "HrContrattiDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.CONTRATTI.DELETE"));
+    options.AddPolicy(
+        "HrDotazioniRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "HR.DOTAZIONI.LIST")
+                || context.User.HasClaim("perm", "HR.DOTAZIONI.READ")));
+    options.AddPolicy(
+        "HrDotazioniCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DOTAZIONI.CREATE"));
+    options.AddPolicy(
+        "HrDotazioniUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DOTAZIONI.UPDATE"));
+    options.AddPolicy(
+        "HrDotazioniDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.DOTAZIONI.DELETE"));
+    options.AddPolicy(
+        "HrFormRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "HR.FORM.LIST")
+                || context.User.HasClaim("perm", "HR.FORM.READ")));
+    options.AddPolicy(
+        "HrFormCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.FORM.CREATE"));
+    options.AddPolicy(
+        "HrFormUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.FORM.UPDATE"));
+    options.AddPolicy(
+        "HrFormDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "HR.FORM.DELETE"));
+    options.AddPolicy(
+        "HrDipReadPersona",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                (context.User.HasClaim("perm", "HR.DIP.LIST")
+                 || context.User.HasClaim("perm", "HR.DIP.READ"))
+                && context.User.HasClaim("perm", "HR.PERSONA.READ")));
 });
 
 // Rate limiting (Gateway)

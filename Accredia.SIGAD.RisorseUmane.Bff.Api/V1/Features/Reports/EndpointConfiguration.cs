@@ -1,0 +1,9 @@
+using Accredia.SIGAD.RisorseUmane.Bff.Api;
+
+namespace Accredia.SIGAD.RisorseUmane.Bff.Api.V1.Features.Reports;
+
+internal sealed class EndpointConfiguration : IEndpointConfiguration
+{
+    public void MapEndpoints(IEndpointRouteBuilder app)
+        => Endpoints.Map(app);
+}

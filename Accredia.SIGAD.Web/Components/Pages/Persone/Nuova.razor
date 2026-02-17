@@ -3,8 +3,15 @@
 @inject GatewayClient GatewayClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanCreate)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuova persona"
@@ -102,6 +109,7 @@
     }
 
     private readonly FormModel _model = new();
+    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
     private MudForm? _form;
     private bool _isSubmitting;
     private string? _errorMessage;

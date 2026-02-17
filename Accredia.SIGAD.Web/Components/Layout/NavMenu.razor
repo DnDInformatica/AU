@@ -35,10 +35,18 @@
         @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
         {
             @NavLink("Persone", Icons.Material.Filled.People, "/persone")
+            @NavLink("Richieste GDPR", Icons.Material.Filled.GppGood, "/gdpr/richieste")
+            @NavLink("Esercizio Diritti", Icons.Material.Filled.Policy, "/gdpr/richieste-esercizio-diritti")
+            @NavLink("Registro Trattamenti", Icons.Material.Filled.MenuBook, "/gdpr/registro-trattamenti")
+            @NavLink("Data Breach", Icons.Material.Filled.WarningAmber, "/gdpr/data-breach")
         }
         @if (UserContext.HasPermission("MODULE.INC.ACCESS"))
         {
             @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
+        }
+        @if (_hasRuAccess)
+        {
+            @NavLink("Dipendenti", Icons.Material.Filled.Groups, "/risorse-umane/dipendenti")
         }
     }
 
@@ -89,6 +97,13 @@
         UserContext.HasPermission("MODULE.ORG.ACCESS")
         || UserContext.HasPermission("MODULE.PERS.ACCESS")
         || UserContext.HasPermission("MODULE.INC.ACCESS");
+
+    private bool _hasRuAccess =>
+        UserContext.HasPermission("HR.DIP.LIST")
+        || UserContext.HasPermission("HR.DIP.READ")
+        || UserContext.HasPermission("HR.DIP.CREATE")
+        || UserContext.HasPermission("HR.DIP.UPDATE")
+        || UserContext.HasPermission("HR.DIP.DELETE");
 
     private bool _hasAdminAccess =>
         UserContext.IsAdmin && UserContext.HasPermission("MODULE.ADMIN.ACCESS");

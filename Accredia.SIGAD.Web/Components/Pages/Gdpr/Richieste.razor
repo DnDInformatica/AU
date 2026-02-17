@@ -1,0 +1,520 @@
+@page "/gdpr/richieste"
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Richieste GDPR"
+                Subtitle="Gestione richieste interessati (CRUD)"
+                Breadcrumbs="Home / GDPR / Richieste" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="2">
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-4 sigad-card mb-3">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.subtitle2">Filtri</MudText>
+                    <MudSpacer />
+                    <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_loading" />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_loading" OnClick="LoadAsync">Applica</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="_loading" OnClick="ResetFiltersAsync">Reset</MudButton>
+                </MudStack>
+                <MudGrid Spacing="1">
+                    <MudItem xs="12" sm="3">
+                        <MudTextField T="int?" Label="PersonaId" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterPersonaId" />
+                    </MudItem>
+                    <MudItem xs="12" sm="3">
+                        <MudSelect T="int?" Label="Tipo diritto" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterTipoDirittoId">
+                            <MudSelectItem T="int?" Value="@null">Tutti</MudSelectItem>
+                            @foreach (var tipo in _lookups)
+                            {
+                                <MudSelectItem T="int?" Value="@tipo.Id">@tipo.Description</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudTextField T="string" Label="Stato" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterStato" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudDatePicker Label="Da" Variant="Variant.Outlined" @bind-Date="_filterFrom" />
+                    </MudItem>
+                    <MudItem xs="12" sm="2">
+                        <MudDatePicker Label="A" Variant="Variant.Outlined" @bind-Date="_filterTo" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 sigad-card">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.subtitle2">Elenco richieste (@FilteredItems.Count)</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanCreate" OnClick="BeginCreate">Nuova richiesta</MudButton>
+                </MudStack>
+
+                @if (_loading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    <MudTable Items="FilteredItems" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Codice</MudTh>
+                            <MudTh>Richiedente</MudTh>
+                            <MudTh>Tipo diritto</MudTh>
+                            <MudTh>Stato</MudTh>
+                            <MudTh>Data richiesta</MudTh>
+                            <MudTh>Scadenza</MudTh>
+                            <MudTh>PersonaId</MudTh>
+                            <MudTh Align="Right"></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Codice</MudTd>
+                            <MudTd>@($"{context.NomeRichiedente} {context.CognomeRichiedente}")</MudTd>
+                            <MudTd>@GetTipoDirittoLabel(context.TipoDirittoInteressatoId)</MudTd>
+                            <MudTd>@context.Stato</MudTd>
+                            <MudTd>@context.DataRichiesta.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd>@context.DataScadenzaRisposta.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd>@(context.PersonaId?.ToString() ?? "—")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RichiestaGdprId))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RichiestaGdprId))" />
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" />
+                        </PagerContent>
+                    </MudTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-4 sigad-card">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">@(_editId.HasValue ? $"Modifica richiesta #{_editId}" : "Nuova richiesta GDPR")</MudText>
+                @if (!string.IsNullOrWhiteSpace(_formMessage))
+                {
+                    <MudAlert Severity="@(_formSuccess ? Severity.Success : Severity.Warning)" Variant="Variant.Outlined" Dense="true" Class="mb-2">@_formMessage</MudAlert>
+                }
+                <MudGrid Spacing="1">
+                    <MudItem xs="12"><MudTextField T="string" Label="Codice *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Codice" /></MudItem>
+                    <MudItem xs="6"><MudTextField T="string" Label="Nome *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.NomeRichiedente" /></MudItem>
+                    <MudItem xs="6"><MudTextField T="string" Label="Cognome *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CognomeRichiedente" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="int?" Label="PersonaId" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.PersonaId" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Email" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.EmailRichiedente" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Telefono" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.TelefonoRichiedente" /></MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="int" Label="Tipo diritto *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.TipoDirittoInteressatoId">
+                            @foreach (var tipo in _lookups)
+                            {
+                                <MudSelectItem T="int" Value="@tipo.Id">@tipo.Description</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6"><MudDatePicker Label="Data richiesta *" Variant="Variant.Outlined" @bind-Date="_form.DataRichiesta" /></MudItem>
+                    <MudItem xs="6"><MudDatePicker Label="Scadenza *" Variant="Variant.Outlined" @bind-Date="_form.DataScadenzaRisposta" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Canale *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.CanaleRichiesta" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Stato *" Dense="true" Variant="Variant.Outlined" @bind-Value="_form.Stato" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Descrizione richiesta" Dense="true" Variant="Variant.Outlined" Lines="3" @bind-Value="_form.DescrizioneRichiesta" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Label="Note" Dense="true" Variant="Variant.Outlined" Lines="2" @bind-Value="_form.Note" /></MudItem>
+                    <MudItem xs="12">
+                        <MudStack Direction="Row" Spacing="1">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_loading || !CanSave" OnClick="SaveAsync">@(_editId.HasValue ? "Salva modifiche" : "Crea richiesta")</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="_loading" OnClick="BeginCreate">Annulla</MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "personaId")]
+    public int? PersonaIdQuery { get; set; }
+
+    private bool _initialized;
+    private bool _loading;
+    private string? _errorMessage;
+    private string? _formMessage;
+    private bool _formSuccess;
+    private int? _editId;
+    private bool _includeDeleted;
+    private int? _filterPersonaId;
+    private int? _filterTipoDirittoId;
+    private string? _filterStato;
+    private DateTime? _filterFrom;
+    private DateTime? _filterTo;
+
+    private IReadOnlyList<TipoDirittoInteressatoLookupItem> _lookups = Array.Empty<TipoDirittoInteressatoLookupItem>();
+    private IReadOnlyList<RichiestaGdprItem> _items = Array.Empty<RichiestaGdprItem>();
+    private RichiestaGdprFormModel _form = RichiestaGdprFormModel.CreateDefault();
+    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
+    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
+    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
+    private bool CanSave => _editId.HasValue ? CanUpdate : CanCreate;
+
+    private IReadOnlyList<RichiestaGdprItem> FilteredItems
+    {
+        get
+        {
+            IEnumerable<RichiestaGdprItem> query = _items;
+
+            if (_filterTipoDirittoId.HasValue)
+            {
+                query = query.Where(x => x.TipoDirittoInteressatoId == _filterTipoDirittoId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_filterStato))
+            {
+                var stato = _filterStato.Trim();
+                query = query.Where(x => x.Stato.Contains(stato, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_filterFrom.HasValue)
+            {
+                query = query.Where(x => x.DataRichiesta.Date >= _filterFrom.Value.Date);
+            }
+
+            if (_filterTo.HasValue)
+            {
+                query = query.Where(x => x.DataRichiesta.Date <= _filterTo.Value.Date);
+            }
+
+            return query.OrderByDescending(x => x.DataRichiesta).ToArray();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_initialized)
+        {
+            _initialized = true;
+            _filterPersonaId = PersonaIdQuery;
+            _form.PersonaId = PersonaIdQuery;
+            await LoadAsync();
+            return;
+        }
+
+        if (_filterPersonaId != PersonaIdQuery)
+        {
+            _filterPersonaId = PersonaIdQuery;
+            _form.PersonaId = PersonaIdQuery;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!CanRead)
+        {
+            _errorMessage = "Accesso negato: permesso di lettura mancante.";
+            return;
+        }
+
+        _loading = true;
+        _errorMessage = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetRichiesteGdprLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetRichiesteGdprAsync(_filterPersonaId, _includeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+
+            var lookups = await lookupsTask;
+            var list = await listTask;
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _errorMessage = lookups.Error ?? list.Error ?? "Impossibile caricare richieste GDPR.";
+                return;
+            }
+
+            _lookups = lookups.Data ?? Array.Empty<TipoDirittoInteressatoLookupItem>();
+            _items = list.Data ?? Array.Empty<RichiestaGdprItem>();
+            if (_form.TipoDirittoInteressatoId == 0 && _lookups.Count > 0)
+            {
+                _form.TipoDirittoInteressatoId = _lookups[0].Id;
+            }
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ResetFiltersAsync()
+    {
+        _filterPersonaId = PersonaIdQuery;
+        _filterTipoDirittoId = null;
+        _filterStato = null;
+        _filterFrom = null;
+        _filterTo = null;
+        await LoadAsync();
+    }
+
+    private void BeginCreate()
+    {
+        if (!CanCreate)
+        {
+            _formMessage = "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = null;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = RichiestaGdprFormModel.CreateDefault();
+        _form.PersonaId = _filterPersonaId ?? PersonaIdQuery;
+        if (_lookups.Count > 0)
+        {
+            _form.TipoDirittoInteressatoId = _lookups[0].Id;
+        }
+    }
+
+    private void BeginEdit(RichiestaGdprItem item)
+    {
+        if (!CanUpdate)
+        {
+            _formMessage = "Accesso negato: permesso di modifica mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = item.RichiestaGdprId;
+        _formMessage = null;
+        _formSuccess = false;
+        _form = RichiestaGdprFormModel.FromItem(item);
+    }
+
+    private async Task LoadByIdAsync(int id)
+    {
+        if (!CanRead)
+        {
+            _formMessage = "Accesso negato: permesso di lettura mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        var result = await GatewayClient.GetRichiestaGdprByIdAsync(id, CancellationToken.None);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _formMessage = result.Error ?? "Impossibile caricare il dettaglio richiesta.";
+            _formSuccess = false;
+            return;
+        }
+
+        _editId = id;
+        _form = RichiestaGdprFormModel.FromItem(result.Data);
+        _formMessage = $"Dettaglio richiesta #{id} caricato.";
+        _formSuccess = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave)
+        {
+            _formMessage = _editId.HasValue
+                ? "Accesso negato: permesso di modifica mancante."
+                : "Accesso negato: permesso di creazione mancante.";
+            _formSuccess = false;
+            return;
+        }
+
+        _formMessage = null;
+        _formSuccess = false;
+
+        var validationError = ValidateForm();
+        if (validationError is not null)
+        {
+            _formMessage = validationError;
+            return;
+        }
+
+        var createRequest = _form.ToCreateRequest();
+        var result = _editId.HasValue
+            ? await GatewayClient.UpdateRichiestaGdprAsync(_editId.Value, _form.ToUpdateRequest(), CancellationToken.None)
+            : await GatewayClient.CreateRichiestaGdprAsync(createRequest, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _formMessage = result.Error ?? "Operazione non riuscita.";
+            return;
+        }
+
+        _formMessage = _editId.HasValue ? "Richiesta aggiornata." : "Richiesta creata.";
+        _formSuccess = true;
+        await LoadAsync();
+        if (!_editId.HasValue)
+        {
+            BeginCreate();
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        if (!CanDelete)
+        {
+            _errorMessage = "Accesso negato: permesso di eliminazione mancante.";
+            return;
+        }
+
+        var result = await GatewayClient.DeleteRichiestaGdprAsync(id, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.Error ?? "Eliminazione non riuscita.";
+            return;
+        }
+
+        if (_editId == id)
+        {
+            BeginCreate();
+        }
+
+        await LoadAsync();
+    }
+
+    private string GetTipoDirittoLabel(int id)
+        => _lookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+
+    private string? ValidateForm()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Codice)) return "Il codice e obbligatorio.";
+        if (string.IsNullOrWhiteSpace(_form.NomeRichiedente)) return "Il nome e obbligatorio.";
+        if (string.IsNullOrWhiteSpace(_form.CognomeRichiedente)) return "Il cognome e obbligatorio.";
+        if (_form.TipoDirittoInteressatoId <= 0) return "Il tipo diritto e obbligatorio.";
+        if (_form.DataRichiesta is null) return "La data richiesta e obbligatoria.";
+        if (_form.DataScadenzaRisposta is null) return "La scadenza risposta e obbligatoria.";
+        if (string.IsNullOrWhiteSpace(_form.CanaleRichiesta)) return "Il canale richiesta e obbligatorio.";
+        if (string.IsNullOrWhiteSpace(_form.Stato)) return "Lo stato e obbligatorio.";
+        return null;
+    }
+
+    private sealed class RichiestaGdprFormModel
+    {
+        public int? PersonaId { get; set; }
+        public string NomeRichiedente { get; set; } = string.Empty;
+        public string CognomeRichiedente { get; set; } = string.Empty;
+        public string? EmailRichiedente { get; set; }
+        public string? TelefonoRichiedente { get; set; }
+        public int TipoDirittoInteressatoId { get; set; }
+        public string Codice { get; set; } = string.Empty;
+        public DateTime? DataRichiesta { get; set; }
+        public string CanaleRichiesta { get; set; } = "Portale";
+        public string? DescrizioneRichiesta { get; set; }
+        public string? DocumentoIdentita { get; set; }
+        public DateTime? DataScadenzaRisposta { get; set; }
+        public string Stato { get; set; } = "Aperta";
+        public int? ResponsabileGestioneId { get; set; }
+        public DateTime? DataPresaInCarico { get; set; }
+        public DateTime? DataRisposta { get; set; }
+        public string? EsitoRichiesta { get; set; }
+        public string? MotivoRifiuto { get; set; }
+        public string? DescrizioneRisposta { get; set; }
+        public string? ModalitaRisposta { get; set; }
+        public string? RiferimentoDocumentoRisposta { get; set; }
+        public string? Note { get; set; }
+
+        public static RichiestaGdprFormModel CreateDefault()
+            => new()
+            {
+                DataRichiesta = DateTime.Today,
+                DataScadenzaRisposta = DateTime.Today.AddDays(30)
+            };
+
+        public static RichiestaGdprFormModel FromItem(RichiestaGdprItem item)
+            => new()
+            {
+                PersonaId = item.PersonaId,
+                NomeRichiedente = item.NomeRichiedente,
+                CognomeRichiedente = item.CognomeRichiedente,
+                EmailRichiedente = item.EmailRichiedente,
+                TelefonoRichiedente = item.TelefonoRichiedente,
+                TipoDirittoInteressatoId = item.TipoDirittoInteressatoId,
+                Codice = item.Codice,
+                DataRichiesta = item.DataRichiesta,
+                CanaleRichiesta = item.CanaleRichiesta,
+                DescrizioneRichiesta = item.DescrizioneRichiesta,
+                DocumentoIdentita = item.DocumentoIdentita,
+                DataScadenzaRisposta = item.DataScadenzaRisposta,
+                Stato = item.Stato,
+                ResponsabileGestioneId = item.ResponsabileGestioneId,
+                DataPresaInCarico = item.DataPresaInCarico,
+                DataRisposta = item.DataRisposta,
+                EsitoRichiesta = item.EsitoRichiesta,
+                MotivoRifiuto = item.MotivoRifiuto,
+                DescrizioneRisposta = item.DescrizioneRisposta,
+                ModalitaRisposta = item.ModalitaRisposta,
+                RiferimentoDocumentoRisposta = item.RiferimentoDocumentoRisposta,
+                Note = item.Note
+            };
+
+        public CreateRichiestaGdprRequest ToCreateRequest()
+            => new(
+                PersonaId,
+                NomeRichiedente.Trim(),
+                CognomeRichiedente.Trim(),
+                NullIfWhiteSpace(EmailRichiedente),
+                NullIfWhiteSpace(TelefonoRichiedente),
+                TipoDirittoInteressatoId,
+                Codice.Trim(),
+                DataRichiesta!.Value,
+                CanaleRichiesta.Trim(),
+                NullIfWhiteSpace(DescrizioneRichiesta),
+                NullIfWhiteSpace(DocumentoIdentita),
+                DataScadenzaRisposta!.Value,
+                Stato.Trim(),
+                ResponsabileGestioneId,
+                DataPresaInCarico,
+                DataRisposta,
+                NullIfWhiteSpace(EsitoRichiesta),
+                NullIfWhiteSpace(MotivoRifiuto),
+                NullIfWhiteSpace(DescrizioneRisposta),
+                NullIfWhiteSpace(ModalitaRisposta),
+                NullIfWhiteSpace(RiferimentoDocumentoRisposta),
+                NullIfWhiteSpace(Note));
+
+        public UpdateRichiestaGdprRequest ToUpdateRequest()
+            => new(
+                PersonaId,
+                NomeRichiedente.Trim(),
+                CognomeRichiedente.Trim(),
+                NullIfWhiteSpace(EmailRichiedente),
+                NullIfWhiteSpace(TelefonoRichiedente),
+                TipoDirittoInteressatoId,
+                Codice.Trim(),
+                DataRichiesta!.Value,
+                CanaleRichiesta.Trim(),
+                NullIfWhiteSpace(DescrizioneRichiesta),
+                NullIfWhiteSpace(DocumentoIdentita),
+                DataScadenzaRisposta!.Value,
+                Stato.Trim(),
+                ResponsabileGestioneId,
+                DataPresaInCarico,
+                DataRisposta,
+                NullIfWhiteSpace(EsitoRichiesta),
+                NullIfWhiteSpace(MotivoRifiuto),
+                NullIfWhiteSpace(DescrizioneRisposta),
+                NullIfWhiteSpace(ModalitaRisposta),
+                NullIfWhiteSpace(RiferimentoDocumentoRisposta),
+                NullIfWhiteSpace(Note));
+
+        private static string? NullIfWhiteSpace(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+}

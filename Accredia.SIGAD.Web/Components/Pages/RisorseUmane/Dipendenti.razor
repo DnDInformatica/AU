@@ -1,0 +1,250 @@
+@page "/risorse-umane/dipendenti"
+@page "/dipendenti"
+@namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane
+@inject GatewayClient GatewayClient
+@inject NavigationManager Navigation
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.RisorseUmane
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Dipendenti"
+                Subtitle="Gestione dipendenti con anagrafica persona completa."
+                Breadcrumbs="Home / Risorse Umane / Dipendenti"
+                PrimaryActionLabel="Nuovo dipendente"
+                OnPrimaryAction="CreateNew" />
+
+    @if (!CanCreate)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+            Accesso in sola lettura: manca il permesso <code>HR.DIP.CREATE</code>.
+        </MudAlert>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-4 mb-4 sigad-card">
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              Label="Ricerca"
+                              Variant="Variant.Outlined"
+                              HelperText="Matricola, email aziendale o telefono interno"
+                              @bind-Value="_query"
+                              Immediate="true"
+                              FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string"
+                              Label="Matricola"
+                              Variant="Variant.Outlined"
+                              @bind-Value="_matricola"
+                              Immediate="true"
+                              FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="2">
+                <MudNumericField T="int?"
+                                 Label="Stato dipendente ID"
+                                 Variant="Variant.Outlined"
+                                 @bind-Value="_statoDipendenteId"
+                                 Min="1"
+                                 Max="999999"
+                                 Immediate="true"
+                                 FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudAutocomplete T="PersonaLookupItem"
+                                 Label="Persona"
+                                 Variant="Variant.Outlined"
+                                 Value="_persona"
+                                 ValueChanged="OnPersonaChanged"
+                                 SearchFunc="SearchPersoneAsync"
+                                 ToStringFunc="@(p => p is null ? string.Empty : $"{p.Cognome} {p.Nome} ({p.CodiceFiscale ?? "N/A"})")"
+                                 MinCharacters="2"
+                                 Immediate="true"
+                                 ResetValueOnEmptyText="true"
+                                 Clearable="true"
+                                 FullWidth="true" />
+            </MudItem>
+        </MudGrid>
+        <MudStack Direction="Row" Justify="Justify.FlexEnd" Spacing="1" Class="mt-3">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CreateNew" Disabled="@(!CanCreate)">
+                Nuovo dipendente
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="ResetFilters">
+                Reset
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">
+                Applica filtri
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudTable T="DipendenteDettaglioCompletoListItem"
+              @ref="_table"
+              ServerData="LoadDipendenti"
+              Hover="true"
+              Dense="true"
+              Breakpoint="Breakpoint.Md"
+              RowClick="OnRowClick">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Matricola</MudTh>
+            <MudTh>Persona</MudTh>
+            <MudTh>CF</MudTh>
+            <MudTh>Email aziendale</MudTh>
+            <MudTh>Stato ID</MudTh>
+            <MudTh>Data assunzione</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Dipendente.DipendenteId</MudTd>
+            <MudTd DataLabel="Matricola">@context.Dipendente.Matricola</MudTd>
+            <MudTd DataLabel="Persona">@context.Persona.Dettaglio.Cognome @context.Persona.Dettaglio.Nome</MudTd>
+            <MudTd DataLabel="CF">@context.Persona.Dettaglio.CodiceFiscale</MudTd>
+            <MudTd DataLabel="Email aziendale">@context.Dipendente.EmailAziendale</MudTd>
+            <MudTd DataLabel="Stato ID">@context.Dipendente.StatoDipendenteId</MudTd>
+            <MudTd DataLabel="Data assunzione">@context.Dipendente.DataAssunzione.ToString("yyyy-MM-dd")</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-4">
+                <MudText Typo="Typo.body2">Nessun dipendente trovato con i filtri correnti.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateNew" Disabled="@(!CanCreate)">
+                    Nuovo dipendente
+                </MudButton>
+            </MudStack>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager RowsPerPageString="Righe per pagina" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private bool CanRead =>
+        (UserContext.HasPermission("HR.DIP.LIST") || UserContext.HasPermission("HR.DIP.READ"))
+        && UserContext.HasPermission("HR.PERSONA.READ");
+
+    private bool CanCreate => UserContext.HasPermission("HR.DIP.CREATE");
+
+    private MudTable<DipendenteDettaglioCompletoListItem>? _table;
+    private string? _errorMessage;
+
+    private string? _query;
+    private string? _matricola;
+    private int? _statoDipendenteId;
+    private PersonaLookupItem? _persona;
+
+    private Task OnPersonaChanged(PersonaLookupItem? value)
+    {
+        _persona = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<PersonaLookupItem>> SearchPersoneAsync(string text, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Trim().Length < 2)
+        {
+            _errorMessage = null;
+            return Array.Empty<PersonaLookupItem>();
+        }
+
+        var query = text.Trim();
+        var result = await GatewayClient.SearchPersoneRuLookupAsync(query, 1, 10, cancellationToken);
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _errorMessage = null;
+            return result.Data.Items;
+        }
+
+        // Fallback: in caso di indisponibilita lookup RU, usa la ricerca Anagrafiche diretta.
+        var fallback = await GatewayClient.SearchPersoneAsync(query, 1, 10, cancellationToken);
+        if (fallback.IsSuccess && fallback.Data is not null)
+        {
+            _errorMessage = null;
+            return fallback.Data.Items.Select(p => new PersonaLookupItem(
+                p.PersonaId,
+                p.Cognome,
+                p.Nome,
+                p.CodiceFiscale,
+                p.DataNascita));
+        }
+
+        _errorMessage = "Ricerca persona temporaneamente non disponibile. Verifica Gateway/BFF/Anagrafiche.";
+        return Array.Empty<PersonaLookupItem>();
+    }
+
+    private Task ApplyFilters()
+    {
+        _errorMessage = null;
+        _table?.ReloadServerData();
+        return Task.CompletedTask;
+    }
+
+    private Task ResetFilters()
+    {
+        _query = null;
+        _matricola = null;
+        _statoDipendenteId = null;
+        _persona = null;
+        _errorMessage = null;
+        _table?.ReloadServerData();
+        return Task.CompletedTask;
+    }
+
+    private async Task<TableData<DipendenteDettaglioCompletoListItem>> LoadDipendenti(TableState state, CancellationToken cancellationToken)
+    {
+        var page = state.Page + 1;
+        var pageSize = state.PageSize;
+
+        var result = await GatewayClient.GetDipendentiDettaglioCompletoAsync(
+            _query,
+            _matricola,
+            _statoDipendenteId,
+            _persona?.PersonaId,
+            page,
+            pageSize,
+            cancellationToken);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare i dipendenti.";
+            return new TableData<DipendenteDettaglioCompletoListItem>
+            {
+                Items = Array.Empty<DipendenteDettaglioCompletoListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        _errorMessage = null;
+        return new TableData<DipendenteDettaglioCompletoListItem>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<DipendenteDettaglioCompletoListItem> args)
+        => Navigation.NavigateTo($"/risorse-umane/dipendenti/{args.Item.Dipendente.DipendenteId}");
+
+    private void CreateNew()
+    {
+        if (!CanCreate)
+        {
+            _errorMessage = "Accesso negato: permesso HR.DIP.CREATE mancante.";
+            return;
+        }
+
+        Navigation.NavigateTo("/risorse-umane/dipendenti/nuovo");
+    }
+}

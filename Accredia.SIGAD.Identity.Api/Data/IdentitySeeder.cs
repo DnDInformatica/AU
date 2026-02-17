@@ -125,6 +125,32 @@ public static class IdentitySeeder
             NewPerm("TIPO.UPDATE", "Aggiornamento tipologie", "TIPO", "ACTION", now),
             NewPerm("TIPO.DELETE", "Cancellazione tipologie", "TIPO", "ACTION", now),
 
+            NewPerm("HR.PERSONA.READ", "Lettura dati persona per Risorse Umane", "HR", "ACTION", now),
+
+            NewPerm("HR.DIP.LIST", "Elenco dipendenti", "HR", "ACTION", now),
+            NewPerm("HR.DIP.READ", "Lettura dipendenti", "HR", "ACTION", now),
+            NewPerm("HR.DIP.CREATE", "Creazione dipendenti", "HR", "ACTION", now),
+            NewPerm("HR.DIP.UPDATE", "Aggiornamento dipendenti", "HR", "ACTION", now),
+            NewPerm("HR.DIP.DELETE", "Cancellazione dipendenti", "HR", "ACTION", now),
+
+            NewPerm("HR.CONTRATTI.LIST", "Elenco contratti", "HR", "ACTION", now),
+            NewPerm("HR.CONTRATTI.READ", "Lettura contratti", "HR", "ACTION", now),
+            NewPerm("HR.CONTRATTI.CREATE", "Creazione contratti", "HR", "ACTION", now),
+            NewPerm("HR.CONTRATTI.UPDATE", "Aggiornamento contratti", "HR", "ACTION", now),
+            NewPerm("HR.CONTRATTI.DELETE", "Cancellazione contratti", "HR", "ACTION", now),
+
+            NewPerm("HR.DOTAZIONI.LIST", "Elenco dotazioni", "HR", "ACTION", now),
+            NewPerm("HR.DOTAZIONI.READ", "Lettura dotazioni", "HR", "ACTION", now),
+            NewPerm("HR.DOTAZIONI.CREATE", "Creazione dotazioni", "HR", "ACTION", now),
+            NewPerm("HR.DOTAZIONI.UPDATE", "Aggiornamento dotazioni", "HR", "ACTION", now),
+            NewPerm("HR.DOTAZIONI.DELETE", "Cancellazione dotazioni", "HR", "ACTION", now),
+
+            NewPerm("HR.FORM.LIST", "Elenco formazione obbligatoria", "HR", "ACTION", now),
+            NewPerm("HR.FORM.READ", "Lettura formazione obbligatoria", "HR", "ACTION", now),
+            NewPerm("HR.FORM.CREATE", "Creazione formazione obbligatoria", "HR", "ACTION", now),
+            NewPerm("HR.FORM.UPDATE", "Aggiornamento formazione obbligatoria", "HR", "ACTION", now),
+            NewPerm("HR.FORM.DELETE", "Cancellazione formazione obbligatoria", "HR", "ACTION", now),
+
             NewPerm("ADMIN.USERS.MANAGE", "Gestione utenti", "ADMIN", "ACTION", now),
             NewPerm("ADMIN.PERMISSIONS.MANAGE", "Gestione permessi", "ADMIN", "ACTION", now),
             NewPerm("ADMIN.ROLES.MANAGE", "Gestione ruoli", "ADMIN", "ACTION", now)
@@ -161,6 +187,11 @@ public static class IdentitySeeder
                 "PERS.LIST", "PERS.READ", "PERS.CREATE", "PERS.UPDATE", "PERS.DELETE",
                 "INC.LIST", "INC.READ", "INC.CREATE", "INC.UPDATE", "INC.DELETE",
                 "TIPO.LIST", "TIPO.READ", "TIPO.CREATE", "TIPO.UPDATE", "TIPO.DELETE",
+                "HR.PERSONA.READ",
+                "HR.DIP.LIST", "HR.DIP.READ", "HR.DIP.CREATE", "HR.DIP.UPDATE", "HR.DIP.DELETE",
+                "HR.CONTRATTI.LIST", "HR.CONTRATTI.READ", "HR.CONTRATTI.CREATE", "HR.CONTRATTI.UPDATE", "HR.CONTRATTI.DELETE",
+                "HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ", "HR.DOTAZIONI.CREATE", "HR.DOTAZIONI.UPDATE", "HR.DOTAZIONI.DELETE",
+                "HR.FORM.LIST", "HR.FORM.READ", "HR.FORM.CREATE", "HR.FORM.UPDATE", "HR.FORM.DELETE",
                 "ADMIN.USERS.MANAGE", "ADMIN.ROLES.MANAGE", "ADMIN.PERMISSIONS.MANAGE"
             });
         }
@@ -173,7 +204,12 @@ public static class IdentitySeeder
                 "ORG.LIST", "ORG.READ", "ORG.UPDATE",
                 "PERS.LIST", "PERS.READ", "PERS.UPDATE",
                 "INC.LIST", "INC.READ", "INC.UPDATE",
-                "TIPO.LIST", "TIPO.READ", "TIPO.UPDATE"
+                "TIPO.LIST", "TIPO.READ", "TIPO.UPDATE",
+                "HR.PERSONA.READ",
+                "HR.DIP.LIST", "HR.DIP.READ", "HR.DIP.UPDATE",
+                "HR.CONTRATTI.LIST", "HR.CONTRATTI.READ", "HR.CONTRATTI.UPDATE",
+                "HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ", "HR.DOTAZIONI.UPDATE",
+                "HR.FORM.LIST", "HR.FORM.READ", "HR.FORM.UPDATE"
             });
         }
 
@@ -185,7 +221,12 @@ public static class IdentitySeeder
                 "ORG.LIST", "ORG.READ",
                 "PERS.LIST", "PERS.READ",
                 "INC.LIST", "INC.READ",
-                "TIPO.LIST", "TIPO.READ"
+                "TIPO.LIST", "TIPO.READ",
+                "HR.PERSONA.READ",
+                "HR.DIP.LIST", "HR.DIP.READ",
+                "HR.CONTRATTI.LIST", "HR.CONTRATTI.READ",
+                "HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ",
+                "HR.FORM.LIST", "HR.FORM.READ"
             });
         }
     }

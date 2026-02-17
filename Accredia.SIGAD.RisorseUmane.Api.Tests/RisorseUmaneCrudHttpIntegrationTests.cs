@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -122,9 +123,107 @@ public sealed class RisorseUmaneCrudHttpIntegrationTests
         var formazioneId = formCreateJson?["formazioneObbligatoriaId"]?.GetValue<int>()
                           ?? throw new InvalidOperationException("formazioneObbligatoriaId missing.");
 
+        // Contratto corrente unico: creating a second current contract must leave only one current.
+        var secondContrattoCreate = await client.PostAsJsonAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/contratti", new
+        {
+            tipoContrattoId = 1,
+            dataInizio = today,
+            dataFine = (string?)null,
+            livelloInquadramento = "L2",
+            ccnlApplicato = "CCNL",
+            ral = 22345.67m,
+            percentualePartTime = (decimal?)null,
+            oreLavoroSettimanali = (decimal?)null,
+            isContrattoCorrente = true,
+            note = "integration-test-2"
+        });
+        secondContrattoCreate.EnsureSuccessStatusCode();
+        var secondContrattoJson = JsonNode.Parse(await secondContrattoCreate.Content.ReadAsStringAsync())?.AsObject();
+        var secondContrattoId = secondContrattoJson?["contrattoId"]?.GetValue<int>()
+                               ?? throw new InvalidOperationException("second contrattoId missing.");
+
+        var contrattiList = await client.GetAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/contratti");
+        contrattiList.EnsureSuccessStatusCode();
+        var contrattiArray = JsonNode.Parse(await contrattiList.Content.ReadAsStringAsync())?.AsArray()
+                            ?? throw new InvalidOperationException("Contratti list payload missing.");
+        var currentCount = contrattiArray.Count(x => x?["isContrattoCorrente"]?.GetValue<bool>() == true);
+        Assert.Equal(1, currentCount);
+
+        // Dotazioni rule: restituito=true without dataRestituzione must fail validation.
+        var invalidDotazione = await client.PostAsJsonAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/dotazioni", new
+        {
+            tipoDotazioneId = 1,
+            descrizione = "Laptop invalid",
+            numeroInventario = "INV-ERR",
+            numeroSerie = "SER-ERR",
+            dataAssegnazione = today,
+            dataRestituzione = (string?)null,
+            isRestituito = true,
+            note = "integration-test-invalid"
+        });
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, invalidDotazione.StatusCode);
+
+        // Setup for operational reports:
+        // - mark employee as ceased today
+        // - create formazione with explicit expiry in 30 days
+        var cessazioneUpdate = await client.PutAsJsonAsync($"/risorseumane/v1/dipendenti/{dipendenteId}", new
+        {
+            personaId,
+            matricola,
+            emailAziendale = "test.hr2@accredia.local",
+            telefonoInterno = "1234",
+            unitaOrganizzativaId = (int?)null,
+            responsabileDirettoId = (int?)null,
+            dataAssunzione = today,
+            dataCessazione = today,
+            statoDipendenteId = 1,
+            abilitatoAttivitaIspettiva = false,
+            note = "integration-test-ceased"
+        });
+        Assert.True(cessazioneUpdate.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.OK);
+
+        var formazioneScadenzaDate = DateTime.UtcNow.Date.AddDays(30).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var formazioneReportCreate = await client.PostAsJsonAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/formazione-obbligatoria", new
+        {
+            tipoFormazioneObbligatoriaId = 1,
+            dataCompletamento = today,
+            dataScadenza = formazioneScadenzaDate,
+            estremiAttestato = "ATTEST-REP",
+            enteFormatore = "Ente",
+            durataOreCorso = 8,
+            note = "integration-test-report"
+        });
+        formazioneReportCreate.EnsureSuccessStatusCode();
+        var formRepJson = JsonNode.Parse(await formazioneReportCreate.Content.ReadAsStringAsync())?.AsObject();
+        var formazioneReportId = formRepJson?["formazioneObbligatoriaId"]?.GetValue<int>()
+                                ?? throw new InvalidOperationException("formazione report id missing.");
+
+        // RU API reports
+        var apiReportForm = await client.GetAsync("/risorseumane/v1/report/formazione-in-scadenza?days=90");
+        apiReportForm.EnsureSuccessStatusCode();
+        var apiFormItems = JsonNode.Parse(await apiReportForm.Content.ReadAsStringAsync())?.AsArray()
+                           ?? throw new InvalidOperationException("API report formazione payload missing.");
+        Assert.Contains(apiFormItems, x => x?["formazioneObbligatoriaId"]?.GetValue<int>() == formazioneReportId);
+
+        var apiReportDotazioni = await client.GetAsync("/risorseumane/v1/report/dotazioni-non-restituite-cessati");
+        apiReportDotazioni.EnsureSuccessStatusCode();
+        var apiDotItems = JsonNode.Parse(await apiReportDotazioni.Content.ReadAsStringAsync())?.AsArray()
+                          ?? throw new InvalidOperationException("API report dotazioni payload missing.");
+        Assert.Contains(apiDotItems, x => x?["dotazioneId"]?.GetValue<int>() == dotazioneId);
+
+        // RU BFF report proxies
+        var bffReportForm = await client.GetAsync("/bff/risorseumane/v1/report/formazione-in-scadenza?days=90");
+        bffReportForm.EnsureSuccessStatusCode();
+
+        var bffReportDotazioni = await client.GetAsync("/bff/risorseumane/v1/report/dotazioni-non-restituite-cessati");
+        bffReportDotazioni.EnsureSuccessStatusCode();
+
         // Cleanup (soft delete children first)
         var delContratto = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/contratti/{contrattoId}");
         Assert.True(delContratto.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
+
+        var delSecondContratto = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/contratti/{secondContrattoId}");
+        Assert.True(delSecondContratto.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
 
         var delDotazione = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/dotazioni/{dotazioneId}");
         Assert.True(delDotazione.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
@@ -132,8 +231,10 @@ public sealed class RisorseUmaneCrudHttpIntegrationTests
         var delFormazione = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/formazione-obbligatoria/{formazioneId}");
         Assert.True(delFormazione.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
 
+        var delFormazioneReport = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}/formazione-obbligatoria/{formazioneReportId}");
+        Assert.True(delFormazioneReport.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
+
         var delDipendente = await client.DeleteAsync($"/risorseumane/v1/dipendenti/{dipendenteId}");
         Assert.True(delDipendente.StatusCode is System.Net.HttpStatusCode.NoContent or System.Net.HttpStatusCode.NotFound);
     }
 }
-

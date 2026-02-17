@@ -5,6 +5,7 @@ using System.Text;
 using Dapper;
 using Accredia.SIGAD.Identity.Api.Contracts;
 using Accredia.SIGAD.Identity.Api.Database;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -33,12 +34,35 @@ internal static class Handler
     {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(connectionFactory);
+        var normalizedUserNameOrEmail = command.UserName.Trim().ToUpperInvariant();
 
-        // Query per AspNetUsers (accetta UserName o Email)
-        const string userSql = @"
+        // Query separate per evitare piano pessimo con OR su colonne diverse.
+        // Strategia graduale: prima query in READ COMMITTED, fallback a NOLOCK solo su timeout.
+        const string userByUserNameSql = @"
 SELECT [Id], [UserName], [Email], [PasswordHash], [LockoutEnabled], [LockoutEnd]
 FROM [Identity].[AspNetUsers]
-WHERE ([UserName] = @UserName OR [Email] = @UserName)
+WHERE [NormalizedUserName] = @NormalizedValue
+  AND ([LockoutEnd] IS NULL OR [LockoutEnd] < SYSDATETIMEOFFSET());
+";
+
+        const string userByUserNameSqlNoLock = @"
+SELECT [Id], [UserName], [Email], [PasswordHash], [LockoutEnabled], [LockoutEnd]
+FROM [Identity].[AspNetUsers] WITH (NOLOCK)
+WHERE [NormalizedUserName] = @NormalizedValue
+  AND ([LockoutEnd] IS NULL OR [LockoutEnd] < SYSDATETIMEOFFSET());
+";
+
+        const string userByEmailSql = @"
+SELECT [Id], [UserName], [Email], [PasswordHash], [LockoutEnabled], [LockoutEnd]
+FROM [Identity].[AspNetUsers]
+WHERE [NormalizedEmail] = @NormalizedValue
+  AND ([LockoutEnd] IS NULL OR [LockoutEnd] < SYSDATETIMEOFFSET());
+";
+
+        const string userByEmailSqlNoLock = @"
+SELECT [Id], [UserName], [Email], [PasswordHash], [LockoutEnabled], [LockoutEnd]
+FROM [Identity].[AspNetUsers] WITH (NOLOCK)
+WHERE [NormalizedEmail] = @NormalizedValue
   AND ([LockoutEnd] IS NULL OR [LockoutEnd] < SYSDATETIMEOFFSET());
 ";
 
@@ -50,11 +74,53 @@ INNER JOIN [Identity].[AspNetRoles] r ON ur.[RoleId] = r.[Id]
 WHERE ur.[UserId] = @UserId;
 ";
 
+        const string rolesSqlNoLock = @"
+SELECT r.[Name]
+FROM [Identity].[AspNetUserRoles] ur WITH (NOLOCK)
+INNER JOIN [Identity].[AspNetRoles] r WITH (NOLOCK) ON ur.[RoleId] = r.[Id]
+WHERE ur.[UserId] = @UserId;
+";
+
+        const string permissionsSql = @"
+SELECT DISTINCT p.[Code]
+FROM [Identity].[AspNetUserRoles] ur
+INNER JOIN [Identity].[RolePermission] rp ON rp.[RoleId] = ur.[RoleId]
+INNER JOIN [Identity].[Permission] p ON p.[PermissionId] = rp.[PermissionId]
+WHERE ur.[UserId] = @UserId
+  AND p.[IsDeleted] = 0
+  AND p.[Attivo] = 1;
+";
+
+        const string permissionsSqlNoLock = @"
+SELECT DISTINCT p.[Code]
+FROM [Identity].[AspNetUserRoles] ur WITH (NOLOCK)
+INNER JOIN [Identity].[RolePermission] rp WITH (NOLOCK) ON rp.[RoleId] = ur.[RoleId]
+INNER JOIN [Identity].[Permission] p WITH (NOLOCK) ON p.[PermissionId] = rp.[PermissionId]
+WHERE ur.[UserId] = @UserId
+  AND p.[IsDeleted] = 0
+  AND p.[Attivo] = 1;
+";
+
         await using var connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
-        // Get user
-        var user = await connection.QuerySingleOrDefaultAsync<AspNetUserRecord>(
-            new CommandDefinition(userSql, new { command.UserName }, cancellationToken: cancellationToken));
+        // 1) lookup per username (index seek su UserNameIndex)
+        var user = await QueryUserWithTimeoutFallbackAsync(
+            connection,
+            userByUserNameSql,
+            userByUserNameSqlNoLock,
+            normalizedUserNameOrEmail,
+            cancellationToken);
+
+        // 2) fallback lookup per email (index seek su EmailIndex)
+        if (user is null && normalizedUserNameOrEmail.Contains('@'))
+        {
+            user = await QueryUserWithTimeoutFallbackAsync(
+                connection,
+                userByEmailSql,
+                userByEmailSqlNoLock,
+                normalizedUserNameOrEmail,
+                cancellationToken);
+        }
 
         if (user is null)
             return null;
@@ -67,8 +133,18 @@ WHERE ur.[UserId] = @UserId;
             return null;
 
         // Get roles
-        var roles = await connection.QueryAsync<string>(
-            new CommandDefinition(rolesSql, new { UserId = user.Id }, cancellationToken: cancellationToken));
+        var roles = await QueryRolesWithTimeoutFallbackAsync(
+            connection,
+            rolesSql,
+            rolesSqlNoLock,
+            user.Id,
+            cancellationToken);
+        var permissions = await QueryPermissionsWithTimeoutFallbackAsync(
+            connection,
+            permissionsSql,
+            permissionsSqlNoLock,
+            user.Id,
+            cancellationToken);
 
         // Generate JWT
         var jwt = jwtOptions.Value;
@@ -84,6 +160,10 @@ WHERE ur.[UserId] = @UserId;
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+        foreach (var permission in permissions)
+        {
+            claims.Add(new Claim("perm", permission));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
@@ -134,6 +214,86 @@ VALUES (@UserId, @Token, @CreatedAt, @ExpiresAt);
                 cancellationToken: cancellationToken));
 
         return token;
+    }
+
+    private static async Task<AspNetUserRecord?> QueryUserWithTimeoutFallbackAsync(
+        System.Data.Common.DbConnection connection,
+        string primarySql,
+        string fallbackSqlNoLock,
+        string normalizedValue,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Timeout breve sulla query "pulita" per privilegiare consistenza quando il DB e' sano.
+            return await connection.QuerySingleOrDefaultAsync<AspNetUserRecord>(
+                new CommandDefinition(
+                    primarySql,
+                    new { NormalizedValue = normalizedValue },
+                    commandTimeout: 5,
+                    cancellationToken: cancellationToken));
+        }
+        catch (SqlException ex) when (ex.Number == -2)
+        {
+            // Fallback di resilienza su ambienti con lock transitori lunghi.
+            return await connection.QuerySingleOrDefaultAsync<AspNetUserRecord>(
+                new CommandDefinition(
+                    fallbackSqlNoLock,
+                    new { NormalizedValue = normalizedValue },
+                    cancellationToken: cancellationToken));
+        }
+    }
+
+    private static async Task<IEnumerable<string>> QueryRolesWithTimeoutFallbackAsync(
+        System.Data.Common.DbConnection connection,
+        string primarySql,
+        string fallbackSqlNoLock,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await connection.QueryAsync<string>(
+                new CommandDefinition(
+                    primarySql,
+                    new { UserId = userId },
+                    commandTimeout: 5,
+                    cancellationToken: cancellationToken));
+        }
+        catch (SqlException ex) when (ex.Number == -2)
+        {
+            return await connection.QueryAsync<string>(
+                new CommandDefinition(
+                    fallbackSqlNoLock,
+                    new { UserId = userId },
+                    cancellationToken: cancellationToken));
+        }
+    }
+
+    private static async Task<IEnumerable<string>> QueryPermissionsWithTimeoutFallbackAsync(
+        System.Data.Common.DbConnection connection,
+        string primarySql,
+        string fallbackSqlNoLock,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await connection.QueryAsync<string>(
+                new CommandDefinition(
+                    primarySql,
+                    new { UserId = userId },
+                    commandTimeout: 5,
+                    cancellationToken: cancellationToken));
+        }
+        catch (SqlException ex) when (ex.Number == -2)
+        {
+            return await connection.QueryAsync<string>(
+                new CommandDefinition(
+                    fallbackSqlNoLock,
+                    new { UserId = userId },
+                    cancellationToken: cancellationToken));
+        }
     }
 
     private static string GenerateSecureToken()

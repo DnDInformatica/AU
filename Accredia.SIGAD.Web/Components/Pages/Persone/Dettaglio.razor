@@ -1,8 +1,15 @@
 @page "/persone/{id:int}"
 @namespace Accredia.SIGAD.Web.Components.Pages.Dettagli.Persone
 @inject GatewayClient GatewayClient
+@inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="@(_detail is null ? "Dettaglio persona" : $"{_detail.Cognome} {_detail.Nome}")"
@@ -26,7 +33,7 @@
         <MudPaper Class="pa-4 sigad-card mb-4">
             <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                 <MudText Typo="Typo.h5">@_detail.Cognome @_detail.Nome</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="@($"/persone/{Id}/modifica")">Modifica</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="@(!CanUpdate)" Href="@($"/persone/{Id}/modifica")">Modifica</MudButton>
             </MudStack>
             <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
                 @(!string.IsNullOrWhiteSpace(_detail.CodiceFiscale) ? $"CF {_detail.CodiceFiscale}" : "CF non disponibile")
@@ -126,6 +133,219 @@
                 }
             </MudTabPanel>
 
+            <MudTabPanel Text="@GetIndirizziTabText()">
+                @if (_indirizziLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_indirizziError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_indirizziError</MudAlert>
+                    }
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudCheckBox T="bool" @bind-Value="_indirizziIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_indirizziLoading" @bind-Value:after="OnIndirizziIncludeDeletedChanged" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_indirizziLoading" OnClick="ReloadIndirizziAsync">Ricarica</MudButton>
+                    </MudStack>
+                    <MudTable Items="_indirizziItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                        <HeaderContent><MudTh>IndirizzoId</MudTh><MudTh>Tipo</MudTh><MudTh>Principale</MudTh><MudTh>Attivo</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.IndirizzoId</MudTd>
+                            <MudTd>@GetIndirizzoTipoLabel(context.TipoIndirizzoId)</MudTd>
+                            <MudTd>@(context.Principale ? "Si" : "No")</MudTd>
+                            <MudTd>@(context.Attivo ? "Si" : "No")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditIndirizzo(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteIndirizzoAsync(context.PersonaIndirizzoId))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="3"><MudTextField T="int" Label="IndirizzoId" Dense="true" Variant="Variant.Outlined" @bind-Value="_indirizzoForm.IndirizzoId" /></MudItem>
+                        <MudItem xs="12" sm="4"><MudSelect T="int" Label="Tipo" Dense="true" Variant="Variant.Outlined" @bind-Value="_indirizzoForm.TipoIndirizzoId">@foreach (var l in _indirizziLookups){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                        <MudItem xs="6" sm="2"><MudCheckBox T="bool" @bind-Value="_indirizzoForm.Principale" Label="Principale" Dense="true" /></MudItem>
+                        <MudItem xs="6" sm="2"><MudCheckBox T="bool" @bind-Value="_indirizzoForm.Attivo" Label="Attivo" Dense="true" /></MudItem>
+                        <MudItem xs="12" sm="1"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveIndirizzoAsync">@(_indirizzoEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetQualificheTabText()">
+                @if (_qualificheLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_qualificheError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_qualificheError</MudAlert>
+                    }
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudCheckBox T="bool" @bind-Value="_qualificheIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_qualificheLoading" @bind-Value:after="OnQualificheIncludeDeletedChanged" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_qualificheLoading" OnClick="ReloadQualificheAsync">Ricarica</MudButton>
+                    </MudStack>
+                    <MudTable Items="_qualificheItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                        <HeaderContent><MudTh>Tipo</MudTh><MudTh>Codice</MudTh><MudTh>Valida</MudTh><MudTh>Scadenza</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@GetTipoQualificaLabel(context.TipoQualificaId)</MudTd>
+                            <MudTd>@(string.IsNullOrWhiteSpace(context.CodiceAttestato) ? "—" : context.CodiceAttestato)</MudTd>
+                            <MudTd>@(context.Valida ? "Si" : "No")</MudTd>
+                            <MudTd>@(context.DataScadenza?.ToString("dd/MM/yyyy") ?? "—")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditQualifica(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteQualificaAsync(context.PersonaQualificaId))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="5"><MudSelect T="int" Label="Tipo" Dense="true" Variant="Variant.Outlined" @bind-Value="_qualificaForm.TipoQualificaId">@foreach (var l in _qualificheLookups.Tipi){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                        <MudItem xs="12" sm="4"><MudTextField T="string" Label="Codice attestato" Dense="true" Variant="Variant.Outlined" @bind-Value="_qualificaForm.CodiceAttestato" /></MudItem>
+                        <MudItem xs="6" sm="2"><MudCheckBox T="bool" @bind-Value="_qualificaForm.Valida" Label="Valida" Dense="true" /></MudItem>
+                        <MudItem xs="12" sm="1"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQualificaAsync">@(_qualificaEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetRelazioniPersonaliTabText()">
+                @if (_relazioniLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_relazioniError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_relazioniError</MudAlert>
+                    }
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudCheckBox T="bool" @bind-Value="_relazioniIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_relazioniLoading" @bind-Value:after="OnRelazioniIncludeDeletedChanged" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_relazioniLoading" OnClick="ReloadRelazioniAsync">Ricarica</MudButton>
+                    </MudStack>
+                    <MudTable Items="_relazioniItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                        <HeaderContent><MudTh>Persona collegata</MudTh><MudTh>Tipo</MudTh><MudTh>Note</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.PersonaCollegataId</MudTd>
+                            <MudTd>@GetTipoRelazioneLabel(context.TipoRelazionePersonaleId)</MudTd>
+                            <MudTd>@(string.IsNullOrWhiteSpace(context.Note) ? "—" : context.Note)</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditRelazione(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteRelazioneAsync(context.PersonaRelazionePersonaleId))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="3"><MudTextField T="int" Label="Persona collegata Id" Dense="true" Variant="Variant.Outlined" @bind-Value="_relazioneForm.PersonaCollegataId" /></MudItem>
+                        <MudItem xs="12" sm="5"><MudSelect T="int" Label="Tipo relazione" Dense="true" Variant="Variant.Outlined" @bind-Value="_relazioneForm.TipoRelazionePersonaleId">@foreach (var l in _relazioniLookups){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                        <MudItem xs="12" sm="3"><MudTextField T="string" Label="Note" Dense="true" Variant="Variant.Outlined" @bind-Value="_relazioneForm.Note" /></MudItem>
+                        <MudItem xs="12" sm="1"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveRelazioneAsync">@(_relazioneEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetTitoliStudioTabText()">
+                @if (_titoliLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_titoliError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_titoliError</MudAlert>
+                    }
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudCheckBox T="bool" @bind-Value="_titoliIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_titoliLoading" @bind-Value:after="OnTitoliIncludeDeletedChanged" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_titoliLoading" OnClick="ReloadTitoliAsync">Ricarica</MudButton>
+                    </MudStack>
+                    <MudTable Items="_titoliItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                        <HeaderContent><MudTh>Tipo</MudTh><MudTh>Istituzione</MudTh><MudTh>Corso</MudTh><MudTh>Principale</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@GetTipoTitoloStudioLabel(context.TipoTitoloStudioId)</MudTd>
+                            <MudTd>@(string.IsNullOrWhiteSpace(context.Istituzione) ? "—" : context.Istituzione)</MudTd>
+                            <MudTd>@(string.IsNullOrWhiteSpace(context.Corso) ? "—" : context.Corso)</MudTd>
+                            <MudTd>@(context.Principale ? "Si" : "No")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTitolo(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTitoloAsync(context.PersonaTitoloStudioId))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="5"><MudSelect T="int" Label="Tipo titolo" Dense="true" Variant="Variant.Outlined" @bind-Value="_titoloForm.TipoTitoloStudioId">@foreach (var l in _titoliLookups.Tipi){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                        <MudItem xs="12" sm="3"><MudTextField T="string" Label="Istituzione" Dense="true" Variant="Variant.Outlined" @bind-Value="_titoloForm.Istituzione" /></MudItem>
+                        <MudItem xs="12" sm="3"><MudTextField T="string" Label="Corso" Dense="true" Variant="Variant.Outlined" @bind-Value="_titoloForm.Corso" /></MudItem>
+                        <MudItem xs="12" sm="1"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTitoloAsync">@(_titoloEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetConsensiTabText()">
+                @if (_consensiLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_consensiError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_consensiError</MudAlert>
+                    }
+                    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudCheckBox T="bool" @bind-Value="_consensiIncludeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_consensiLoading" @bind-Value:after="OnConsensiIncludeDeletedChanged" />
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_consensiLoading" OnClick="ReloadConsensiAsync">Ricarica</MudButton>
+                    </MudStack>
+                    <MudTable Items="_consensiItems" Dense="true" Hover="true" Elevation="0" Class="mb-2">
+                        <HeaderContent><MudTh>Finalita</MudTh><MudTh>Consenso</MudTh><MudTh>Data</MudTh><MudTh Align="Right"></MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@GetTipoFinalitaLabel(context.TipoFinalitaTrattamentoId)</MudTd>
+                            <MudTd>@(context.Consenso ? "Si" : "No")</MudTd>
+                            <MudTd>@context.DataConsenso.ToString("dd/MM/yyyy")</MudTd>
+                            <MudTd Align="Right">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditConsenso(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteConsensoAsync(context.ConsensoPersonaId))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="5"><MudSelect T="int" Label="Finalita" Dense="true" Variant="Variant.Outlined" @bind-Value="_consensoForm.TipoFinalitaTrattamentoId">@foreach (var l in _consensiLookups){<MudSelectItem T="int" Value="@l.Id">@l.Description</MudSelectItem>}</MudSelect></MudItem>
+                        <MudItem xs="6" sm="2"><MudCheckBox T="bool" @bind-Value="_consensoForm.Consenso" Label="Consenso" Dense="true" /></MudItem>
+                        <MudItem xs="12" sm="4"><MudTextField T="string" Label="Modalita" Dense="true" Variant="Variant.Outlined" @bind-Value="_consensoForm.ModalitaAcquisizione" /></MudItem>
+                        <MudItem xs="12" sm="1"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveConsensoAsync">@(_consensoEditId.HasValue ? "Salva" : "Aggiungi")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="@GetUtenteTabText()">
+                @if (_utenteLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else
+                {
+                    @if (!string.IsNullOrWhiteSpace(_utenteError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-2">@_utenteError</MudAlert>
+                    }
+                    @if (_utenteItem is null)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">Nessun utente associato.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Class="pa-3 sigad-card mb-2">
+                            <MudText Typo="Typo.subtitle2">UserId associato: @_utenteItem.UserId</MudText>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(() => DeleteUtenteAsync(_utenteItem.PersonaUtenteId))">Rimuovi associazione</MudButton>
+                        </MudPaper>
+                    }
+                    <MudGrid Spacing="1">
+                        <MudItem xs="12" sm="10"><MudTextField T="string" Label="UserId" Dense="true" Variant="Variant.Outlined" @bind-Value="_utenteForm.UserId" /></MudItem>
+                        <MudItem xs="12" sm="2"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUtenteAsync">@(_utenteItem is null ? "Associa" : "Aggiorna")</MudButton></MudItem>
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
             <MudTabPanel Text="Storico eventi">
                 @if (_storicoLoading)
                 {
@@ -141,11 +361,29 @@
                         <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Persona (@_storicoPersona.Count)</MudText></MudPaper></MudItem>
                         <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Email (@_storicoEmail.Count)</MudText></MudPaper></MudItem>
                         <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Telefoni (@_storicoTelefoni.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Indirizzi (@_storicoIndirizzi.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Qualifiche (@_storicoQualifiche.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Relazioni personali (@_storicoRelazioni.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Titoli studio (@_storicoTitoli.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Consensi (@_storicoConsensi.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Utente (@_storicoUtente.Count)</MudText></MudPaper></MudItem>
+                        <MudItem xs="12" md="4"><MudPaper Class="pa-3 sigad-card"><MudText Typo="Typo.subtitle2">Richieste GDPR correlate (@_richiesteGdprCorrelateCount)</MudText></MudPaper></MudItem>
                     </MudGrid>
                 }
             </MudTabPanel>
 
-            <MudTabPanel Text="GDPR"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Sezione GDPR in roadmap.</MudAlert></MudTabPanel>
+            <MudTabPanel Text="GDPR">
+                <MudPaper Class="pa-4 sigad-card">
+                    <MudText Typo="Typo.subtitle2" Class="mb-1">Gestione GDPR</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">Apri i moduli GDPR dedicati. I moduli persona-based sono già filtrati sulla persona corrente.</MudText>
+                    <MudStack Direction="Row" Spacing="1">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/gdpr/richieste?personaId={Id}")">Richieste GDPR</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"/gdpr/richieste-esercizio-diritti?personaId={Id}")">Esercizio diritti</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/gdpr/registro-trattamenti">Registro trattamenti</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/gdpr/data-breach">Data breach</MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudTabPanel>
             <MudTabPanel Text="Documenti"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Sezione documenti in roadmap.</MudAlert></MudTabPanel>
         </MudTabs>
     }
@@ -153,8 +391,19 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+    private const int TabOverview = 0;
+    private const int TabIncarichi = 1;
+    private const int TabIndirizzi = 2;
+    private const int TabQualifiche = 3;
+    private const int TabRelazioni = 4;
+    private const int TabTitoli = 5;
+    private const int TabConsensi = 6;
+    private const int TabUtente = 7;
+    private const int TabStorico = 8;
 
     private PersonaDetail? _detail;
+    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
+    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
     private bool _isLoading = true;
     private string? _errorMessage;
     private int _activeTabIndex;
@@ -180,28 +429,111 @@
     private TelefonoFormModel _telefonoForm = new();
     private int? _telefonoEditId;
 
+    private bool _indirizziLoaded;
+    private bool _indirizziLoading;
+    private string? _indirizziError;
+    private bool _indirizziIncludeDeleted;
+    private IReadOnlyList<ContactLookupItem> _indirizziLookups = Array.Empty<ContactLookupItem>();
+    private IReadOnlyList<PersonaIndirizzoItem> _indirizziItems = Array.Empty<PersonaIndirizzoItem>();
+    private IndirizzoFormModel _indirizzoForm = new();
+    private int? _indirizzoEditId;
+
+    private bool _qualificheLoaded;
+    private bool _qualificheLoading;
+    private string? _qualificheError;
+    private bool _qualificheIncludeDeleted;
+    private QualificheLookupsResponse _qualificheLookups = new(Array.Empty<TipoQualificaLookupItem>(), Array.Empty<EnteRilascioQualificaLookupItem>());
+    private IReadOnlyList<PersonaQualificaItem> _qualificheItems = Array.Empty<PersonaQualificaItem>();
+    private QualificaFormModel _qualificaForm = new();
+    private int? _qualificaEditId;
+
+    private bool _relazioniLoaded;
+    private bool _relazioniLoading;
+    private string? _relazioniError;
+    private bool _relazioniIncludeDeleted;
+    private IReadOnlyList<TipoRelazionePersonaleLookupItem> _relazioniLookups = Array.Empty<TipoRelazionePersonaleLookupItem>();
+    private IReadOnlyList<PersonaRelazionePersonaleItem> _relazioniItems = Array.Empty<PersonaRelazionePersonaleItem>();
+    private RelazioneFormModel _relazioneForm = new();
+    private int? _relazioneEditId;
+
+    private bool _titoliLoaded;
+    private bool _titoliLoading;
+    private string? _titoliError;
+    private bool _titoliIncludeDeleted;
+    private TitoliStudioLookupsResponse _titoliLookups = new(Array.Empty<TipoTitoloStudioLookupItem>());
+    private IReadOnlyList<PersonaTitoloStudioItem> _titoliItems = Array.Empty<PersonaTitoloStudioItem>();
+    private TitoloFormModel _titoloForm = new();
+    private int? _titoloEditId;
+
+    private bool _consensiLoaded;
+    private bool _consensiLoading;
+    private string? _consensiError;
+    private bool _consensiIncludeDeleted;
+    private IReadOnlyList<TipoFinalitaTrattamentoLookupItem> _consensiLookups = Array.Empty<TipoFinalitaTrattamentoLookupItem>();
+    private IReadOnlyList<ConsensoPersonaItem> _consensiItems = Array.Empty<ConsensoPersonaItem>();
+    private ConsensoFormModel _consensoForm = new();
+    private int? _consensoEditId;
+
+    private bool _utenteLoaded;
+    private bool _utenteLoading;
+    private string? _utenteError;
+    private PersonaUtenteItem? _utenteItem;
+    private UtenteFormModel _utenteForm = new();
+
     private bool _storicoLoaded;
     private bool _storicoLoading;
     private string? _storicoError;
     private IReadOnlyList<PersonaStoricoEvent> _storicoPersona = Array.Empty<PersonaStoricoEvent>();
     private IReadOnlyList<PersonaEmailStoricoEvent> _storicoEmail = Array.Empty<PersonaEmailStoricoEvent>();
     private IReadOnlyList<PersonaTelefonoStoricoEvent> _storicoTelefoni = Array.Empty<PersonaTelefonoStoricoEvent>();
+    private IReadOnlyList<PersonaIndirizzoStoricoEvent> _storicoIndirizzi = Array.Empty<PersonaIndirizzoStoricoEvent>();
+    private IReadOnlyList<PersonaQualificaStoricoEvent> _storicoQualifiche = Array.Empty<PersonaQualificaStoricoEvent>();
+    private IReadOnlyList<PersonaRelazionePersonaleStoricoEvent> _storicoRelazioni = Array.Empty<PersonaRelazionePersonaleStoricoEvent>();
+    private IReadOnlyList<PersonaTitoloStudioStoricoEvent> _storicoTitoli = Array.Empty<PersonaTitoloStudioStoricoEvent>();
+    private IReadOnlyList<ConsensoPersonaStoricoEvent> _storicoConsensi = Array.Empty<ConsensoPersonaStoricoEvent>();
+    private IReadOnlyList<PersonaUtenteStoricoEvent> _storicoUtente = Array.Empty<PersonaUtenteStoricoEvent>();
+    private int _richiesteGdprCorrelateCount;
 
     protected override async Task OnParametersSetAsync()
     {
-        _activeTabIndex = 0;
+        _activeTabIndex = TabOverview;
         _incarichiLoaded = false;
         _contattiLoaded = false;
+        _indirizziLoaded = false;
+        _qualificheLoaded = false;
+        _relazioniLoaded = false;
+        _titoliLoaded = false;
+        _consensiLoaded = false;
+        _utenteLoaded = false;
         _storicoLoaded = false;
         _emailEditId = null;
         _telefonoEditId = null;
+        _indirizzoEditId = null;
+        _qualificaEditId = null;
+        _relazioneEditId = null;
+        _titoloEditId = null;
+        _consensoEditId = null;
         _emailForm = new EmailFormModel();
         _telefonoForm = new TelefonoFormModel();
+        _indirizzoForm = new IndirizzoFormModel();
+        _qualificaForm = new QualificaFormModel();
+        _relazioneForm = new RelazioneFormModel();
+        _titoloForm = new TitoloFormModel();
+        _consensoForm = new ConsensoFormModel();
+        _utenteForm = new UtenteFormModel();
         await ReloadAsync();
     }
 
     private async Task ReloadAsync()
     {
+        if (!CanRead)
+        {
+            _errorMessage = "Accesso negato: permesso di lettura mancante.";
+            _detail = null;
+            _isLoading = false;
+            return;
+        }
+
         _isLoading = true;
         _errorMessage = null;
         var result = await GatewayClient.GetPersonaDetailAsync(Id, CancellationToken.None);
@@ -223,8 +555,14 @@
     private async Task OnTabChanged(int index)
     {
         _activeTabIndex = index;
-        if (index == 1) await EnsureIncarichiAsync();
-        if (index == 2) await EnsureStoricoAsync();
+        if (index == TabIncarichi) await EnsureIncarichiAsync();
+        if (index == TabIndirizzi) await EnsureIndirizziAsync();
+        if (index == TabQualifiche) await EnsureQualificheAsync();
+        if (index == TabRelazioni) await EnsureRelazioniAsync();
+        if (index == TabTitoli) await EnsureTitoliAsync();
+        if (index == TabConsensi) await EnsureConsensiAsync();
+        if (index == TabUtente) await EnsureUtenteAsync();
+        if (index == TabStorico) await EnsureStoricoAsync();
     }
 
     private async Task EnsureIncarichiAsync(bool force = false)
@@ -408,6 +746,659 @@
         await EnsureContattiAsync(force: true);
     }
 
+    private Task OnIndirizziIncludeDeletedChanged()
+    {
+        _indirizziLoaded = false;
+        return EnsureIndirizziAsync(force: true);
+    }
+
+    private Task ReloadIndirizziAsync()
+    {
+        _indirizziLoaded = false;
+        return EnsureIndirizziAsync(force: true);
+    }
+
+    private async Task EnsureIndirizziAsync(bool force = false)
+    {
+        if (_indirizziLoaded && !force) return;
+        _indirizziLoading = true;
+        _indirizziError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetPersonaIndirizziLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetPersonaIndirizziAsync(Id, _indirizziIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _indirizziError = lookups.Error ?? list.Error ?? "Impossibile caricare indirizzi.";
+                _indirizziLoaded = false;
+                return;
+            }
+
+            _indirizziLookups = lookups.Data ?? Array.Empty<ContactLookupItem>();
+            _indirizziItems = list.Data ?? Array.Empty<PersonaIndirizzoItem>();
+            if (_indirizzoForm.TipoIndirizzoId == 0 && _indirizziLookups.Count > 0) _indirizzoForm.TipoIndirizzoId = _indirizziLookups[0].Id;
+            _indirizziLoaded = true;
+        }
+        finally
+        {
+            _indirizziLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginEditIndirizzo(PersonaIndirizzoItem item)
+    {
+        _indirizzoEditId = item.PersonaIndirizzoId;
+        _indirizzoForm = new IndirizzoFormModel
+        {
+            IndirizzoId = item.IndirizzoId,
+            TipoIndirizzoId = item.TipoIndirizzoId,
+            Principale = item.Principale,
+            Attivo = item.Attivo
+        };
+    }
+
+    private async Task SaveIndirizzoAsync()
+    {
+        if (_indirizzoForm.IndirizzoId <= 0 || _indirizzoForm.TipoIndirizzoId <= 0)
+        {
+            _indirizziError = "Compila IndirizzoId e tipo indirizzo.";
+            return;
+        }
+
+        var result = _indirizzoEditId.HasValue
+            ? await GatewayClient.UpdatePersonaIndirizzoAsync(Id, _indirizzoEditId.Value, new UpdatePersonaIndirizzoRequest(_indirizzoForm.IndirizzoId, _indirizzoForm.TipoIndirizzoId, _indirizzoForm.Principale, _indirizzoForm.Attivo), CancellationToken.None)
+            : await GatewayClient.CreatePersonaIndirizzoAsync(Id, new CreatePersonaIndirizzoRequest(_indirizzoForm.IndirizzoId, _indirizzoForm.TipoIndirizzoId, _indirizzoForm.Principale, _indirizzoForm.Attivo), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _indirizziError = result.Error ?? "Operazione indirizzo non riuscita.";
+            return;
+        }
+
+        _indirizzoEditId = null;
+        _indirizzoForm = new IndirizzoFormModel();
+        _indirizziLoaded = false;
+        await EnsureIndirizziAsync(force: true);
+    }
+
+    private async Task DeleteIndirizzoAsync(int personaIndirizzoId)
+    {
+        var result = await GatewayClient.DeletePersonaIndirizzoAsync(Id, personaIndirizzoId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _indirizziError = result.Error ?? "Eliminazione indirizzo non riuscita.";
+            return;
+        }
+
+        _indirizziLoaded = false;
+        await EnsureIndirizziAsync(force: true);
+    }
+
+    private Task OnQualificheIncludeDeletedChanged()
+    {
+        _qualificheLoaded = false;
+        return EnsureQualificheAsync(force: true);
+    }
+
+    private Task ReloadQualificheAsync()
+    {
+        _qualificheLoaded = false;
+        return EnsureQualificheAsync(force: true);
+    }
+
+    private async Task EnsureQualificheAsync(bool force = false)
+    {
+        if (_qualificheLoaded && !force) return;
+        _qualificheLoading = true;
+        _qualificheError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetPersonaQualificheLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetPersonaQualificheAsync(Id, _qualificheIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _qualificheError = lookups.Error ?? list.Error ?? "Impossibile caricare qualifiche.";
+                _qualificheLoaded = false;
+                return;
+            }
+
+            _qualificheLookups = lookups.Data ?? new QualificheLookupsResponse(Array.Empty<TipoQualificaLookupItem>(), Array.Empty<EnteRilascioQualificaLookupItem>());
+            _qualificheItems = list.Data ?? Array.Empty<PersonaQualificaItem>();
+            if (_qualificaForm.TipoQualificaId == 0 && _qualificheLookups.Tipi.Count > 0) _qualificaForm.TipoQualificaId = _qualificheLookups.Tipi[0].Id;
+            _qualificheLoaded = true;
+        }
+        finally
+        {
+            _qualificheLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginEditQualifica(PersonaQualificaItem item)
+    {
+        _qualificaEditId = item.PersonaQualificaId;
+        _qualificaForm = new QualificaFormModel
+        {
+            TipoQualificaId = item.TipoQualificaId,
+            EnteRilascioQualificaId = item.EnteRilascioQualificaId,
+            CodiceAttestato = item.CodiceAttestato,
+            DataRilascio = item.DataRilascio,
+            DataScadenza = item.DataScadenza,
+            Valida = item.Valida,
+            Note = item.Note
+        };
+    }
+
+    private async Task SaveQualificaAsync()
+    {
+        if (_qualificaForm.TipoQualificaId <= 0)
+        {
+            _qualificheError = "Seleziona il tipo qualifica.";
+            return;
+        }
+
+        var request = new CreatePersonaQualificaRequest(
+            _qualificaForm.TipoQualificaId,
+            _qualificaForm.EnteRilascioQualificaId,
+            NullIfWhiteSpace(_qualificaForm.CodiceAttestato),
+            _qualificaForm.DataRilascio,
+            _qualificaForm.DataScadenza,
+            _qualificaForm.Valida,
+            NullIfWhiteSpace(_qualificaForm.Note));
+
+        var result = _qualificaEditId.HasValue
+            ? await GatewayClient.UpdatePersonaQualificaAsync(
+                Id,
+                _qualificaEditId.Value,
+                new UpdatePersonaQualificaRequest(
+                    request.TipoQualificaId,
+                    request.EnteRilascioQualificaId,
+                    request.CodiceAttestato,
+                    request.DataRilascio,
+                    request.DataScadenza,
+                    request.Valida,
+                    request.Note),
+                CancellationToken.None)
+            : await GatewayClient.CreatePersonaQualificaAsync(Id, request, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _qualificheError = result.Error ?? "Operazione qualifica non riuscita.";
+            return;
+        }
+
+        _qualificaEditId = null;
+        _qualificaForm = new QualificaFormModel { Valida = true };
+        _qualificheLoaded = false;
+        await EnsureQualificheAsync(force: true);
+    }
+
+    private async Task DeleteQualificaAsync(int personaQualificaId)
+    {
+        var result = await GatewayClient.DeletePersonaQualificaAsync(Id, personaQualificaId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _qualificheError = result.Error ?? "Eliminazione qualifica non riuscita.";
+            return;
+        }
+
+        _qualificheLoaded = false;
+        await EnsureQualificheAsync(force: true);
+    }
+
+    private Task OnRelazioniIncludeDeletedChanged()
+    {
+        _relazioniLoaded = false;
+        return EnsureRelazioniAsync(force: true);
+    }
+
+    private Task ReloadRelazioniAsync()
+    {
+        _relazioniLoaded = false;
+        return EnsureRelazioniAsync(force: true);
+    }
+
+    private async Task EnsureRelazioniAsync(bool force = false)
+    {
+        if (_relazioniLoaded && !force) return;
+        _relazioniLoading = true;
+        _relazioniError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetPersonaRelazioniPersonaliLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetPersonaRelazioniPersonaliAsync(Id, _relazioniIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _relazioniError = lookups.Error ?? list.Error ?? "Impossibile caricare relazioni personali.";
+                _relazioniLoaded = false;
+                return;
+            }
+
+            _relazioniLookups = lookups.Data ?? Array.Empty<TipoRelazionePersonaleLookupItem>();
+            _relazioniItems = list.Data ?? Array.Empty<PersonaRelazionePersonaleItem>();
+            if (_relazioneForm.TipoRelazionePersonaleId == 0 && _relazioniLookups.Count > 0) _relazioneForm.TipoRelazionePersonaleId = _relazioniLookups[0].Id;
+            _relazioniLoaded = true;
+        }
+        finally
+        {
+            _relazioniLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginEditRelazione(PersonaRelazionePersonaleItem item)
+    {
+        _relazioneEditId = item.PersonaRelazionePersonaleId;
+        _relazioneForm = new RelazioneFormModel
+        {
+            PersonaCollegataId = item.PersonaCollegataId,
+            TipoRelazionePersonaleId = item.TipoRelazionePersonaleId,
+            Note = item.Note
+        };
+    }
+
+    private async Task SaveRelazioneAsync()
+    {
+        if (_relazioneForm.PersonaCollegataId <= 0 || _relazioneForm.TipoRelazionePersonaleId <= 0)
+        {
+            _relazioniError = "Compila Persona collegata e tipo relazione.";
+            return;
+        }
+
+        var request = new CreatePersonaRelazionePersonaleRequest(
+            _relazioneForm.PersonaCollegataId,
+            _relazioneForm.TipoRelazionePersonaleId,
+            NullIfWhiteSpace(_relazioneForm.Note));
+
+        var result = _relazioneEditId.HasValue
+            ? await GatewayClient.UpdatePersonaRelazionePersonaleAsync(
+                Id,
+                _relazioneEditId.Value,
+                new UpdatePersonaRelazionePersonaleRequest(
+                    request.PersonaCollegataId,
+                    request.TipoRelazionePersonaleId,
+                    request.Note),
+                CancellationToken.None)
+            : await GatewayClient.CreatePersonaRelazionePersonaleAsync(Id, request, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _relazioniError = result.Error ?? "Operazione relazione non riuscita.";
+            return;
+        }
+
+        _relazioneEditId = null;
+        _relazioneForm = new RelazioneFormModel();
+        _relazioniLoaded = false;
+        await EnsureRelazioniAsync(force: true);
+    }
+
+    private async Task DeleteRelazioneAsync(int personaRelazionePersonaleId)
+    {
+        var result = await GatewayClient.DeletePersonaRelazionePersonaleAsync(Id, personaRelazionePersonaleId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _relazioniError = result.Error ?? "Eliminazione relazione non riuscita.";
+            return;
+        }
+
+        _relazioniLoaded = false;
+        await EnsureRelazioniAsync(force: true);
+    }
+
+    private Task OnTitoliIncludeDeletedChanged()
+    {
+        _titoliLoaded = false;
+        return EnsureTitoliAsync(force: true);
+    }
+
+    private Task ReloadTitoliAsync()
+    {
+        _titoliLoaded = false;
+        return EnsureTitoliAsync(force: true);
+    }
+
+    private async Task EnsureTitoliAsync(bool force = false)
+    {
+        if (_titoliLoaded && !force) return;
+        _titoliLoading = true;
+        _titoliError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetPersonaTitoliStudioLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetPersonaTitoliStudioAsync(Id, _titoliIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _titoliError = lookups.Error ?? list.Error ?? "Impossibile caricare titoli di studio.";
+                _titoliLoaded = false;
+                return;
+            }
+
+            _titoliLookups = lookups.Data ?? new TitoliStudioLookupsResponse(Array.Empty<TipoTitoloStudioLookupItem>());
+            _titoliItems = list.Data ?? Array.Empty<PersonaTitoloStudioItem>();
+            if (_titoloForm.TipoTitoloStudioId == 0 && _titoliLookups.Tipi.Count > 0) _titoloForm.TipoTitoloStudioId = _titoliLookups.Tipi[0].Id;
+            _titoliLoaded = true;
+        }
+        finally
+        {
+            _titoliLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginEditTitolo(PersonaTitoloStudioItem item)
+    {
+        _titoloEditId = item.PersonaTitoloStudioId;
+        _titoloForm = new TitoloFormModel
+        {
+            TipoTitoloStudioId = item.TipoTitoloStudioId,
+            Istituzione = item.Istituzione,
+            Corso = item.Corso,
+            DataConseguimento = item.DataConseguimento,
+            Voto = item.Voto,
+            Lode = item.Lode,
+            Paese = item.Paese,
+            Note = item.Note,
+            Principale = item.Principale
+        };
+    }
+
+    private async Task SaveTitoloAsync()
+    {
+        if (_titoloForm.TipoTitoloStudioId <= 0)
+        {
+            _titoliError = "Seleziona il tipo titolo di studio.";
+            return;
+        }
+
+        var request = new CreatePersonaTitoloStudioRequest(
+            _titoloForm.TipoTitoloStudioId,
+            NullIfWhiteSpace(_titoloForm.Istituzione),
+            NullIfWhiteSpace(_titoloForm.Corso),
+            _titoloForm.DataConseguimento,
+            NullIfWhiteSpace(_titoloForm.Voto),
+            _titoloForm.Lode,
+            NullIfWhiteSpace(_titoloForm.Paese),
+            NullIfWhiteSpace(_titoloForm.Note),
+            _titoloForm.Principale);
+
+        var result = _titoloEditId.HasValue
+            ? await GatewayClient.UpdatePersonaTitoloStudioAsync(
+                Id,
+                _titoloEditId.Value,
+                new UpdatePersonaTitoloStudioRequest(
+                    request.TipoTitoloStudioId,
+                    request.Istituzione,
+                    request.Corso,
+                    request.DataConseguimento,
+                    request.Voto,
+                    request.Lode,
+                    request.Paese,
+                    request.Note,
+                    request.Principale),
+                CancellationToken.None)
+            : await GatewayClient.CreatePersonaTitoloStudioAsync(Id, request, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _titoliError = result.Error ?? "Operazione titolo non riuscita.";
+            return;
+        }
+
+        _titoloEditId = null;
+        _titoloForm = new TitoloFormModel();
+        _titoliLoaded = false;
+        await EnsureTitoliAsync(force: true);
+    }
+
+    private async Task DeleteTitoloAsync(int personaTitoloStudioId)
+    {
+        var result = await GatewayClient.DeletePersonaTitoloStudioAsync(Id, personaTitoloStudioId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _titoliError = result.Error ?? "Eliminazione titolo non riuscita.";
+            return;
+        }
+
+        _titoliLoaded = false;
+        await EnsureTitoliAsync(force: true);
+    }
+
+    private Task OnConsensiIncludeDeletedChanged()
+    {
+        _consensiLoaded = false;
+        return EnsureConsensiAsync(force: true);
+    }
+
+    private Task ReloadConsensiAsync()
+    {
+        _consensiLoaded = false;
+        return EnsureConsensiAsync(force: true);
+    }
+
+    private async Task EnsureConsensiAsync(bool force = false)
+    {
+        if (_consensiLoaded && !force) return;
+        _consensiLoading = true;
+        _consensiError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var lookupsTask = GatewayClient.GetPersonaConsensiLookupsAsync(CancellationToken.None);
+            var listTask = GatewayClient.GetPersonaConsensiAsync(Id, _consensiIncludeDeleted, CancellationToken.None);
+            await Task.WhenAll(lookupsTask, listTask);
+            var lookups = await lookupsTask;
+            var list = await listTask;
+
+            if (!lookups.IsSuccess || !list.IsSuccess)
+            {
+                _consensiError = lookups.Error ?? list.Error ?? "Impossibile caricare consensi.";
+                _consensiLoaded = false;
+                return;
+            }
+
+            _consensiLookups = lookups.Data ?? Array.Empty<TipoFinalitaTrattamentoLookupItem>();
+            _consensiItems = list.Data ?? Array.Empty<ConsensoPersonaItem>();
+            if (_consensoForm.TipoFinalitaTrattamentoId == 0 && _consensiLookups.Count > 0) _consensoForm.TipoFinalitaTrattamentoId = _consensiLookups[0].Id;
+            _consensiLoaded = true;
+        }
+        finally
+        {
+            _consensiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BeginEditConsenso(ConsensoPersonaItem item)
+    {
+        _consensoEditId = item.ConsensoPersonaId;
+        _consensoForm = new ConsensoFormModel
+        {
+            TipoFinalitaTrattamentoId = item.TipoFinalitaTrattamentoId,
+            Consenso = item.Consenso,
+            DataConsenso = item.DataConsenso,
+            DataScadenza = item.DataScadenza,
+            DataRevoca = item.DataRevoca,
+            ModalitaAcquisizione = item.ModalitaAcquisizione,
+            ModalitaRevoca = item.ModalitaRevoca,
+            RiferimentoDocumento = item.RiferimentoDocumento,
+            IPAddress = item.IPAddress,
+            UserAgent = item.UserAgent,
+            MotivoRevoca = item.MotivoRevoca,
+            VersioneInformativa = item.VersioneInformativa,
+            DataInformativa = item.DataInformativa,
+            Note = item.Note
+        };
+    }
+
+    private async Task SaveConsensoAsync()
+    {
+        if (_consensoForm.TipoFinalitaTrattamentoId <= 0 || string.IsNullOrWhiteSpace(_consensoForm.ModalitaAcquisizione))
+        {
+            _consensiError = "Compila finalita e modalita acquisizione.";
+            return;
+        }
+
+        var request = new CreateConsensoPersonaRequest(
+            _consensoForm.TipoFinalitaTrattamentoId,
+            _consensoForm.Consenso,
+            _consensoForm.DataConsenso ?? DateTime.UtcNow,
+            _consensoForm.DataScadenza,
+            _consensoForm.DataRevoca,
+            _consensoForm.ModalitaAcquisizione.Trim(),
+            NullIfWhiteSpace(_consensoForm.ModalitaRevoca),
+            NullIfWhiteSpace(_consensoForm.RiferimentoDocumento),
+            NullIfWhiteSpace(_consensoForm.IPAddress),
+            NullIfWhiteSpace(_consensoForm.UserAgent),
+            NullIfWhiteSpace(_consensoForm.MotivoRevoca),
+            NullIfWhiteSpace(_consensoForm.VersioneInformativa),
+            _consensoForm.DataInformativa,
+            NullIfWhiteSpace(_consensoForm.Note));
+
+        var result = _consensoEditId.HasValue
+            ? await GatewayClient.UpdatePersonaConsensoAsync(
+                Id,
+                _consensoEditId.Value,
+                new UpdateConsensoPersonaRequest(
+                    request.TipoFinalitaTrattamentoId,
+                    request.Consenso,
+                    request.DataConsenso,
+                    request.DataScadenza,
+                    request.DataRevoca,
+                    request.ModalitaAcquisizione,
+                    request.ModalitaRevoca,
+                    request.RiferimentoDocumento,
+                    request.IPAddress,
+                    request.UserAgent,
+                    request.MotivoRevoca,
+                    request.VersioneInformativa,
+                    request.DataInformativa,
+                    request.Note),
+                CancellationToken.None)
+            : await GatewayClient.CreatePersonaConsensoAsync(Id, request, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _consensiError = result.Error ?? "Operazione consenso non riuscita.";
+            return;
+        }
+
+        _consensoEditId = null;
+        _consensoForm = new ConsensoFormModel();
+        _consensiLoaded = false;
+        await EnsureConsensiAsync(force: true);
+    }
+
+    private async Task DeleteConsensoAsync(int consensoPersonaId)
+    {
+        var result = await GatewayClient.DeletePersonaConsensoAsync(Id, consensoPersonaId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _consensiError = result.Error ?? "Eliminazione consenso non riuscita.";
+            return;
+        }
+
+        _consensiLoaded = false;
+        await EnsureConsensiAsync(force: true);
+    }
+
+    private Task ReloadUtenteAsync()
+    {
+        _utenteLoaded = false;
+        return EnsureUtenteAsync(force: true);
+    }
+
+    private async Task EnsureUtenteAsync(bool force = false)
+    {
+        if (_utenteLoaded && !force) return;
+        _utenteLoading = true;
+        _utenteError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var result = await GatewayClient.GetPersonaUtenteAsync(Id, true, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _utenteItem = null;
+                    _utenteLoaded = true;
+                    return;
+                }
+
+                _utenteError = result.Error ?? "Impossibile caricare utente associato.";
+                _utenteLoaded = false;
+                return;
+            }
+
+            _utenteItem = result.Data;
+            _utenteForm.UserId = _utenteItem?.UserId ?? string.Empty;
+            _utenteLoaded = true;
+        }
+        finally
+        {
+            _utenteLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SaveUtenteAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_utenteForm.UserId))
+        {
+            _utenteError = "Compila UserId.";
+            return;
+        }
+
+        var request = new CreatePersonaUtenteRequest(_utenteForm.UserId.Trim());
+        var result = _utenteItem is null
+            ? await GatewayClient.CreatePersonaUtenteAsync(Id, request, CancellationToken.None)
+            : await GatewayClient.UpdatePersonaUtenteAsync(Id, _utenteItem.PersonaUtenteId, new UpdatePersonaUtenteRequest(request.UserId), CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            _utenteError = result.Error ?? "Operazione utente non riuscita.";
+            return;
+        }
+
+        _utenteLoaded = false;
+        await EnsureUtenteAsync(force: true);
+    }
+
+    private async Task DeleteUtenteAsync(int personaUtenteId)
+    {
+        var result = await GatewayClient.DeletePersonaUtenteAsync(Id, personaUtenteId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _utenteError = result.Error ?? "Eliminazione utente non riuscita.";
+            return;
+        }
+
+        _utenteLoaded = false;
+        await EnsureUtenteAsync(force: true);
+    }
+
     private async Task EnsureStoricoAsync(bool force = false)
     {
         if (_storicoLoaded && !force) return;
@@ -419,11 +1410,29 @@
             var pTask = GatewayClient.GetPersonaStoricoAsync(Id, CancellationToken.None);
             var eTask = GatewayClient.GetPersonaStoricoEmailAsync(Id, CancellationToken.None);
             var tTask = GatewayClient.GetPersonaStoricoTelefoniAsync(Id, CancellationToken.None);
-            await Task.WhenAll(pTask, eTask, tTask);
-            var p = await pTask; var e = await eTask; var t = await tTask;
-            if (!p.IsSuccess || !e.IsSuccess || !t.IsSuccess)
+            var iTask = GatewayClient.GetPersonaStoricoIndirizziAsync(Id, CancellationToken.None);
+            var qTask = GatewayClient.GetPersonaStoricoQualificheAsync(Id, CancellationToken.None);
+            var rTask = GatewayClient.GetPersonaStoricoRelazioniPersonaliAsync(Id, CancellationToken.None);
+            var tsTask = GatewayClient.GetPersonaStoricoTitoliStudioAsync(Id, CancellationToken.None);
+            var cTask = GatewayClient.GetPersonaStoricoConsensiAsync(Id, CancellationToken.None);
+            var uTask = GatewayClient.GetPersonaStoricoUtenteAsync(Id, CancellationToken.None);
+            var rgTask = GatewayClient.GetRichiesteGdprAsync(Id, includeDeleted: true, CancellationToken.None);
+
+            await Task.WhenAll(pTask, eTask, tTask, iTask, qTask, rTask, tsTask, cTask, uTask, rgTask);
+            var p = await pTask;
+            var e = await eTask;
+            var t = await tTask;
+            var i = await iTask;
+            var q = await qTask;
+            var r = await rTask;
+            var ts = await tsTask;
+            var c = await cTask;
+            var u = await uTask;
+            var rg = await rgTask;
+
+            if (!p.IsSuccess || !e.IsSuccess || !t.IsSuccess || !i.IsSuccess || !q.IsSuccess || !r.IsSuccess || !ts.IsSuccess || !c.IsSuccess || !u.IsSuccess || !rg.IsSuccess)
             {
-                _storicoError = p.Error ?? e.Error ?? t.Error ?? "Impossibile caricare storico.";
+                _storicoError = p.Error ?? e.Error ?? t.Error ?? i.Error ?? q.Error ?? r.Error ?? ts.Error ?? c.Error ?? u.Error ?? rg.Error ?? "Impossibile caricare storico.";
                 _storicoLoaded = false;
                 return;
             }
@@ -431,6 +1440,13 @@
             _storicoPersona = p.Data ?? Array.Empty<PersonaStoricoEvent>();
             _storicoEmail = e.Data ?? Array.Empty<PersonaEmailStoricoEvent>();
             _storicoTelefoni = t.Data ?? Array.Empty<PersonaTelefonoStoricoEvent>();
+            _storicoIndirizzi = i.Data ?? Array.Empty<PersonaIndirizzoStoricoEvent>();
+            _storicoQualifiche = q.Data ?? Array.Empty<PersonaQualificaStoricoEvent>();
+            _storicoRelazioni = r.Data ?? Array.Empty<PersonaRelazionePersonaleStoricoEvent>();
+            _storicoTitoli = ts.Data ?? Array.Empty<PersonaTitoloStudioStoricoEvent>();
+            _storicoConsensi = c.Data ?? Array.Empty<ConsensoPersonaStoricoEvent>();
+            _storicoUtente = u.Data ?? Array.Empty<PersonaUtenteStoricoEvent>();
+            _richiesteGdprCorrelateCount = rg.Data?.Count ?? 0;
             _storicoLoaded = true;
         }
         finally
@@ -441,8 +1457,19 @@
     }
 
     private string GetIncarichiTabText() => _incarichiLoaded ? $"Incarichi ({_incarichi.Count})" : "Incarichi (...)";
+    private string GetIndirizziTabText() => _indirizziLoaded ? $"Indirizzi ({_indirizziItems.Count})" : "Indirizzi (...)";
+    private string GetQualificheTabText() => _qualificheLoaded ? $"Qualifiche ({_qualificheItems.Count})" : "Qualifiche (...)";
+    private string GetRelazioniPersonaliTabText() => _relazioniLoaded ? $"Relazioni personali ({_relazioniItems.Count})" : "Relazioni personali (...)";
+    private string GetTitoliStudioTabText() => _titoliLoaded ? $"Titoli studio ({_titoliItems.Count})" : "Titoli studio (...)";
+    private string GetConsensiTabText() => _consensiLoaded ? $"Consensi ({_consensiItems.Count})" : "Consensi (...)";
+    private string GetUtenteTabText() => _utenteLoaded ? (_utenteItem is null ? "Utente (0)" : "Utente (1)") : "Utente (...)";
     private string GetEmailTipoLabel(int id) => _emailLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
     private string GetTelefonoTipoLabel(int id) => _telefonoLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetIndirizzoTipoLabel(int id) => _indirizziLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetTipoQualificaLabel(int id) => _qualificheLookups.Tipi.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetTipoRelazioneLabel(int id) => _relazioniLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetTipoTitoloStudioLabel(int id) => _titoliLookups.Tipi.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
+    private string GetTipoFinalitaLabel(int id) => _consensiLookups.FirstOrDefault(x => x.Id == id)?.Description ?? id.ToString();
 
     private static string FormatTelefono(PersonaTelefonoItem item) => FormatTelefono(item.PrefissoInternazionale, item.Numero, item.Estensione);
     private static string FormatTelefono(string? prefisso, string numero, string? estensione)
@@ -454,6 +1481,9 @@
         var clean = new string(prefisso.Trim().Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
         return string.IsNullOrWhiteSpace(clean) ? null : clean;
     }
+
+    private static string? NullIfWhiteSpace(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static string GetInitials(PersonaDetail detail)
     {
@@ -473,5 +1503,67 @@
         public int TipoTelefonoId { get; set; }
         public string? PrefissoInternazionale { get; set; }
         public string Numero { get; set; } = string.Empty;
+    }
+
+    private sealed class IndirizzoFormModel
+    {
+        public int IndirizzoId { get; set; }
+        public int TipoIndirizzoId { get; set; }
+        public bool Principale { get; set; }
+        public bool Attivo { get; set; } = true;
+    }
+
+    private sealed class QualificaFormModel
+    {
+        public int TipoQualificaId { get; set; }
+        public int? EnteRilascioQualificaId { get; set; }
+        public string? CodiceAttestato { get; set; }
+        public DateTime? DataRilascio { get; set; }
+        public DateTime? DataScadenza { get; set; }
+        public bool Valida { get; set; } = true;
+        public string? Note { get; set; }
+    }
+
+    private sealed class RelazioneFormModel
+    {
+        public int PersonaCollegataId { get; set; }
+        public int TipoRelazionePersonaleId { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class TitoloFormModel
+    {
+        public int TipoTitoloStudioId { get; set; }
+        public string? Istituzione { get; set; }
+        public string? Corso { get; set; }
+        public DateTime? DataConseguimento { get; set; }
+        public string? Voto { get; set; }
+        public bool Lode { get; set; }
+        public string? Paese { get; set; }
+        public string? Note { get; set; }
+        public bool Principale { get; set; }
+    }
+
+    private sealed class ConsensoFormModel
+    {
+        public int TipoFinalitaTrattamentoId { get; set; }
+        public bool Consenso { get; set; } = true;
+        public DateTime? DataConsenso { get; set; }
+        public DateTime? DataScadenza { get; set; }
+        public DateTime? DataRevoca { get; set; }
+        public string ModalitaAcquisizione { get; set; } = "Portale";
+        public string? ModalitaRevoca { get; set; }
+        public string? RiferimentoDocumento { get; set; }
+        public string? IPAddress { get; set; }
+        public string? UserAgent { get; set; }
+        public string? MotivoRevoca { get; set; }
+        public string? VersioneInformativa { get; set; }
+        public DateTime? DataInformativa { get; set; }
+        public string? Note { get; set; }
+    }
+
+    private sealed class UtenteFormModel
+    {
+        public string UserId { get; set; } = string.Empty;
     }
 }

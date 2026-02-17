@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.IO;
 using OpenTelemetry.Trace;
 using Accredia.SIGAD.Web.Components;
 using MudBlazor.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Accredia.SIGAD.Web.Auth;
@@ -29,6 +31,15 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<ProtectedLocalStorage>(); // <-- Aggiunto per LocalStorage (RememberMe)
 builder.Services.AddHttpContextAccessor();
+
+// In Development persist DataProtection keys in workspace to avoid DPAPI/profile permission issues.
+if (builder.Environment.IsDevelopment())
+{
+    var keysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
+    Directory.CreateDirectory(keysPath);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
 
 // =====================================================
 // FASE 1: TOKEN MANAGEMENT & SECURITY SERVICES
