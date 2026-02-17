@@ -39,3 +39,6 @@ nul
 # Test settings (local)
 **/appsettings.Test.json
 **/gateway.appsettings.json
+# NuGet cache/offline feed
+# NuGet cache/offline feed
+**/*.nupkg
