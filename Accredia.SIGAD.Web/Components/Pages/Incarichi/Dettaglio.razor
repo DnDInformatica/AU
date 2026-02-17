@@ -10,7 +10,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Dettaglio incarico"
                 Subtitle="@(_detail is null ? "" : $"{_detail.PersonaCognome} {_detail.PersonaNome}")"
-                Breadcrumbs="@($"Home / Anagrafiche / Incarichi / {Id}")"
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Incarichi"
+                BackHref="/incarichi"
                 PrimaryActionLabel="Modifica"
                 PrimaryActionDisabled="@(_detail is null || _detail.DataCancellazione.HasValue)"
                 OnPrimaryAction="GoToEdit"
@@ -94,6 +96,13 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+
+    private IReadOnlyList<BreadcrumbItem> _breadcrumbs => new BreadcrumbItem[]
+    {
+        new("Home", "/"),
+        new("Incarichi", "/incarichi"),
+        new($"#{Id}")
+    };
 
     private bool _isLoading = true;
     private string? _errorMessage;

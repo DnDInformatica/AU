@@ -6,6 +6,7 @@
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanCreate)
 {
@@ -16,7 +17,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuova persona"
                 Subtitle="Crea una nuova persona in anagrafica."
-                Breadcrumbs="Home / Anagrafiche / Persone / Nuova" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Persone"
+                BackHref="/persone" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -100,6 +103,13 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Persone", "/persone"),
+        new BreadcrumbItem("Nuova")
+    };
+
     private sealed class FormModel
     {
         public string Cognome { get; set; } = string.Empty;

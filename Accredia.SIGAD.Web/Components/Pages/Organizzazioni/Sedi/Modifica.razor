@@ -10,7 +10,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica sede"
                 Subtitle="@($"Organizzazione #{Id} · Sede #{SedeId}")"
-                Breadcrumbs="@($"Home / Anagrafiche / Organizzazioni / {Id} / Sedi / {SedeId} / Modifica")" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna all'organizzazione"
+                BackHref="@($"/organizzazioni/{Id}")" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -127,6 +129,16 @@
 @code {
     [Parameter] public int Id { get; set; }
     [Parameter] public int SedeId { get; set; }
+
+    private IReadOnlyList<BreadcrumbItem> _breadcrumbs => new BreadcrumbItem[]
+    {
+        new("Home", "/"),
+        new("Organizzazioni", "/organizzazioni"),
+        new($"#{Id}", $"/organizzazioni/{Id}"),
+        new("Sedi"),
+        new($"#{SedeId}"),
+        new("Modifica")
+    };
 
     private sealed class FormModel
     {

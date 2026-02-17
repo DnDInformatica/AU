@@ -6,6 +6,7 @@
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.RisorseUmane
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanRead)
 {
@@ -16,8 +17,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Dipendenti"
                 Subtitle="Gestione dipendenti con anagrafica persona completa."
-                Breadcrumbs="Home / Risorse Umane / Dipendenti"
+                BreadcrumbItems="@_breadcrumbs"
                 PrimaryActionLabel="Nuovo dipendente"
+                PrimaryActionIcon="@Icons.Material.Filled.Add"
                 OnPrimaryAction="CreateNew" />
 
     @if (!CanCreate)
@@ -136,6 +138,13 @@
         && UserContext.HasPermission("HR.PERSONA.READ");
 
     private bool CanCreate => UserContext.HasPermission("HR.DIP.CREATE");
+
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Risorse Umane"),
+        new BreadcrumbItem("Dipendenti")
+    };
 
     private MudTable<DipendenteDettaglioCompletoListItem>? _table;
     private string? _errorMessage;

@@ -4,6 +4,7 @@
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanRead)
 {
@@ -14,7 +15,7 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Richieste GDPR"
                 Subtitle="Gestione richieste interessati (CRUD)"
-                Breadcrumbs="Home / GDPR / Richieste" />
+                BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -143,6 +144,13 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("GDPR"),
+        new BreadcrumbItem("Richieste")
+    };
+
     [SupplyParameterFromQuery(Name = "personaId")]
     public int? PersonaIdQuery { get; set; }
 

@@ -6,6 +6,7 @@
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.RisorseUmane
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanReadDipendente)
 {
@@ -14,9 +15,11 @@
 }
 
 <MudContainer MaxWidth="MaxWidth.False">
-    <PageHeader Title="Dettaglio dipendente"
-                Subtitle="@($"Scheda #{Id}")"
-                Breadcrumbs="Home / Risorse Umane / Dipendenti / Dettaglio" />
+    <PageHeader Title="@(_detail is not null ? $"{_detail.Persona.Dettaglio.Cognome} {_detail.Persona.Dettaglio.Nome}" : "Dettaglio dipendente")"
+                Subtitle="@($"Dipendente #{Id}")"
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Dipendenti"
+                BackHref="/risorse-umane/dipendenti" />
 
     @if (_isLoading)
     {
@@ -32,51 +35,72 @@
     }
     else if (_detail is not null)
     {
+        <MudPaper Elevation="0" Class="sigad-hero-card">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                <MudAvatar Size="Size.Large" Color="Color.Primary" Variant="Variant.Outlined" Class="sigad-hero-avatar">
+                    @GetDipendenteInitials()
+                </MudAvatar>
+                <MudStack Spacing="0" Class="flex-grow-1">
+                    <MudText Typo="Typo.h5" Class="sigad-hero-title">
+                        @_detail.Persona.Dettaglio.Cognome @_detail.Persona.Dettaglio.Nome
+                    </MudText>
+                    <MudStack Row="true" Spacing="2" Class="mt-1">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Matricola @(_detail.Dipendente.Matricola ?? "N/A")
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">·</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @(!string.IsNullOrWhiteSpace(_detail.Persona.Dettaglio.CodiceFiscale) ? $"CF {_detail.Persona.Dettaglio.CodiceFiscale}" : "CF non disponibile")
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">·</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Assunzione @_detail.Dipendente.DataAssunzione.ToString("dd/MM/yyyy")
+                        </MudText>
+                    </MudStack>
+                </MudStack>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                           Href="@($"/persone/{_detail.Persona.Dettaglio.PersonaId}")"
+                           StartIcon="@Icons.Material.Filled.OpenInNew">
+                    Scheda persona
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+
         <MudGrid Spacing="2">
             <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4 sigad-card">
-                    <MudText Typo="Typo.h6">Dati dipendente</MudText>
-                    <MudList T="string" Dense="true">
-                        <MudListItem T="string">Matricola: @_detail.Dipendente.Matricola</MudListItem>
-                        <MudListItem T="string">Stato dipendente ID: @_detail.Dipendente.StatoDipendenteId</MudListItem>
-                        <MudListItem T="string">Data assunzione: @_detail.Dipendente.DataAssunzione.ToString("yyyy-MM-dd")</MudListItem>
-                        <MudListItem T="string">Data cessazione: @(_detail.Dipendente.DataCessazione?.ToString("yyyy-MM-dd") ?? "-")</MudListItem>
-                        <MudListItem T="string">Email aziendale: @(_detail.Dipendente.EmailAziendale ?? "-")</MudListItem>
-                        <MudListItem T="string">Telefono interno: @(_detail.Dipendente.TelefonoInterno ?? "-")</MudListItem>
-                    </MudList>
+                <MudPaper Elevation="0" Class="sigad-section-card">
+                    <MudText Typo="Typo.subtitle1" Class="sigad-section-header">Dati dipendente</MudText>
+                    <MudDivider Class="mb-4" />
+                    <dl class="sigad-dl">
+                        <div class="sigad-dl-item"><dt>Matricola</dt><dd>@(_detail.Dipendente.Matricola ?? "—")</dd></div>
+                        <div class="sigad-dl-item"><dt>Stato dipendente ID</dt><dd>@_detail.Dipendente.StatoDipendenteId</dd></div>
+                        <div class="sigad-dl-item"><dt>Data assunzione</dt><dd>@_detail.Dipendente.DataAssunzione.ToString("dd/MM/yyyy")</dd></div>
+                        <div class="sigad-dl-item"><dt>Data cessazione</dt><dd>@(_detail.Dipendente.DataCessazione?.ToString("dd/MM/yyyy") ?? "—")</dd></div>
+                        <div class="sigad-dl-item"><dt>Email aziendale</dt><dd>@(_detail.Dipendente.EmailAziendale ?? "—")</dd></div>
+                        <div class="sigad-dl-item"><dt>Telefono interno</dt><dd>@(_detail.Dipendente.TelefonoInterno ?? "—")</dd></div>
+                    </dl>
                 </MudPaper>
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4 sigad-card">
-                    <MudText Typo="Typo.h6">Persona collegata</MudText>
-                    <MudList T="string" Dense="true">
-                        <MudListItem T="string">ID Persona: @_detail.Persona.Dettaglio.PersonaId</MudListItem>
-                        <MudListItem T="string">Cognome e nome: @_detail.Persona.Dettaglio.Cognome @_detail.Persona.Dettaglio.Nome</MudListItem>
-                        <MudListItem T="string">Codice fiscale: @(_detail.Persona.Dettaglio.CodiceFiscale ?? "-")</MudListItem>
-                        <MudListItem T="string">Data nascita: @_detail.Persona.Dettaglio.DataNascita.ToString("yyyy-MM-dd")</MudListItem>
-                    </MudList>
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Primary"
-                               Href="@($"/persone/{_detail.Persona.Dettaglio.PersonaId}")">
-                        Apri dettaglio persona
-                    </MudButton>
+                <MudPaper Elevation="0" Class="sigad-section-card">
+                    <MudText Typo="Typo.subtitle1" Class="sigad-section-header">Persona collegata</MudText>
+                    <MudDivider Class="mb-4" />
+                    <dl class="sigad-dl">
+                        <div class="sigad-dl-item"><dt>ID Persona</dt><dd>@_detail.Persona.Dettaglio.PersonaId</dd></div>
+                        <div class="sigad-dl-item"><dt>Cognome e nome</dt><dd>@_detail.Persona.Dettaglio.Cognome @_detail.Persona.Dettaglio.Nome</dd></div>
+                        <div class="sigad-dl-item"><dt>Codice fiscale</dt><dd class="sigad-mono">@(_detail.Persona.Dettaglio.CodiceFiscale ?? "—")</dd></div>
+                        <div class="sigad-dl-item"><dt>Data nascita</dt><dd>@_detail.Persona.Dettaglio.DataNascita.ToString("dd/MM/yyyy")</dd></div>
+                    </dl>
                 </MudPaper>
             </MudItem>
 
             <MudItem xs="12">
-                <MudPaper Class="pa-4 sigad-card">
-                    <MudText Typo="Typo.h6">Anagrafica completa persona (sintesi)</MudText>
-                    <MudGrid Spacing="1" Class="mt-2">
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Email: @_detail.Persona.Email.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Telefoni: @_detail.Persona.Telefoni.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Indirizzi: @_detail.Persona.Indirizzi.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">Qualifiche: @_detail.Persona.Qualifiche.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Relazioni personali: @_detail.Persona.RelazioniPersonali.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Consensi: @_detail.Persona.Consensi.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Richieste GDPR: @_detail.Persona.RichiesteGdpr.Count</MudChip></MudItem>
-                        <MudItem xs="6" md="3"><MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined">Esercizio diritti: @_detail.Persona.RichiesteEsercizioDiritti.Count</MudChip></MudItem>
-                    </MudGrid>
-                </MudPaper>
+                <MudGrid Spacing="3">
+                    <MudItem xs="6" sm="6" md="3"><MudPaper Elevation="0" Class="sigad-kpi-card-accent"><MudText Typo="Typo.caption" Color="Color.Secondary">Email</MudText><MudText Typo="Typo.h4" Color="Color.Primary">@_detail.Persona.Email.Count</MudText></MudPaper></MudItem>
+                    <MudItem xs="6" sm="6" md="3"><MudPaper Elevation="0" Class="sigad-kpi-card-accent"><MudText Typo="Typo.caption" Color="Color.Secondary">Telefoni</MudText><MudText Typo="Typo.h4" Color="Color.Primary">@_detail.Persona.Telefoni.Count</MudText></MudPaper></MudItem>
+                    <MudItem xs="6" sm="6" md="3"><MudPaper Elevation="0" Class="sigad-kpi-card-accent"><MudText Typo="Typo.caption" Color="Color.Secondary">Indirizzi</MudText><MudText Typo="Typo.h4" Color="Color.Primary">@_detail.Persona.Indirizzi.Count</MudText></MudPaper></MudItem>
+                    <MudItem xs="6" sm="6" md="3"><MudPaper Elevation="0" Class="sigad-kpi-card-accent"><MudText Typo="Typo.caption" Color="Color.Secondary">Qualifiche</MudText><MudText Typo="Typo.h4" Color="Color.Primary">@_detail.Persona.Qualifiche.Count</MudText></MudPaper></MudItem>
+                </MudGrid>
             </MudItem>
 
             <MudItem xs="12">
@@ -687,6 +711,22 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+
+    private IReadOnlyList<BreadcrumbItem> _breadcrumbs => new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Risorse Umane"),
+        new BreadcrumbItem("Dipendenti", "/risorse-umane/dipendenti"),
+        new BreadcrumbItem(_detail is not null ? $"{_detail.Persona.Dettaglio.Cognome} {_detail.Persona.Dettaglio.Nome}" : $"#{Id}")
+    };
+
+    private string GetDipendenteInitials()
+    {
+        if (_detail is null) return "?";
+        var c = string.IsNullOrWhiteSpace(_detail.Persona.Dettaglio.Cognome) ? "" : _detail.Persona.Dettaglio.Cognome[..1];
+        var n = string.IsNullOrWhiteSpace(_detail.Persona.Dettaglio.Nome) ? "" : _detail.Persona.Dettaglio.Nome[..1];
+        return $"{c}{n}".ToUpperInvariant();
+    }
 
     private bool CanReadDipendente =>
         (UserContext.HasPermission("HR.DIP.LIST") || UserContext.HasPermission("HR.DIP.READ"))

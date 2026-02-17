@@ -5,11 +5,14 @@
 @inject ISnackbar Snackbar
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.Common
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuovo incarico"
                 Subtitle="Crea un nuovo incarico"
-                Breadcrumbs="Home / Anagrafiche / Incarichi / Nuovo" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Incarichi"
+                BackHref="/incarichi" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -143,6 +146,13 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Incarichi", "/incarichi"),
+        new BreadcrumbItem("Nuovo")
+    };
+
     [Parameter]
     [SupplyParameterFromQuery(Name = "organizzazioneId")]
     public int? OrganizzazioneId { get; set; }

@@ -2,10 +2,17 @@
 
 <div class="sigad-page-header">
     <div class="sigad-page-header-left">
-        <MudText Typo="Typo.h4" Class="sigad-page-title">@Title</MudText>
-        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        @if (HasBackButton)
         {
-            <MudText Typo="Typo.body2" Class="sigad-page-subtitle">@Subtitle</MudText>
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       Href="@BackHref"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Size="Size.Small"
+                       Class="sigad-back-btn"
+                       aria-label="@BackLabel">
+                @BackLabel
+            </MudButton>
         }
         @if (HasStructuredBreadcrumbs)
         {
@@ -35,27 +42,22 @@
         {
             <MudText Typo="Typo.caption" Class="sigad-page-breadcrumbs">@Breadcrumbs</MudText>
         }
+        <MudText Typo="Typo.h5" Class="sigad-page-title">@Title</MudText>
+        @if (!string.IsNullOrWhiteSpace(Subtitle))
+        {
+            <MudText Typo="Typo.body2" Class="sigad-page-subtitle">@Subtitle</MudText>
+        }
     </div>
-    @if (HasActions)
+    @if (HasActionButtons)
     {
         <div class="sigad-page-header-action">
             <MudStack Direction="Row" Spacing="1" AlignItems="AlignItems.Center">
-                @if (HasBackButton)
-                {
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Default"
-                               Href="@BackHref"
-                               StartIcon="@Icons.Material.Filled.ArrowBack"
-                               Class="sigad-back-btn"
-                               aria-label="@BackLabel">
-                        @BackLabel
-                    </MudButton>
-                }
                 @if (!string.IsNullOrWhiteSpace(SecondaryActionLabel))
                 {
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Inherit"
                                Disabled="SecondaryActionDisabled"
+                               StartIcon="@SecondaryActionIcon"
                                OnClick="OnSecondaryAction">
                         @SecondaryActionLabel
                     </MudButton>
@@ -65,6 +67,7 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                Disabled="PrimaryActionDisabled"
+                               StartIcon="@PrimaryActionIcon"
                                OnClick="OnPrimaryAction">
                         @PrimaryActionLabel
                     </MudButton>

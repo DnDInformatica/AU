@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIGAD — UX/UI Mock (HTML)</title>
+
+  <!-- Fonts (simili al design system) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <style>
+    :root{
+      /* SIGAD tokens */
+      --sigad-graphite:#1a1a2e;
+      --sigad-ocra:#d4a574;
+      --sigad-ecru:#f8f7f5;
+      --sigad-white:#ffffff;
+      --sigad-text-secondary:#666666;
+      --sigad-text-disabled:#bdbdbd;
+      --sigad-line:rgba(26,26,46,0.12);
+      --sigad-info:#0277bd;
+      --sigad-success:#2e7d32;
+      --sigad-warning:#f57c00;
+      --sigad-error:#c62828;
+
+      --radius:16px;
+      --radius-sm:8px;
+
+      --appbar-h:56px;
+
+      --drawer-w:280px;
+      --drawer-mini-w:72px;
+
+      --content-max:1440px;
+      --content-pad-x:32px;
+      --content-pad-y:24px;
+
+      --shadow-overlay:0 8px 24px rgba(0,0,0,0.12);
+      --shadow-pop:0 2px 8px rgba(0,0,0,0.08);
+
+      --t-h4:2.125rem;
+      --t-h5:1.5rem;
+      --t-h6:1.25rem;
+      --t-body:0.95rem;
+      --t-body2:0.875rem;
+      --t-cap:0.75rem;
+
+      --tr:200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--sigad-ecru);
+      color:var(--sigad-graphite);
+    }
+
+    /* ---------- App shell ---------- */
+    .app{
+      display:grid;
+      grid-template-columns: var(--drawer-w) 1fr;
+      min-height:100vh;
+      padding-top:var(--appbar-h);
+      transition:grid-template-columns var(--tr);
+    }
+    .app.is-mini{
+      grid-template-columns: var(--drawer-mini-w) 1fr;
+    }
+
+    /* ---------- AppBar ---------- */
+    .appbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:var(--appbar-h);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:0 16px;
+      background:rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid var(--sigad-line);
+      z-index:1100;
+    }
+    .icon-btn{
+      width:40px; height:40px;
+      display:grid; place-items:center;
+      border:none;
+      background:transparent;
+      border-radius:999px;
+      cursor:pointer;
+      color:var(--sigad-graphite);
+      transition:background var(--tr), color var(--tr);
+    }
+    .icon-btn:hover{ background:rgba(26,26,46,0.06); }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width:220px;
+    }
+    .logo{
+      width:28px; height:28px;
+      border-radius:8px;
+      background:var(--sigad-graphite);
+      display:grid; place-items:center;
+      color:white;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:14px;
+    }
+    .brand-title{
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      letter-spacing:0.02em;
+      font-size:14px;
+      opacity:0.9;
+    }
+
+    .appbar-center{
+      flex:1;
+      display:flex;
+      justify-content:center;
+    }
+    .global-search{
+      width:min(720px, 100%);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 12px;
+      border:1px solid var(--sigad-line);
+      border-radius:999px;
+      background:var(--sigad-white);
+      box-shadow:0 1px 0 rgba(0,0,0,0.02);
+    }
+    .global-search .material-icons-outlined{
+      font-size:20px;
+      opacity:0.65;
+    }
+    .global-search input{
+      width:100%;
+      border:none;
+      outline:none;
+      font-size:0.95rem;
+      background:transparent;
+    }
+
+    .appbar-right{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .badge{
+      position:relative;
+    }
+    .badge::after{
+      content:attr(data-badge);
+      position:absolute;
+      top:2px; right:2px;
+      min-width:18px;
+      height:18px;
+      padding:0 5px;
+      display:grid; place-items:center;
+      border-radius:999px;
+      background:var(--sigad-error);
+      color:white;
+      font-size:11px;
+      font-weight:700;
+      border:2px solid rgba(255,255,255,0.85);
+    }
+    .user-pill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:6px 10px;
+      border:1px solid var(--sigad-line);
+      border-radius:999px;
+      background:var(--sigad-white);
+      cursor:pointer;
+    }
+    .avatar{
+      width:28px; height:28px;
+      border-radius:999px;
+      border:1px solid var(--sigad-line);
+      display:grid; place-items:center;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:12px;
+      color:var(--sigad-graphite);
+      background:rgba(212,165,116,0.14);
+    }
+    .user-pill .name{
+      font-size:0.9rem;
+      font-weight:600;
+      opacity:0.9;
+    }
+
+    /* ---------- Drawer ---------- */
+    .drawer{
+      position:sticky;
+      top:var(--appbar-h);
+      height:calc(100vh - var(--appbar-h));
+      background:var(--sigad-graphite);
+      color:rgba(255,255,255,0.87);
+      border-right:1px solid rgba(255,255,255,0.08);
+      overflow:hidden;
+    }
+    .drawer-inner{
+      padding:14px 10px;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .drawer-section-title{
+      padding:10px 12px;
+      font-size:0.7rem;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,0.38);
+    }
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      padding:0 6px;
+    }
+    .nav a{
+      text-decoration:none;
+      color:inherit;
+    }
+    .nav-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      position:relative;
+      cursor:pointer;
+      transition:background var(--tr);
+    }
+    .nav-item:hover{ background:rgba(255,255,255,0.06); }
+    .nav-item .material-icons-outlined{
+      font-size:22px;
+      opacity:0.9;
+      width:24px;
+      text-align:center;
+    }
+    .nav-item .label{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:0.95rem;
+      font-weight:600;
+    }
+    .nav-item.active{
+      background:rgba(212,165,116,0.12);
+    }
+    .nav-item.active::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:10px;
+      bottom:10px;
+      width:3px;
+      border-radius:99px;
+      background:var(--sigad-ocra);
+    }
+
+    /* Mini mode labels */
+    .app.is-mini .nav-item{
+      justify-content:center;
+      padding:12px 10px;
+    }
+    .app.is-mini .nav-item .label,
+    .app.is-mini .drawer-section-title{
+      display:none;
+    }
+
+    .drawer-footer{
+      margin-top:auto;
+      padding:12px;
+      border-top:1px solid rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.54);
+      font-size:0.8rem;
+    }
+
+    /* ---------- Main content ---------- */
+    .main{
+      padding:var(--content-pad-y) var(--content-pad-x);
+    }
+    .content{
+      max-width:var(--content-max);
+      margin:0 auto;
+    }
+
+    /* ---------- PageHeader ---------- */
+    .page-header{
+      margin-bottom:24px;
+    }
+    .backrow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:6px;
+    }
+    .backlink{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--sigad-text-secondary);
+      text-decoration:none;
+      font-size:0.9rem;
+    }
+    .backlink:hover{ color:var(--sigad-graphite); }
+
+    .breadcrumbs{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+      font-size:var(--t-cap);
+      color:var(--sigad-text-secondary);
+    }
+    .breadcrumbs a{
+      color:inherit;
+      text-decoration:none;
+      border-bottom:1px dotted transparent;
+    }
+    .breadcrumbs a:hover{
+      color:var(--sigad-graphite);
+      border-bottom-color:var(--sigad-line);
+    }
+    .crumb-sep{ opacity:0.55; }
+
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-top:6px;
+    }
+    .title-col h1{
+      margin:0;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:var(--t-h5);
+      line-height:1.2;
+    }
+    .title-col .subtitle{
+      margin-top:6px;
+      color:var(--sigad-text-secondary);
+      font-size:0.92rem;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border-radius:var(--radius-sm);
+      padding:10px 12px;
+      font-weight:700;
+      font-size:0.9rem;
+      border:1px solid var(--sigad-line);
+      background:var(--sigad-white);
+      color:var(--sigad-graphite);
+      cursor:pointer;
+      transition:transform var(--tr), background var(--tr), border-color var(--tr);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ background:rgba(26,26,46,0.03); }
+    .btn:active{ transform:translateY(1px); }
+
+    .btn-primary{
+      border-color:rgba(212,165,116,0.35);
+      background:var(--sigad-ocra);
+      color:#1a1a2e;
+    }
+    .btn-primary:hover{ background: #d9b086; }
+    .btn-outline{
+      background:transparent;
+      border-color:rgba(212,165,116,0.55);
+      color:var(--sigad-graphite);
+    }
+    .btn-text{
+      border-color:transparent;
+      background:transparent;
+      color:var(--sigad-graphite);
+    }
+
+    /* ---------- Cards / surfaces ---------- */
+    .card{
+      background:var(--sigad-white);
+      border:1px solid var(--sigad-line);
+      border-radius:var(--radius);
+    }
+    .card.pad-24{ padding:24px; }
+    .card.pad-16{ padding:16px; }
+    .mb-16{ margin-bottom:16px; }
+    .mb-24{ margin-bottom:24px; }
+
+    /* ---------- FilterBar ---------- */
+    .filterbar{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .field{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--sigad-line);
+      background:var(--sigad-white);
+      border-radius:12px;
+      padding:10px 12px;
+      min-height:40px;
+    }
+    .field input, .field select{
+      border:none;
+      outline:none;
+      font-size:0.92rem;
+      background:transparent;
+      min-width:120px;
+    }
+    .field.search{
+      flex:1;
+      min-width:min(420px, 100%);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(212,165,116,0.14);
+      border:1px solid rgba(212,165,116,0.30);
+      font-size:0.82rem;
+      font-weight:700;
+      color:var(--sigad-graphite);
+    }
+
+    /* ---------- Table ---------- */
+    .table-wrap{
+      overflow:auto;
+      border-radius:calc(var(--radius) - 2px);
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:var(--t-body2);
+      min-width:860px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:var(--sigad-white);
+      border-bottom:1px solid var(--sigad-line);
+      text-align:left;
+      font-weight:800;
+      font-family:"Open Sans", sans-serif;
+      padding:12px 14px;
+      white-space:nowrap;
+      z-index:1;
+    }
+    tbody td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(26,26,46,0.08);
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+    tbody tr:hover{
+      background:rgba(26,26,46,0.03);
+    }
+    .mono{
+      font-family:"Roboto Mono", monospace;
+      font-size:0.85rem;
+      letter-spacing:0.02em;
+    }
+    .table-link{
+      color:var(--sigad-graphite);
+      text-decoration:none;
+      font-weight:700;
+      transition:color var(--tr), text-decoration var(--tr);
+    }
+    .table-link:hover{
+      color:var(--sigad-ocra);
+      text-decoration:underline;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:0.78rem;
+      font-weight:800;
+      border:1px solid var(--sigad-line);
+      background:rgba(26,26,46,0.04);
+    }
+    .chip.success{ border-color:rgba(46,125,50,0.35); background:rgba(46,125,50,0.10); color:var(--sigad-success); }
+    .chip.warn{ border-color:rgba(245,124,0,0.35); background:rgba(245,124,0,0.10); color:var(--sigad-warning); }
+    .chip.err{ border-color:rgba(198,40,40,0.35); background:rgba(198,40,40,0.10); color:var(--sigad-error); }
+    .actions-cell{
+      text-align:right;
+    }
+    .kebab{
+      width:34px; height:34px;
+      border-radius:10px;
+      border:1px solid var(--sigad-line);
+      background:transparent;
+      cursor:pointer;
+    }
+    .kebab:hover{ background:rgba(26,26,46,0.04); }
+
+    .table-footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 16px;
+      border-top:1px solid var(--sigad-line);
+      color:var(--sigad-text-secondary);
+      font-size:0.85rem;
+    }
+    .pager{
+      display:flex; align-items:center; gap:8px;
+    }
+    .pager select{
+      border:1px solid var(--sigad-line);
+      background:var(--sigad-white);
+      border-radius:10px;
+      padding:6px 10px;
+    }
+
+    /* ---------- Empty state ---------- */
+    .empty{
+      padding:48px 16px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      gap:12px;
+    }
+    .empty .bigicon{
+      font-size:46px;
+      opacity:0.28;
+    }
+    .empty h3{
+      margin:0;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:1.15rem;
+    }
+    .empty p{
+      margin:0;
+      color:var(--sigad-text-secondary);
+      font-size:0.92rem;
+      max-width:520px;
+    }
+
+    /* ---------- Bulk bar ---------- */
+    .bulkbar{
+      margin-top:14px;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    /* ---------- Detail hero + KPI + tabs ---------- */
+    .hero{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .hero-avatar{
+      width:54px; height:54px;
+      border-radius:999px;
+      border:1px solid rgba(212,165,116,0.40);
+      background:rgba(212,165,116,0.14);
+      display:grid; place-items:center;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:18px;
+      color:var(--sigad-graphite);
+    }
+    .hero-main{
+      flex:1;
+      min-width:240px;
+    }
+    .hero-main .name{
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:1.35rem;
+      line-height:1.2;
+      margin:0;
+    }
+    .hero-meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+      color:var(--sigad-text-secondary);
+      font-size:0.85rem;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+    .kpi{
+      padding:14px 16px;
+      border-left:3px solid var(--sigad-ocra);
+    }
+    .kpi .label{
+      font-size:0.78rem;
+      color:var(--sigad-text-secondary);
+      text-transform:uppercase;
+      letter-spacing:0.04em;
+      margin-bottom:6px;
+    }
+    .kpi .value{
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:1.4rem;
+      line-height:1;
+    }
+
+    .tabs{
+      display:flex;
+      gap:6px;
+      padding:10px 10px 0 10px;
+      border-bottom:1px solid var(--sigad-line);
+      overflow:auto;
+    }
+    .tab{
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:12px 12px 0 0;
+      font-weight:800;
+      color:rgba(26,26,46,0.75);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .tab .material-icons-outlined{ font-size:18px; opacity:0.8; }
+    .tab.active{
+      color:var(--sigad-graphite);
+      background:rgba(26,26,46,0.03);
+      border:1px solid var(--sigad-line);
+      border-bottom-color:transparent;
+    }
+    .tab-panel{
+      padding:18px;
+    }
+    .section-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .section-title{
+      font-family:"Open Sans", sans-serif;
+      font-weight:800;
+      font-size:1rem;
+    }
+    .divider{ height:1px; background:var(--sigad-line); margin:12px 0 16px; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 960px){
+      :root{ --content-pad-x:16px; --content-pad-y:16px; }
+      .app{ grid-template-columns: var(--drawer-mini-w) 1fr; }
+      .drawer{ position:fixed; left:0; top:var(--appbar-h); z-index:1200; width:var(--drawer-mini-w); }
+      .app.is-mini .drawer{ width:var(--drawer-mini-w); }
+      .app:not(.is-mini) .drawer{ width:var(--drawer-w); box-shadow:var(--shadow-pop); }
+      .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .brand{ min-width:unset; }
+      .appbar-center{ display:none; } /* su mobile, spesso la search globale è in pagina o drawer */
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AppBar -->
+  <header class="appbar">
+    <button class="icon-btn" id="btnToggleDrawer" aria-label="Apri/chiudi menu">
+      <span class="material-icons-outlined">menu</span>
+    </button>
+
+    <div class="brand">
+      <div class="logo">S</div>
+      <div class="brand-title">SIGAD</div>
+    </div>
+
+    <div class="appbar-center">
+      <div class="global-search" role="search" aria-label="Ricerca globale">
+        <span class="material-icons-outlined">search</span>
+        <input placeholder="Cerca (organizzazioni, persone, codici…)" />
+      </div>
+    </div>
+
+    <div class="appbar-right">
+      <div class="badge" data-badge="3">
+        <button class="icon-btn" aria-label="Notifiche">
+          <span class="material-icons-outlined">notifications</span>
+        </button>
+      </div>
+
+      <div class="user-pill" role="button" aria-label="Menu utente">
+        <div class="avatar">DD</div>
+        <div class="name">Danilo</div>
+        <span class="material-icons-outlined" style="font-size:18px;opacity:.7;">expand_more</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app" id="appShell">
+    <!-- Drawer -->
+    <aside class="drawer" aria-label="Navigazione laterale">
+      <div class="drawer-inner">
+        <div class="drawer-section-title">Principale</div>
+        <nav class="nav">
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">dashboard</span>
+              <span class="label">Dashboard</span>
+            </div>
+          </a>
+        </nav>
+
+        <div class="drawer-section-title">Anagrafiche</div>
+        <nav class="nav">
+          <a href="#">
+            <div class="nav-item active">
+              <span class="material-icons-outlined">business</span>
+              <span class="label">Organizzazioni</span>
+            </div>
+          </a>
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">person</span>
+              <span class="label">Persone</span>
+            </div>
+          </a>
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">assignment_ind</span>
+              <span class="label">Incarichi</span>
+            </div>
+          </a>
+        </nav>
+
+        <div class="drawer-section-title">Risorse Umane</div>
+        <nav class="nav">
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">badge</span>
+              <span class="label">Dipendenti</span>
+            </div>
+          </a>
+        </nav>
+
+        <div class="drawer-section-title">Sistema</div>
+        <nav class="nav">
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">admin_panel_settings</span>
+              <span class="label">Amministrazione</span>
+            </div>
+          </a>
+          <a href="#">
+            <div class="nav-item">
+              <span class="material-icons-outlined">settings</span>
+              <span class="label">Configurazione</span>
+            </div>
+          </a>
+        </nav>
+
+        <div class="drawer-footer">
+          v1.0 · Stile Accredia · SIGAD
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="content">
+
+        <!-- ============ PAGE: LISTA (Organizzazioni) ============ -->
+        <section id="page-list">
+          <div class="page-header">
+            <div class="backrow">
+              <a class="backlink" href="#">
+                <span class="material-icons-outlined">arrow_back</span>
+                Torna a Dashboard
+              </a>
+
+              <div class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="#">Home</a><span class="crumb-sep">›</span>
+                <a href="#">Anagrafiche</a><span class="crumb-sep">›</span>
+                <span>Organizzazioni</span>
+              </div>
+            </div>
+
+            <div class="title-row">
+              <div class="title-col">
+                <h1>Organizzazioni</h1>
+                <div class="subtitle">Ricerca, filtra e gestisci le organizzazioni accreditate</div>
+              </div>
+              <div class="actions">
+                <button class="btn btn-primary">
+                  <span class="material-icons-outlined">add</span>
+                  Nuova organizzazione
+                </button>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">file_download</span>
+                  Esporta
+                </button>
+                <button class="btn btn-text" aria-label="Altro">
+                  <span class="material-icons-outlined">more_vert</span>
+                  Altro
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- FilterBar -->
+          <div class="card mb-16">
+            <div class="filterbar">
+              <div class="field search" role="search">
+                <span class="material-icons-outlined" style="opacity:.7;">search</span>
+                <input placeholder="Cerca organizzazione..." value="" />
+              </div>
+
+              <div class="field">
+                <span class="material-icons-outlined" style="opacity:.65;">toggle_on</span>
+                <select aria-label="Filtro stato">
+                  <option value="">Stato (tutti)</option>
+                  <option>Attiva</option>
+                  <option>Sospesa</option>
+                  <option>Inattiva</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <span class="material-icons-outlined" style="opacity:.65;">category</span>
+                <select aria-label="Filtro tipo">
+                  <option value="">Tipo (tutti)</option>
+                  <option>Organismo</option>
+                  <option>Laboratorio</option>
+                  <option>Altro</option>
+                </select>
+              </div>
+
+              <button class="btn btn-text" style="padding:10px 10px;">
+                <span class="material-icons-outlined">filter_list</span>
+                Filtri
+                <span class="pill" style="margin-left:6px;">2</span>
+              </button>
+
+              <div style="flex:1"></div>
+
+              <!-- Bulk hint example -->
+              <span class="pill">3 selezionati</span>
+              <button class="btn btn-text">
+                <span class="material-icons-outlined">download</span>
+                Esporta selezionati
+              </button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="card mb-16">
+            <div class="table-wrap">
+              <table aria-label="Tabella organizzazioni">
+                <thead>
+                  <tr>
+                    <th style="width:46px;">
+                      <input type="checkbox" aria-label="Seleziona tutti" />
+                    </th>
+                    <th>Denominazione</th>
+                    <th style="width:160px;">P.IVA</th>
+                    <th style="width:140px;">Stato</th>
+                    <th style="width:70px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" /></td>
+                    <td><a class="table-link" href="#page-detail">Acme S.r.l.</a></td>
+                    <td class="mono">01234567890</td>
+                    <td><span class="chip success">Attiva</span></td>
+                    <td class="actions-cell">
+                      <button class="kebab" aria-label="Azioni riga">
+                        <span class="material-icons-outlined">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" /></td>
+                    <td><a class="table-link" href="#page-detail">Beta S.p.A.</a></td>
+                    <td class="mono">12345678901</td>
+                    <td><span class="chip warn">Sospesa</span></td>
+                    <td class="actions-cell">
+                      <button class="kebab" aria-label="Azioni riga">
+                        <span class="material-icons-outlined">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" /></td>
+                    <td><a class="table-link" href="#page-detail">Gamma Società Cooperativa</a></td>
+                    <td class="mono">99887766554</td>
+                    <td><span class="chip err">Inattiva</span></td>
+                    <td class="actions-cell">
+                      <button class="kebab" aria-label="Azioni riga">
+                        <span class="material-icons-outlined">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-footer">
+              <div>Mostrando <strong>1–20</strong> di <strong>147</strong></div>
+              <div class="pager">
+                <span>Righe</span>
+                <select aria-label="Righe per pagina">
+                  <option>20</option><option>50</option><option>100</option>
+                </select>
+                <button class="icon-btn" aria-label="Pagina precedente">
+                  <span class="material-icons-outlined">chevron_left</span>
+                </button>
+                <button class="icon-btn" aria-label="Pagina successiva">
+                  <span class="material-icons-outlined">chevron_right</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- BulkBar (visibile quando selection > 0) -->
+          <div class="card bulkbar">
+            <div class="pill">
+              <span class="material-icons-outlined" style="font-size:18px;">check_circle</span>
+              3 selezionati
+            </div>
+            <div class="actions">
+              <button class="btn btn-text">
+                <span class="material-icons-outlined">download</span>
+                Esporta CSV
+              </button>
+              <button class="btn btn-outline">
+                <span class="material-icons-outlined">sync</span>
+                Cambia stato
+              </button>
+            </div>
+          </div>
+
+          <!-- Empty state (demo): commenta la tabella sopra e lascia questo) -->
+          <!--
+          <div class="card">
+            <div class="empty">
+              <span class="material-icons-outlined bigicon">business</span>
+              <h3>Nessuna organizzazione trovata</h3>
+              <p>Prova a modificare i criteri di ricerca oppure crea una nuova organizzazione.</p>
+              <button class="btn btn-primary">
+                <span class="material-icons-outlined">add</span>
+                Nuova organizzazione
+              </button>
+            </div>
+          </div>
+          -->
+        </section>
+
+        <div style="height:32px;"></div>
+
+        <!-- ============ PAGE: DETTAGLIO (Organizzazione) ============ -->
+        <section id="page-detail">
+          <div class="page-header">
+            <div class="backrow">
+              <a class="backlink" href="#page-list">
+                <span class="material-icons-outlined">arrow_back</span>
+                Torna a Organizzazioni
+              </a>
+
+              <div class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="#">Home</a><span class="crumb-sep">›</span>
+                <a href="#">Organizzazioni</a><span class="crumb-sep">›</span>
+                <span>Acme S.r.l.</span>
+              </div>
+            </div>
+
+            <div class="title-row">
+              <div class="title-col">
+                <h1>Dettaglio organizzazione</h1>
+                <div class="subtitle">Scheda completa e sezioni correlate (sedi, incarichi, risorse umane)</div>
+              </div>
+              <div class="actions">
+                <button class="btn btn-primary">
+                  <span class="material-icons-outlined">edit</span>
+                  Modifica
+                </button>
+                <button class="btn btn-text">
+                  <span class="material-icons-outlined">more_vert</span>
+                  Altro
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Card -->
+          <div class="card pad-24 mb-16">
+            <div class="hero">
+              <div class="hero-avatar">AS</div>
+              <div class="hero-main">
+                <p class="name">Acme S.r.l.</p>
+                <div class="hero-meta">
+                  <span>P.IVA <span class="mono">01234567890</span></span>
+                  <span>·</span>
+                  <span>CF <span class="mono">ABCDEF12G34H567I</span></span>
+                  <span>·</span>
+                  <span>REA <span class="mono">MI-123456</span></span>
+                </div>
+              </div>
+              <div class="chip success" style="font-size:0.82rem;">Attiva</div>
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpis mb-16">
+            <div class="card kpi">
+              <div class="label">Sedi</div>
+              <div class="value">5</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Incarichi</div>
+              <div class="value">12</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Dipendenti</div>
+              <div class="value">8</div>
+            </div>
+            <div class="card kpi">
+              <div class="label">Documenti</div>
+              <div class="value">21</div>
+            </div>
+          </div>
+
+          <!-- Tabs container -->
+          <div class="card mb-24">
+            <div class="tabs" role="tablist" aria-label="Sezioni dettaglio">
+              <button class="tab active" data-tab="overview" role="tab" aria-selected="true">
+                <span class="material-icons-outlined">info</span> Panoramica
+              </button>
+              <button class="tab" data-tab="locations" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">location_on</span> Sedi (5)
+              </button>
+              <button class="tab" data-tab="assignments" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">assignment_ind</span> Incarichi (12)
+              </button>
+              <button class="tab" data-tab="hr" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">badge</span> Risorse Umane (8)
+              </button>
+            </div>
+
+            <div class="tab-panel" id="panel-overview" role="tabpanel">
+              <div class="card pad-16">
+                <div class="section-header">
+                  <div class="section-title">Dati principali</div>
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">content_copy</span>
+                    Copia dati
+                  </button>
+                </div>
+                <div class="divider"></div>
+
+                <!-- Definition list style (mock) -->
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;">
+                  <div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Denominazione</div>
+                      <div style="font-weight:600;">Acme S.r.l.</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Partita IVA</div>
+                      <div class="mono">01234567890</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Stato</div>
+                      <div><span class="chip success">Attiva</span></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Codice Fiscale</div>
+                      <div class="mono">ABCDEF12G34H567I</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">REA</div>
+                      <div class="mono">MI-123456</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                      <div style="font-size:.75rem;color:var(--sigad-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Note</div>
+                      <div style="color:var(--sigad-text-secondary);">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="panel-locations" role="tabpanel" hidden>
+              <div class="card pad-16">
+                <div class="section-header">
+                  <div class="section-title">Sedi</div>
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">add</span>
+                    Aggiungi sede
+                  </button>
+                </div>
+                <div class="divider"></div>
+                <div style="color:var(--sigad-text-secondary);font-size:.92rem;">
+                  Contenuto sedi (tabella/CRUD inline) — caricato lazy al primo click.
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="panel-assignments" role="tabpanel" hidden>
+              <div class="card pad-16">
+                <div class="section-header">
+                  <div class="section-title">Incarichi</div>
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">add</span>
+                    Nuovo incarico
+                  </button>
+                </div>
+                <div class="divider"></div>
+                <div style="color:var(--sigad-text-secondary);font-size:.92rem;">
+                  Contenuto incarichi — caricato lazy.
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="panel-hr" role="tabpanel" hidden>
+              <div class="card pad-16">
+                <div class="section-header">
+                  <div class="section-title">Risorse Umane</div>
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">add</span>
+                    Aggiungi dipendente
+                  </button>
+                </div>
+                <div class="divider"></div>
+                <div style="color:var(--sigad-text-secondary);font-size:.92rem;">
+                  Contenuto risorse umane — caricato lazy.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Drawer toggle (expanded/mini)
+    const app = document.getElementById('appShell');
+    const btn = document.getElementById('btnToggleDrawer');
+    btn.addEventListener('click', () => {
+      app.classList.toggle('is-mini');
+    });
+
+    // Simple tabs
+    const tabs = document.querySelectorAll('.tab');
+    const panels = {
+      overview: document.getElementById('panel-overview'),
+      locations: document.getElementById('panel-locations'),
+      assignments: document.getElementById('panel-assignments'),
+      hr: document.getElementById('panel-hr')
+    };
+
+    function activateTab(name){
+      tabs.forEach(t => {
+        const isActive = t.dataset.tab === name;
+        t.classList.toggle('active', isActive);
+        t.setAttribute('aria-selected', String(isActive));
+      });
+      Object.entries(panels).forEach(([k, el]) => {
+        el.hidden = (k !== name);
+      });
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
+  </script>
+</body>
+</html>

@@ -1,11 +1,12 @@
 @page "/"
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Common
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
     <PageHeader Title="Dashboard"
                 Subtitle="Accesso rapido alle anagrafiche principali con pattern coerenti."
-                Breadcrumbs="Home / Dashboard" />
+                BreadcrumbItems="@_breadcrumbs" />
 
     <MudGrid Spacing="3" Class="mb-4">
         <MudItem xs="12" md="3">
@@ -88,6 +89,11 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home")
+    };
+
     private readonly List<ActivityItem> _recentItems = new()
     {
         new ActivityItem("Organizzazione aggiornata", "06/02/2026"),

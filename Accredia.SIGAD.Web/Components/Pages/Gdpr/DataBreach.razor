@@ -3,6 +3,7 @@
 @inject UserContext UserContext
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanRead)
 {
@@ -13,7 +14,7 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Data Breach"
                 Subtitle="Gestione incidenti sicurezza (CRUD)"
-                Breadcrumbs="Home / GDPR / Data Breach" />
+                BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -100,6 +101,13 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("GDPR"),
+        new BreadcrumbItem("Data Breach")
+    };
+
     private bool _loading;
     private string? _errorMessage;
     private string? _formMessage;

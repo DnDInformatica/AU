@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIGAD — Scheda Persona</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Open+Sans:wght@400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <style>
+    :root{
+      --sigad-graphite:#1a1a2e;
+      --sigad-ocra:#d4a574;
+      --sigad-ecru:#f8f7f5;
+      --sigad-white:#ffffff;
+      --sigad-text-secondary:#666666;
+      --sigad-line:rgba(26,26,46,0.12);
+      --sigad-info:#0277bd;
+      --sigad-success:#2e7d32;
+      --sigad-warning:#f57c00;
+      --sigad-error:#c62828;
+
+      --radius:16px;
+      --radius-sm:10px;
+      --shadow:0 2px 8px rgba(0,0,0,0.08);
+      --tr:200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+      --content-max:1440px;
+      --padx:32px;
+      --pady:24px;
+
+      --t-h5:1.55rem;
+      --t-h6:1.15rem;
+      --t-body:0.95rem;
+      --t-body2:0.875rem;
+      --t-cap:0.75rem;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--sigad-ecru);
+      color:var(--sigad-graphite);
+    }
+
+    .page{
+      padding:var(--pady) var(--padx);
+    }
+    .content{
+      max-width:var(--content-max);
+      margin:0 auto;
+    }
+
+    /* Header */
+    .page-header{ margin-bottom:18px; }
+    .breadcrumbs{
+      display:flex; gap:6px; flex-wrap:wrap;
+      font-size:var(--t-cap);
+      color:var(--sigad-text-secondary);
+      margin-bottom:8px;
+    }
+    .breadcrumbs a{ color:inherit; text-decoration:none; border-bottom:1px dotted transparent; }
+    .breadcrumbs a:hover{ color:var(--sigad-graphite); border-bottom-color:var(--sigad-line); }
+    .sep{ opacity:.55; }
+
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+    }
+    h1{
+      margin:0;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:var(--t-h5);
+      line-height:1.2;
+    }
+    .subtitle{
+      margin-top:6px;
+      color:var(--sigad-text-secondary);
+      font-size:0.92rem;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      border-radius:var(--radius-sm);
+      padding:10px 12px;
+      font-weight:800;
+      font-size:0.9rem;
+      border:1px solid var(--sigad-line);
+      background:var(--sigad-white);
+      color:var(--sigad-graphite);
+      cursor:pointer;
+      transition:background var(--tr), transform var(--tr);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ background:rgba(26,26,46,0.03); }
+    .btn:active{ transform:translateY(1px); }
+    .btn-primary{
+      border-color:rgba(212,165,116,0.35);
+      background:var(--sigad-ocra);
+      color:#1a1a2e;
+    }
+    .btn-primary:hover{ background:#d9b086; }
+    .btn-outline{
+      background:transparent;
+      border-color:rgba(212,165,116,0.55);
+    }
+    .btn-text{
+      border-color:transparent;
+      background:transparent;
+    }
+
+    /* Surfaces */
+    .card{
+      background:var(--sigad-white);
+      border:1px solid var(--sigad-line);
+      border-radius:var(--radius);
+      box-shadow:0 1px 0 rgba(0,0,0,0.02);
+    }
+    .pad-24{ padding:24px; }
+    .pad-16{ padding:16px; }
+    .mb-16{ margin-bottom:16px; }
+    .mb-24{ margin-bottom:24px; }
+
+    /* Layout: left main + right sidebar */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:16px;
+      align-items:start;
+    }
+
+    /* Hero */
+    .hero{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .avatar{
+      width:64px; height:64px;
+      border-radius:999px;
+      border:1px solid rgba(212,165,116,0.40);
+      background:rgba(212,165,116,0.14);
+      display:grid; place-items:center;
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:20px;
+    }
+    .hero-main{ flex:1; min-width:260px; }
+    .hero-name{
+      font-family:"Montserrat", sans-serif;
+      font-weight:800;
+      font-size:1.35rem;
+      margin:0;
+      line-height:1.2;
+    }
+    .hero-meta{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:8px;
+      color:var(--sigad-text-secondary);
+      font-size:0.86rem;
+    }
+    .mono{ font-family:"Roboto Mono", monospace; font-size:0.85rem; letter-spacing:0.02em; }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:0.78rem;
+      font-weight:900;
+      border:1px solid var(--sigad-line);
+      background:rgba(26,26,46,0.04);
+      white-space:nowrap;
+    }
+    .chip.success{ border-color:rgba(46,125,50,0.35); background:rgba(46,125,50,0.10); color:var(--sigad-success); }
+    .chip.warn{ border-color:rgba(245,124,0,0.35); background:rgba(245,124,0,0.10); color:var(--sigad-warning); }
+    .chip.info{ border-color:rgba(2,119,189,0.35); background:rgba(2,119,189,0.10); color:var(--sigad-info); }
+
+    /* KPI */
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .kpi{
+      padding:14px 16px;
+      border-left:3px solid var(--sigad-ocra);
+    }
+    .kpi .label{
+      font-size:0.78rem;
+      color:var(--sigad-text-secondary);
+      text-transform:uppercase;
+      letter-spacing:0.04em;
+      margin-bottom:6px;
+    }
+    .kpi .value{
+      font-family:"Montserrat", sans-serif;
+      font-weight:900;
+      font-size:1.35rem;
+      line-height:1;
+    }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:6px;
+      padding:10px 10px 0 10px;
+      border-bottom:1px solid var(--sigad-line);
+      overflow:auto;
+    }
+    .tab{
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:12px 12px 0 0;
+      font-weight:900;
+      color:rgba(26,26,46,0.75);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .tab .material-icons-outlined{ font-size:18px; opacity:0.8; }
+    .tab.active{
+      color:var(--sigad-graphite);
+      background:rgba(26,26,46,0.03);
+      border:1px solid var(--sigad-line);
+      border-bottom-color:transparent;
+    }
+    .tab-panel{ padding:18px; }
+
+    /* Section header + divider */
+    .section-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .section-title{
+      font-weight:900;
+      font-size:1rem;
+    }
+    .divider{ height:1px; background:var(--sigad-line); margin:12px 0 16px; }
+
+    /* Definition list */
+    .dl{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:18px;
+    }
+    .dl .item .k{
+      font-size:.75rem;
+      color:var(--sigad-text-secondary);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:3px;
+    }
+    .dl .item .v{
+      font-weight:600;
+      font-size:0.95rem;
+    }
+    .muted{ color:var(--sigad-text-secondary); font-weight:600; }
+
+    /* Table */
+    .table-wrap{
+      overflow:auto;
+      border-radius:calc(var(--radius) - 2px);
+      border:1px solid rgba(26,26,46,0.08);
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:var(--t-body2);
+      min-width:860px;
+    }
+    thead th{
+      background:var(--sigad-white);
+      border-bottom:1px solid var(--sigad-line);
+      text-align:left;
+      font-weight:900;
+      padding:12px 14px;
+      white-space:nowrap;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tbody td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(26,26,46,0.08);
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+    tbody tr:hover{ background:rgba(26,26,46,0.03); }
+    .row-actions{ text-align:right; }
+    .icon-small{
+      width:34px; height:34px;
+      border-radius:10px;
+      border:1px solid var(--sigad-line);
+      background:transparent;
+      cursor:pointer;
+    }
+    .icon-small:hover{ background:rgba(26,26,46,0.04); }
+
+    /* Sidebar blocks */
+    .side-title{
+      font-weight:900;
+      font-size:0.95rem;
+      margin:0 0 10px 0;
+    }
+    .side-block + .side-block{ margin-top:12px; }
+    .side-list{ display:flex; flex-direction:column; gap:10px; }
+    .side-item{
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(26,26,46,0.08);
+      background:rgba(26,26,46,0.02);
+    }
+    .side-item .material-icons-outlined{ font-size:20px; opacity:0.75; }
+    .side-item .t{ font-weight:800; font-size:0.9rem; }
+    .side-item .d{ color:var(--sigad-text-secondary); font-size:0.84rem; margin-top:2px; }
+
+    /* Timeline */
+    .timeline{ display:flex; flex-direction:column; gap:10px; }
+    .event{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(26,26,46,0.08);
+      background:var(--sigad-white);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      margin-top:6px;
+      background:var(--sigad-ocra);
+      flex:0 0 auto;
+    }
+    .event .what{ font-weight:800; font-size:0.9rem; }
+    .event .when{ color:var(--sigad-text-secondary); font-size:0.82rem; margin-top:2px; }
+    .event .who{ color:var(--sigad-text-secondary); font-size:0.82rem; margin-top:2px; }
+
+    /* Responsive */
+    @media (max-width: 1180px){
+      :root{ --padx:16px; --pady:16px; }
+      .grid{ grid-template-columns: 1fr; }
+      .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      table{ min-width: 780px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="content">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="#">Home</a><span class="sep">›</span>
+          <a href="#">Anagrafiche</a><span class="sep">›</span>
+          <a href="#">Persone</a><span class="sep">›</span>
+          <span>Dettaglio</span>
+        </div>
+
+        <div class="title-row">
+          <div>
+            <h1>Scheda Persona</h1>
+            <div class="subtitle">Gestione completa di dati anagrafici e correlazioni (organizzazioni, incarichi, HR, documenti, consensi).</div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-outline">
+              <span class="material-icons-outlined">content_copy</span>
+              Copia ID
+            </button>
+            <button class="btn btn-primary">
+              <span class="material-icons-outlined">edit</span>
+              Modifica
+            </button>
+            <button class="btn btn-text">
+              <span class="material-icons-outlined">more_vert</span>
+              Altro
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+
+        <!-- LEFT: main -->
+        <div>
+
+          <!-- Hero -->
+          <div class="card pad-24 mb-16">
+            <div class="hero">
+              <div class="avatar">MR</div>
+              <div class="hero-main">
+                <p class="hero-name">Mario Rossi</p>
+                <div class="hero-meta">
+                  <span>Persona #<span class="mono">P-0002381</span></span>
+                  <span>·</span>
+                  <span>CF <span class="mono">RSSMRA80A01H501U</span></span>
+                  <span>·</span>
+                  <span>Data nascita <strong>01/01/1980</strong></span>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <span class="chip success"><span class="material-icons-outlined" style="font-size:18px;">verified</span> Attiva</span>
+                <span class="chip info"><span class="material-icons-outlined" style="font-size:18px;">badge</span> HR</span>
+                <span class="chip warn"><span class="material-icons-outlined" style="font-size:18px;">schedule</span> Qualifica in scadenza</span>
+              </div>
+            </div>
+
+            <div class="kpis">
+              <div class="card kpi">
+                <div class="label">Organizzazioni</div>
+                <div class="value">3</div>
+              </div>
+              <div class="card kpi">
+                <div class="label">Incarichi</div>
+                <div class="value">5</div>
+              </div>
+              <div class="card kpi">
+                <div class="label">Documenti</div>
+                <div class="value">12</div>
+              </div>
+              <div class="card kpi">
+                <div class="label">Note</div>
+                <div class="value">2</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="card mb-24">
+            <div class="tabs" role="tablist" aria-label="Sezioni scheda persona">
+              <button class="tab active" data-tab="anagrafica" role="tab" aria-selected="true">
+                <span class="material-icons-outlined">person</span> Anagrafica
+              </button>
+              <button class="tab" data-tab="contatti" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">call</span> Contatti
+              </button>
+              <button class="tab" data-tab="indirizzi" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">home_pin</span> Indirizzi
+              </button>
+              <button class="tab" data-tab="org" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">business</span> Organizzazioni
+              </button>
+              <button class="tab" data-tab="incarichi" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">assignment_ind</span> Incarichi/Qualifiche
+              </button>
+              <button class="tab" data-tab="hr" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">badge</span> Risorse Umane
+              </button>
+              <button class="tab" data-tab="doc" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">folder</span> Documenti
+              </button>
+              <button class="tab" data-tab="privacy" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">gpp_good</span> Consensi
+              </button>
+              <button class="tab" data-tab="storico" role="tab" aria-selected="false">
+                <span class="material-icons-outlined">history</span> Storico
+              </button>
+            </div>
+
+            <!-- PANELS -->
+
+            <!-- Anagrafica -->
+            <div class="tab-panel" id="panel-anagrafica" role="tabpanel">
+              <div class="section-header">
+                <div class="section-title">Dati anagrafici</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">person_search</span>
+                    Verifica duplicati
+                  </button>
+                  <button class="btn btn-text">
+                    <span class="material-icons-outlined">content_copy</span>
+                    Copia dati
+                  </button>
+                </div>
+              </div>
+              <div class="divider"></div>
+
+              <div class="dl">
+                <div class="item">
+                  <div class="k">Nome</div>
+                  <div class="v">Mario</div>
+                </div>
+                <div class="item">
+                  <div class="k">Cognome</div>
+                  <div class="v">Rossi</div>
+                </div>
+                <div class="item">
+                  <div class="k">Codice Fiscale</div>
+                  <div class="v mono">RSSMRA80A01H501U</div>
+                </div>
+                <div class="item">
+                  <div class="k">Sesso</div>
+                  <div class="v">M</div>
+                </div>
+                <div class="item">
+                  <div class="k">Data nascita</div>
+                  <div class="v">01/01/1980</div>
+                </div>
+                <div class="item">
+                  <div class="k">Luogo nascita</div>
+                  <div class="v">Roma (RM)</div>
+                </div>
+                <div class="item">
+                  <div class="k">Nazionalità</div>
+                  <div class="v">Italiana</div>
+                </div>
+                <div class="item">
+                  <div class="k">Stato anagrafica</div>
+                  <div class="v"><span class="chip success">Attiva</span></div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="section-header">
+                <div class="section-title">Identificativi</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Aggiungi identificativo
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table aria-label="Identificativi persona">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Valore</th>
+                      <th>Rilasciato da</th>
+                      <th>Validità</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Carta Identità</td>
+                      <td class="mono">CA1234567</td>
+                      <td>Comune di Roma</td>
+                      <td>01/02/2022 → 01/02/2032</td>
+                      <td class="row-actions">
+                        <button class="icon-small" aria-label="Azioni">
+                          <span class="material-icons-outlined">more_vert</span>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Passaporto</td>
+                      <td class="mono">YA998877</td>
+                      <td>Questura</td>
+                      <td><span class="chip warn">Scade 14/03/2026</span></td>
+                      <td class="row-actions">
+                        <button class="icon-small" aria-label="Azioni">
+                          <span class="material-icons-outlined">more_vert</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Contatti -->
+            <div class="tab-panel" id="panel-contatti" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Contatti</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Aggiungi contatto
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Contatti persona">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Valore</th>
+                      <th>Preferito</th>
+                      <th>Verificato</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Email</td>
+                      <td>mario.rossi@example.com</td>
+                      <td><span class="chip success"><span class="material-icons-outlined" style="font-size:18px;">star</span> Sì</span></td>
+                      <td><span class="chip success"><span class="material-icons-outlined" style="font-size:18px;">done</span> Sì</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>PEC</td>
+                      <td>mario.rossi@pec.example.it</td>
+                      <td><span class="chip">No</span></td>
+                      <td><span class="chip warn"><span class="material-icons-outlined" style="font-size:18px;">help</span> Da verificare</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>Telefono</td>
+                      <td class="mono">+39 333 1234567</td>
+                      <td><span class="chip">No</span></td>
+                      <td><span class="chip success"><span class="material-icons-outlined" style="font-size:18px;">done</span> Sì</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Indirizzi -->
+            <div class="tab-panel" id="panel-indirizzi" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Indirizzi</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Aggiungi indirizzo
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Indirizzi persona">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Indirizzo</th>
+                      <th>Città</th>
+                      <th>CAP</th>
+                      <th>Paese</th>
+                      <th>Principale</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Residenza</td>
+                      <td>Via Esempio 10</td>
+                      <td>Roma (RM)</td>
+                      <td class="mono">00100</td>
+                      <td>Italia</td>
+                      <td><span class="chip success">Sì</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>Domicilio</td>
+                      <td>Viale Demo 22</td>
+                      <td>Milano (MI)</td>
+                      <td class="mono">20100</td>
+                      <td>Italia</td>
+                      <td><span class="chip">No</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Organizzazioni collegate -->
+            <div class="tab-panel" id="panel-org" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Organizzazioni collegate</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">link</span>
+                  Collega organizzazione
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Organizzazioni collegate">
+                  <thead>
+                    <tr>
+                      <th>Organizzazione</th>
+                      <th>Ruolo</th>
+                      <th>Periodo</th>
+                      <th>Stato</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Acme S.r.l.</strong></td>
+                      <td>Referente tecnico</td>
+                      <td>01/2023 → —</td>
+                      <td><span class="chip success">Attivo</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Beta S.p.A.</strong></td>
+                      <td>Ispettore</td>
+                      <td>06/2021 → 12/2024</td>
+                      <td><span class="chip">Chiuso</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Gamma Coop.</strong></td>
+                      <td>Consulente</td>
+                      <td>02/2025 → —</td>
+                      <td><span class="chip success">Attivo</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Incarichi / Qualifiche -->
+            <div class="tab-panel" id="panel-incarichi" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Incarichi & Qualifiche</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">add</span>
+                    Nuovo incarico
+                  </button>
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">school</span>
+                    Nuova qualifica
+                  </button>
+                </div>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap mb-16">
+                <table aria-label="Incarichi">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Ambito</th>
+                      <th>Organizzazione</th>
+                      <th>Periodo</th>
+                      <th>Stato</th>
+                      <th>Documenti</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Incarico</td>
+                      <td>Certificazione</td>
+                      <td>Acme S.r.l.</td>
+                      <td>01/2023 → —</td>
+                      <td><span class="chip success">Attivo</span></td>
+                      <td><span class="chip info"><span class="material-icons-outlined" style="font-size:18px;">description</span> 2</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>Qualifica</td>
+                      <td>Ispettore Senior</td>
+                      <td>—</td>
+                      <td>01/2024 → 14/03/2026</td>
+                      <td><span class="chip warn">In scadenza</span></td>
+                      <td><span class="chip info"><span class="material-icons-outlined" style="font-size:18px;">description</span> 1</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="card pad-16" style="background:rgba(245,124,0,0.06); border-color:rgba(245,124,0,0.20);">
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                  <span class="material-icons-outlined" style="color:var(--sigad-warning);">warning</span>
+                  <div>
+                    <div style="font-weight:900;">Attenzione: una qualifica è in scadenza</div>
+                    <div style="color:var(--sigad-text-secondary); font-size:0.9rem; margin-top:4px;">
+                      Pianifica rinnovo o carica la documentazione aggiornata prima del <strong>14/03/2026</strong>.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Risorse Umane -->
+            <div class="tab-panel" id="panel-hr" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Profilo Risorse Umane</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">edit</span>
+                  Modifica HR
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="dl">
+                <div class="item">
+                  <div class="k">Matricola</div>
+                  <div class="v mono">HR-009812</div>
+                </div>
+                <div class="item">
+                  <div class="k">Unità organizzativa</div>
+                  <div class="v">Dipartimento Certificazione</div>
+                </div>
+                <div class="item">
+                  <div class="k">Ruolo</div>
+                  <div class="v">Ispettore</div>
+                </div>
+                <div class="item">
+                  <div class="k">Responsabile</div>
+                  <div class="v">Laura Bianchi</div>
+                </div>
+                <div class="item">
+                  <div class="k">Tipo contratto</div>
+                  <div class="v">Tempo indeterminato</div>
+                </div>
+                <div class="item">
+                  <div class="k">Data assunzione</div>
+                  <div class="v">15/06/2020</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="section-header">
+                <div class="section-title">Assegnazioni & abilitazioni</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Aggiungi assegnazione
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table aria-label="Assegnazioni HR">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Valore</th>
+                      <th>Dal</th>
+                      <th>Al</th>
+                      <th>Stato</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Abilitazione</td>
+                      <td>Accesso area riservata ispettori</td>
+                      <td>01/09/2023</td>
+                      <td>—</td>
+                      <td><span class="chip success">Attiva</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Documenti -->
+            <div class="tab-panel" id="panel-doc" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Documenti & Allegati</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-outline">
+                    <span class="material-icons-outlined">upload</span>
+                    Carica documento
+                  </button>
+                  <button class="btn btn-text">
+                    <span class="material-icons-outlined">filter_list</span>
+                    Filtra
+                  </button>
+                </div>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Documenti persona">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Nome file</th>
+                      <th>Validità</th>
+                      <th>Stato</th>
+                      <th>Caricato il</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Documento identità</td>
+                      <td>CI_MarioRossi.pdf</td>
+                      <td>01/02/2022 → 01/02/2032</td>
+                      <td><span class="chip success">Valido</span></td>
+                      <td>03/02/2022</td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>Attestato qualifica</td>
+                      <td>Qualifica_IspettoreSenior.pdf</td>
+                      <td>01/2024 → 14/03/2026</td>
+                      <td><span class="chip warn">In scadenza</span></td>
+                      <td>10/01/2024</td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Consensi -->
+            <div class="tab-panel" id="panel-privacy" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Consensi & Privacy</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Registra consenso
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Consensi">
+                  <thead>
+                    <tr>
+                      <th>Tipo consenso</th>
+                      <th>Stato</th>
+                      <th>Data</th>
+                      <th>Fonte</th>
+                      <th>Documento</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Informativa privacy</td>
+                      <td><span class="chip success">Accettato</span></td>
+                      <td>15/09/2023</td>
+                      <td>Portale</td>
+                      <td><span class="chip info"><span class="material-icons-outlined" style="font-size:18px;">description</span> PDF</span></td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                    <tr>
+                      <td>Comunicazioni email</td>
+                      <td><span class="chip">Negato</span></td>
+                      <td>15/09/2023</td>
+                      <td>Portale</td>
+                      <td class="muted">—</td>
+                      <td class="row-actions"><button class="icon-small"><span class="material-icons-outlined">more_vert</span></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Storico -->
+            <div class="tab-panel" id="panel-storico" role="tabpanel" hidden>
+              <div class="section-header">
+                <div class="section-title">Storico modifiche</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">download</span>
+                  Esporta log
+                </button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="table-wrap">
+                <table aria-label="Audit trail">
+                  <thead>
+                    <tr>
+                      <th>Quando</th>
+                      <th>Cosa</th>
+                      <th>Utente</th>
+                      <th>Dettagli</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono">2026-02-15 10:32</td>
+                      <td>Aggiornati contatti</td>
+                      <td>admin.sigad</td>
+                      <td class="muted">Email preferita impostata</td>
+                    </tr>
+                    <tr>
+                      <td class="mono">2026-01-12 09:05</td>
+                      <td>Caricato documento</td>
+                      <td>mrossi</td>
+                      <td class="muted">Attestato qualifica</td>
+                    </tr>
+                    <tr>
+                      <td class="mono">2025-09-15 14:22</td>
+                      <td>Accettata informativa</td>
+                      <td>mrossi</td>
+                      <td class="muted">Privacy</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="section-header">
+                <div class="section-title">Note</div>
+                <button class="btn btn-outline">
+                  <span class="material-icons-outlined">add</span>
+                  Aggiungi nota
+                </button>
+              </div>
+
+              <div class="card pad-16" style="border-color:rgba(26,26,46,0.10); background:rgba(26,26,46,0.02);">
+                <div style="font-weight:900;">Nota interna</div>
+                <div style="margin-top:6px; color:var(--sigad-text-secondary); font-size:0.92rem;">
+                  Verificare rinnovo qualifica e aggiornare documentazione entro scadenza.
+                </div>
+                <div style="margin-top:8px; color:var(--sigad-text-secondary); font-size:0.82rem;">
+                  <span class="mono">2026-02-01</span> · admin.sigad
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: sidebar -->
+        <aside>
+
+          <div class="card pad-16 side-block">
+            <h3 class="side-title">Azioni rapide</h3>
+            <div class="side-list">
+              <div class="side-item">
+                <span class="material-icons-outlined">mail</span>
+                <div>
+                  <div class="t">Invia email</div>
+                  <div class="d">Usa contatto preferito</div>
+                </div>
+              </div>
+              <div class="side-item">
+                <span class="material-icons-outlined">link</span>
+                <div>
+                  <div class="t">Collega organizzazione</div>
+                  <div class="d">Associa ruolo e periodo</div>
+                </div>
+              </div>
+              <div class="side-item">
+                <span class="material-icons-outlined">upload</span>
+                <div>
+                  <div class="t">Carica documento</div>
+                  <div class="d">Con validità e tipologia</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card pad-16 side-block">
+            <h3 class="side-title">Riepilogo stato</h3>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <span class="chip success">Anagrafica OK</span>
+              <span class="chip warn">1 scadenza</span>
+              <span class="chip info">HR attivo</span>
+            </div>
+            <div class="divider"></div>
+            <div class="dl" style="grid-template-columns:1fr;">
+              <div class="item">
+                <div class="k">Ultima modifica</div>
+                <div class="v mono">2026-02-15 10:32</div>
+              </div>
+              <div class="item">
+                <div class="k">Utente</div>
+                <div class="v">admin.sigad</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card pad-16 side-block">
+            <h3 class="side-title">Timeline</h3>
+            <div class="timeline">
+              <div class="event">
+                <div class="dot"></div>
+                <div>
+                  <div class="what">Aggiornati contatti</div>
+                  <div class="when">15/02/2026 · 10:32</div>
+                  <div class="who">admin.sigad</div>
+                </div>
+              </div>
+              <div class="event">
+                <div class="dot" style="background:var(--sigad-warning);"></div>
+                <div>
+                  <div class="what">Qualifica in scadenza</div>
+                  <div class="when">Scade 14/03/2026</div>
+                  <div class="who">Sistema</div>
+                </div>
+              </div>
+              <div class="event">
+                <div class="dot" style="background:var(--sigad-info);"></div>
+                <div>
+                  <div class="what">Caricato attestato</div>
+                  <div class="when">10/01/2024</div>
+                  <div class="who">mrossi</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Tabs logic
+    const tabs = document.querySelectorAll('.tab');
+    const panels = {
+      anagrafica: document.getElementById('panel-anagrafica'),
+      contatti: document.getElementById('panel-contatti'),
+      indirizzi: document.getElementById('panel-indirizzi'),
+      org: document.getElementById('panel-org'),
+      incarichi: document.getElementById('panel-incarichi'),
+      hr: document.getElementById('panel-hr'),
+      doc: document.getElementById('panel-doc'),
+      privacy: document.getElementById('panel-privacy'),
+      storico: document.getElementById('panel-storico')
+    };
+
+    function activateTab(name){
+      tabs.forEach(t => {
+        const active = t.dataset.tab === name;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', String(active));
+      });
+      Object.entries(panels).forEach(([k, el]) => {
+        el.hidden = (k !== name);
+      });
+    }
+    tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
+  </script>
+</body>
+</html>

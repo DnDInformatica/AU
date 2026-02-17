@@ -9,7 +9,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica incarico"
                 Subtitle="@($"Incarico #{Id}")"
-                Breadcrumbs="@($"Home / Anagrafiche / Incarichi / {Id} / Modifica")" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna al dettaglio"
+                BackHref="@($"/incarichi/{Id}")" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -141,6 +143,14 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+
+    private IReadOnlyList<BreadcrumbItem> _breadcrumbs => new BreadcrumbItem[]
+    {
+        new("Home", "/"),
+        new("Incarichi", "/incarichi"),
+        new($"#{Id}", $"/incarichi/{Id}"),
+        new("Modifica")
+    };
 
     private sealed record PersonOption(int Id, string Display, string? CodiceFiscale);
     private sealed record OrgOption(int Id, string Display);

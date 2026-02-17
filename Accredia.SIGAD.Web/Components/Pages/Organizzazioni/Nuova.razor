@@ -5,11 +5,14 @@
 @inject ISnackbar Snackbar
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Models.Common
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuova organizzazione"
                 Subtitle="Crea una nuova organizzazione in anagrafica."
-                Breadcrumbs="Home / Anagrafiche / Organizzazioni / Nuova" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Organizzazioni"
+                BackHref="/organizzazioni" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -129,6 +132,13 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Organizzazioni", "/organizzazioni"),
+        new BreadcrumbItem("Nuova")
+    };
+
     private sealed class FormModel
     {
         public string Denominazione { get; set; } = string.Empty;

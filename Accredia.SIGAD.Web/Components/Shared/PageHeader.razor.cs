@@ -29,6 +29,9 @@ public partial class PageHeader
     public string? PrimaryActionLabel { get; set; }
 
     [Parameter]
+    public string? PrimaryActionIcon { get; set; }
+
+    [Parameter]
     public bool PrimaryActionDisabled { get; set; }
 
     [Parameter]
@@ -36,6 +39,9 @@ public partial class PageHeader
 
     [Parameter]
     public string? SecondaryActionLabel { get; set; }
+
+    [Parameter]
+    public string? SecondaryActionIcon { get; set; }
 
     [Parameter]
     public bool SecondaryActionDisabled { get; set; }
@@ -60,8 +66,9 @@ public partial class PageHeader
     private bool HasStructuredBreadcrumbs => BreadcrumbItems is { Count: > 0 };
     private bool HasLegacyBreadcrumbs => !HasStructuredBreadcrumbs && !string.IsNullOrWhiteSpace(Breadcrumbs);
     private bool HasBackButton => !string.IsNullOrWhiteSpace(BackLabel) && !string.IsNullOrWhiteSpace(BackHref);
-    private bool HasActions =>
+
+    /// <summary>Action buttons (primary/secondary) in the right area.</summary>
+    private bool HasActionButtons =>
         !string.IsNullOrWhiteSpace(PrimaryActionLabel)
-        || !string.IsNullOrWhiteSpace(SecondaryActionLabel)
-        || HasBackButton;
+        || !string.IsNullOrWhiteSpace(SecondaryActionLabel);
 }

@@ -8,6 +8,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 @using Accredia.SIGAD.Web.Models.RisorseUmane
+@using Accredia.SIGAD.Web.Models.Common
 
 @if (!CanCreateDipendente)
 {
@@ -18,7 +19,9 @@
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuovo dipendente"
                 Subtitle="Seleziona persona e completa i dati dipendente."
-                Breadcrumbs="Home / Risorse Umane / Dipendenti / Nuovo" />
+                BreadcrumbItems="@_breadcrumbs"
+                BackLabel="Torna a Dipendenti"
+                BackHref="/risorse-umane/dipendenti" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -181,6 +184,14 @@
 </MudContainer>
 
 @code {
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
+    {
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Risorse Umane"),
+        new BreadcrumbItem("Dipendenti", "/risorse-umane/dipendenti"),
+        new BreadcrumbItem("Nuovo")
+    };
+
     private bool CanCreateDipendente => UserContext.HasPermission("HR.DIP.CREATE");
 
     private sealed class FormModel

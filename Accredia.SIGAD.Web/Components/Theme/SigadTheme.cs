@@ -17,8 +17,8 @@ internal static class SigadTheme
             Surface = "#ffffff",
             AppbarBackground = "#f8f7f5",
             AppbarText = "#1a1a2e",
-            DrawerBackground = "#ffffff",
-            DrawerText = "#1a1a2e",
+            DrawerBackground = "#1a1a2e",
+            DrawerText = "#ffffffde",  // rgba(255,255,255,0.87)
             TextPrimary = "#1a1a2e",
             TextSecondary = "#666666",
             TextDisabled = "#bdbdbd",
@@ -38,7 +38,7 @@ internal static class SigadTheme
                 FontFamily = new[] { "Open Sans", "system-ui", "Segoe UI", "Arial", "sans-serif" },
                 FontSize = ".95rem",
                 FontWeight = "400",
-                LineHeight = "1.4"
+                LineHeight = "1.5"
             },
             H1 = new H1Typography
             {
