@@ -34,8 +34,19 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<ProtectedLocalStorage>(); // <-- Aggiunto per LocalStorage (RememberMe)
 builder.Services.AddHttpContextAccessor();
 
-// In Development persist DataProtection keys in workspace to avoid DPAPI/profile permission issues.
-if (builder.Environment.IsDevelopment())
+// Persist DataProtection keys to a shared location when configured (recommended for HA/scale-out).
+// Fallback in Development: local workspace folder to avoid DPAPI/profile permission issues.
+var configuredKeysPath =
+    builder.Configuration["DataProtection:KeysPath"] ??
+    Environment.GetEnvironmentVariable("DataProtection__KeysPath");
+
+if (!string.IsNullOrWhiteSpace(configuredKeysPath))
+{
+    Directory.CreateDirectory(configuredKeysPath);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(configuredKeysPath));
+}
+else if (builder.Environment.IsDevelopment())
 {
     var keysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
     Directory.CreateDirectory(keysPath);
@@ -59,9 +70,42 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<TokenRefreshService>();
 
 // Auth Services (esistenti, aggiornati per usare TokenService)
+
+// Contesto profilo demo (funzionamento Portale): identita' da configurazione,
+// nessuna pagina di login, cambio ruolo al volo. Attivo solo se Enabled.
+builder.Services.Configure<SigadDemoOptions>(
+    builder.Configuration.GetSection(SigadDemoOptions.SectionName));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IDemoProfileContext, DemoProfileContext>();
+
 builder.Services.AddScoped<GatewayAuthenticationStateProvider>();
+
+var demoConfig = builder.Configuration.GetSection(SigadDemoOptions.SectionName).Get<SigadDemoOptions>();
+var demoAttivo = demoConfig?.Enabled == true;
+
+if (demoAttivo)
+{
+    // Funzionamento Portale: stato autenticato dal profilo, nessun login.
+    builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<DemoAuthenticationStateProvider>());
+}
+#if DEBUG
+else if (Accredia.SIGAD.Shared.Auth.DevAuth.IsEnabled(builder.Environment))
+{
+    // Profilo di sviluppo: sostituisce il flusso OIDC verso Entra, che richiede
+    // la registrazione applicativa nel tenant. L'identita' e' la stessa che
+    // viene propagata alle API, quindi permessi e ambito arrivano da IAM.
+    builder.Services.AddScoped<AuthenticationStateProvider, DevAuthenticationStateProvider>();
+}
+else
+{
+    builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<GatewayAuthenticationStateProvider>());
+}
+#else
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<GatewayAuthenticationStateProvider>());
+#endif
+
 builder.Services.AddScoped<UserContext>();
+builder.Services.AddScoped<DemoAuthenticationStateProvider>();
 
 // QuickDrawerService: stato UI per drawer di dettaglio rapido (pattern mockup).
 builder.Services.AddScoped<QuickDrawerService>();
@@ -187,6 +231,8 @@ app.UseSerilogRequestLogging(options =>
         }
     };
 });
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.UseAntiforgery();
 
