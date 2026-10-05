@@ -1,0 +1,44 @@
+/* ========================================
+   SigadResultsPanel.razor - Scoped Styles
+   Data: 18 Febbraio 2026
+   Responsive table e accessibility
+   ======================================== */
+
+/* ── FOCUS STATE FOR RESULTS CONTAINER ── */
+::deep .sigad-results-focus:focus {
+    outline: 2px solid var(--mud-palette-primary, #2B2B21);
+    outline-offset: 2px;
+}
+
+/* ── TABLE ENHANCEMENTS ── */
+::deep .sigad-table-wrap .mud-table thead th {
+    font-family: "Open Sans Accredia", Arial, sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(43, 43, 33, 0.70);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.10);
+}
+
+::deep .sigad-table-wrap .mud-table tbody tr:hover {
+    background: rgba(222, 126, 0, 0.06);
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 960px) {
+    ::deep .sigad-table-toolbar {
+        padding: 12px 16px;
+    }
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+    ::deep .sigad-table-toolbar {
+        display: none;
+    }
+
+    ::deep .sigad-table-wrap .mud-table tbody tr:hover {
+        background: transparent;
+    }
+}
