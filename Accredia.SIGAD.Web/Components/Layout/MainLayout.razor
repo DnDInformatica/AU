@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject GatewayAuthenticationStateProvider AuthProvider
+@inject IDemoProfileContext DemoContext
 @inject AuthenticationStateProvider AuthStateProvider
 @inject UserContext UserContext
 @inject GatewayClient GatewayClient
@@ -10,6 +11,11 @@
 @inject ILogger<MainLayout> Logger
 
 <AppProviders />
+
+@* Skip-to-content link for accessibility *@
+<a href="#main-content" class="sigad-skip-link">
+    Salta al contenuto principale
+</a>
 
 <MudLayout Class="sigad-shell">
     <MudAppBar Color="Color.Default" Elevation="0" Class="sigad-appbar">
@@ -28,12 +34,41 @@
         <div class="sigad-topbar-right">
             <AuthorizeView>
                 <Authorized>
+                    @if (demoEnabled)
+                    {
+                        <MudMenu Dense="true" Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Inherit"
+                                 AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Class="sigad-demo-switcher">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button">
+                                    <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" />
+                                    <MudText Typo="Typo.caption" Class="ml-2">@figuraCorrente</MudText>
+                                </MudButton>
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudMenuItem Disabled="true"><MudText Typo="Typo.caption">Profilo di sviluppo</MudText></MudMenuItem>
+                                <MudDivider />
+                                @foreach (var profilo in profili)
+                                {
+                                    <MudMenuItem OnClick="@(() => CambiaProfilo(profilo.Role))">
+                                        @profilo.Figure (@profilo.Role)
+                                    </MudMenuItem>
+                                }
+                            </ChildContent>
+                        </MudMenu>
+                    }
                     <MudMenu Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                         <ActivatorContent>
                             <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button">
-                                <MudAvatar Size="Size.Small" Class="sigad-avatar">
-                                    @GetUserInitials()
-                                </MudAvatar>
+                                @if (!string.IsNullOrEmpty(GetUserProfileImageUrl()))
+                                {
+                                    <MudAvatar Size="Size.Small" Image="@GetUserProfileImageUrl()" Class="sigad-avatar sigad-avatar-with-image" />
+                                }
+                                else
+                                {
+                                    <MudAvatar Size="Size.Small" Class="sigad-avatar sigad-avatar-initials">
+                                        @GetUserInitials()
+                                    </MudAvatar>
+                                }
                                 <MudText Typo="Typo.body2" Class="ml-2">@GetUsername()</MudText>
                             </MudButton>
                         </ActivatorContent>
@@ -55,15 +90,17 @@
 
     <MudDrawer @bind-Open="_drawerOpen"
                Variant="DrawerVariant.Mini"
-               Width="280px"
-               MiniVariantWidth="72px"
+               Width="260px"
+               MiniWidth="72px"
                Elevation="0"
                ClipMode="DrawerClipMode.Always"
+               Breakpoint="Breakpoint.Md"
+               DisableOverlay="false"
                Class="@($"sigad-drawer {(_drawerOpen ? "sigad-drawer-expanded" : "sigad-drawer-collapsed")}")">
         <NavMenu IsCollapsed="!_drawerOpen" OnToggleDrawer="ToggleDrawer" />
     </MudDrawer>
 
-    <MudMainContent Class="main-content">
+    <MudMainContent Class="main-content" id="main-content">
         @Body
     </MudMainContent>
 
@@ -77,135 +114,16 @@
 </div>
 
 @code {
-    private bool _drawerOpen = true;
-    private bool _authInitialized;
-    private bool _disposed;
+    private bool demoEnabled => DemoContext.IsEnabled;
+    private IReadOnlyList<SigadDemoProfile> profili => DemoContext.GetAvailableProfiles();
+    private string figuraCorrente => DemoContext.GetCurrentProfile().Figure;
 
-    private void ToggleDrawer()
+    private void CambiaProfilo(string role)
     {
-        _drawerOpen = !_drawerOpen;
-        Logger.LogInformation("Sidebar toggle clicked. Open={Open}", _drawerOpen);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !_authInitialized)
+        if (DemoContext.TrySetRole(role))
         {
-            _authInitialized = true;
-
-            // NOTE: auth initialization is performed in Routes.razor so it runs even when MainLayout is not rendered.
-            await UserContext.EnsureLoadedAsync();
-            // UserContext is loaded asynchronously after the first paint; trigger a re-render so NavMenu updates immediately.
-            await InvokeAsync(StateHasChanged);
-
-            // AVVIA TokenRefreshService per auto-refresh token
-            // Questo previene logout improvvisi ogni 15 minuti
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            if (authState.User.Identity?.IsAuthenticated == true)
-            {
-                TokenRefreshService.Start();
-            }
+            UserContext.OnDemoProfileChanged();
+            InvokeAsync(StateHasChanged);
         }
-    }
-
-    private async Task Logout()
-    {
-        // Ferma il TokenRefreshService
-        TokenRefreshService.Stop();
-
-        // Esegue logout via API
-        var refreshToken = await TokenService.GetRefreshTokenAsync();
-        if (!string.IsNullOrWhiteSpace(refreshToken))
-        {
-            _ = await GatewayClient.LogoutAsync(refreshToken, CancellationToken.None);
-        }
-
-        // Pulisce token e stato
-        await TokenService.ClearAllAsync();
-        UserContext.Reset();
-        await AuthProvider.SignOutAsync();
-        Navigation.NavigateTo("/login", forceLoad: true);
-    }
-
-    protected override void OnInitialized()
-    {
-        AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-    }
-
-    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        UserContext.Reset();
-        try
-        {
-            await InvokeAsync(async () =>
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-
-                await UserContext.EnsureLoadedAsync();
-
-                // Avvia/Ferma TokenRefreshService basato sullo stato auth
-                var authState = await task;
-                if (authState.User.Identity?.IsAuthenticated == true)
-                {
-                    TokenRefreshService.Start();
-                }
-                else
-                {
-                    TokenRefreshService.Stop();
-                }
-
-                StateHasChanged();
-            });
-        }
-        catch (Exception ex)
-        {
-            // Avoid tearing down the circuit for a late auth change after disconnect.
-            Logger.LogDebug(ex, "AuthenticationStateChanged ignored (layout disposing/disconnected).");
-        }
-    }
-
-    private string GetUsername()
-        => UserContext.Current?.Username ?? "Utente";
-
-    private string GetUserInitials()
-    {
-        var username = GetUsername();
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            return "U";
-        }
-
-        var parts = username.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1)
-        {
-            return parts[0][..1].ToUpperInvariant();
-        }
-
-        return string.Concat(parts[0][..1], parts[^1][..1]).ToUpperInvariant();
-    }
-
-    private string GetUserRoleSummary()
-    {
-        if (UserContext.Current?.Roles is not { Count: > 0 })
-        {
-            return "Nessun ruolo";
-        }
-
-        return string.Join(", ", UserContext.Current.Roles);
-    }
-
-    public void Dispose()
-    {
-        _disposed = true;
-        AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
-        TokenRefreshService.Stop();
     }
 }

@@ -1,3 +1,98 @@
-.mud-nav-menu {
+/* ========================================
+   NavMenu.razor - Scoped Styles
+   CSS Variables per Drawer Scuro + MudBlazor Nativo
+   ======================================== */
+
+/* ── CSS VARIABLES MUDBLAZOR PER DRAWER SCURO ── */
+.sigad-drawer .mud-nav-menu {
     padding-top: 0;
+    
+    /* Override CSS variables MudBlazor per drawer scuro */
+    --mud-palette-primary: #EEBE80;
+    --mud-palette-primary-hover: rgba(222, 126, 0, 0.12);
+    --mud-palette-action-default: rgba(255, 255, 255, 0.87);
+    --mud-palette-action-default-hover: rgba(255, 255, 255, 0.06);
+}
+
+/* ── TOOLTIP ANTI-OVERFLOW (collapsed mode) ── */
+::deep .sigad-nav-tooltip .mud-tooltip-root {
+    max-width: 200px;
+}
+
+::deep .sigad-nav-tooltip .mud-tooltip-content {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* ── FOCUS STATES (Keyboard Navigation) ── */
+::deep .mud-nav-link:focus-visible {
+    outline: 3px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+::deep .sigad-collapse-btn:focus-visible {
+    outline: 3px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+/* ── SMOOTH ICON ROTATION (toggle button) ── */
+::deep .sigad-collapse-btn .mud-icon-root {
+    transition: transform 0.3s ease;
+}
+
+::deep .sigad-drawer-collapsed .sigad-collapse-btn .mud-icon-root {
+    transform: rotate(180deg);
+}
+
+/* ── SECTION HEADER ENHANCEMENT ── */
+::deep .sigad-nav-section::before {
+    content: "▸";
+    opacity: 0.5;
+    font-size: 10px;
+    margin-right: 6px;
+}
+
+/* ── DIVIDER REFINEMENT (expanded mode) ── */
+::deep .sigad-drawer-expanded .mud-divider {
+    margin: 12px 20px 10px;
+    opacity: 0.12;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── MOBILE OPTIMIZATION ── */
+@media (max-width: 960px) {
+    ::deep .mud-nav-link {
+        cursor: pointer;
+    }
+}
+
+/* ── ACCESSIBILITY: High Contrast Mode ── */
+@media (prefers-contrast: high) {
+    ::deep .mud-nav-link.active,
+    ::deep .mud-nav-link.mud-nav-link-active {
+        outline: 2px solid currentColor;
+    }
+}
+
+/* Sidebar — stessa resa della sidebar del Portale: chiara, selezione piatta con filetto grafite */
+.sigad-nav {
+  background: #ffffff;
+}
+::deep .sigad-nav a.mud-nav-link,
+::deep .sigad-nav .mud-nav-link-text,
+::deep .sigad-nav .mud-nav-link .mud-icon-root {
+  color: var(--acc-grafite, #2B2B21) !important;
+}
+::deep .sigad-nav a.mud-nav-link:hover {
+  background-color: rgba(43, 43, 33, 0.05) !important;
+}
+::deep .sigad-nav a.mud-nav-link.active,
+::deep .sigad-nav a.mud-nav-link.mud-nav-link-active {
+  background-color: rgba(43, 43, 33, 0.10) !important;
+  border-left: 3px solid var(--acc-grafite, #2B2B21);
+  border-radius: 0;
+  font-weight: 600;
+}
+::deep .sigad-nav .mud-nav-group-title {
+  color: var(--acc-text-secondary, #5F5E5A) !important;
 }

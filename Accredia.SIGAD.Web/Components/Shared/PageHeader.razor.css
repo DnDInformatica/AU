@@ -1,0 +1,84 @@
+/* ========================================
+   PageHeader.razor - Scoped Styles
+   Data: 18 Febbraio 2026  
+   Responsive layout e accessibility
+   ======================================== */
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 960px) {
+    ::deep .sigad-page-header {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    ::deep .sigad-page-header-action {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+    ::deep .sigad-page-title {
+        font-size: 24px;
+    }
+
+    ::deep .sigad-page-subtitle {
+        font-size: 13px;
+    }
+}
+
+/* ── BREADCRUMB FOCUS STATES ── */
+::deep .sigad-breadcrumb-link:focus-visible {
+    outline: 2px solid var(--sigad-ocra, #DE7E00);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ── BACK BUTTON ENHANCEMENT ── */
+::deep .sigad-back-btn:focus-visible {
+    outline: 3px solid var(--sigad-ocra, #DE7E00);
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+    ::deep .sigad-page-header-action {
+        display: none;
+    }
+
+    ::deep .sigad-back-btn {
+        display: none;
+    }
+}
+
+/* Barra breadcrumb — stessa resa di section.portal-breadcrumb-bar del Portale */
+.sigad-breadcrumbs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(43, 43, 33, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(43, 43, 33, 0.06);
+}
+.sigad-breadcrumbs a {
+  color: rgba(43, 43, 33, 0.82);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 0.12rem 0.2rem;
+  border-radius: 6px;
+}
+.sigad-breadcrumbs a:hover {
+  color: var(--acc-blu-indaco, #004C97);
+  background: rgba(43, 43, 33, 0.045);
+}
+.sigad-breadcrumbs [aria-current='page'] {
+  color: var(--acc-grafite, #2B2B21);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 0.12rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(43, 43, 33, 0.055);
+}

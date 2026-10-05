@@ -1,8 +1,111 @@
+/* ========================================
+   MainLayout.razor - Scoped Styles
+   Data: 18 Febbraio 2026
+   Migliorie: responsive, focus, scroll behavior
+   ======================================== */
+
 .main-content {
     background-color: #f5f6fa;
     min-height: calc(100vh - 64px);
 }
 
+/* ── SKIP-TO-CONTENT ENHANCEMENT ── */
+::deep .sigad-skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--sigad-ocra, #DE7E00);
+    color: var(--sigad-graphite, #2B2B21);
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    z-index: 10000;
+    font-weight: 700;
+    font-size: 14px;
+    transition: top 0.3s ease;
+}
+
+::deep .sigad-skip-link:focus {
+    top: 0;
+    outline: 3px solid var(--sigad-graphite, #2B2B21);
+    outline-offset: -3px;
+}
+
+/* ── MOBILE RESPONSIVE ENHANCEMENTS ── */
+@media (max-width: 600px) {
+    ::deep .sigad-topbar-center {
+        min-width: 0;
+    }
+
+    ::deep .sigad-search {
+        width: clamp(160px, 50vw, 260px);
+    }
+
+    ::deep .sigad-logo {
+        height: 32px;
+        margin-left: 4px;
+    }
+
+    ::deep .sigad-user-button {
+        padding: 4px 8px;
+    }
+
+    ::deep .sigad-user-button .mud-button-label {
+        font-size: 12px;
+    }
+
+    .main-content {
+        padding: calc(var(--mud-appbar-height, 56px) + 12px) 16px 24px;
+    }
+}
+
+/* ── DRAWER ENHANCEMENTS ── */
+::deep .mud-drawer-overlay {
+    background: rgba(43, 43, 33, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+@media (max-width: 960px) {
+    ::deep .sigad-drawer .mud-drawer-paper {
+        box-shadow: 0 18px 60px rgba(43, 43, 33, 0.45);
+    }
+
+    .main-content {
+        padding: calc(var(--mud-appbar-height, 56px) + 16px) 20px 32px;
+    }
+}
+
+/* ── USER MENU FOCUS ── */
+::deep .sigad-user-button:focus-visible {
+    outline: 3px solid var(--sigad-ocra, #DE7E00);
+    outline-offset: 2px;
+}
+
+/* ── APPBAR SCROLL ENHANCEMENT ── */
+::deep .sigad-appbar.scrolled {
+    box-shadow: 0 4px 16px rgba(43, 43, 33, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* ── SMOOTH DRAWER ANIMATION ── */
+::deep .sigad-drawer .mud-drawer-paper {
+    transition: width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* ── AVATAR WITH IMAGE SUPPORT ── */
+::deep .sigad-avatar.sigad-avatar-with-image {
+    border: 2px solid var(--sigad-ocra, #DE7E00);
+    padding: 2px;
+    background: white;
+}
+
+::deep .sigad-avatar.sigad-avatar-with-image img {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* ── BLAZOR ERROR UI ── */
 #blazor-error-ui {
     color-scheme: light only;
     background: #fff4e5;
@@ -22,4 +125,31 @@
     position: absolute;
     right: 0.75rem;
     top: 0.5rem;
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+    ::deep .sigad-appbar,
+    ::deep .sigad-drawer,
+    ::deep .sigad-skip-link {
+        display: none !important;
+    }
+
+    .main-content {
+        padding: 0;
+        max-width: 100%;
+    }
+}
+
+/* Drawer chiaro come la sidebar del Portale (prima: grafite) */
+.sigad-drawer {
+  background: #ffffff;
+  border-right: 1px solid rgba(43, 43, 33, 0.12);
+}
+.sigad-drawer .sigad-brand-title,
+.sigad-drawer .sigad-brand-subtitle {
+  color: var(--acc-grafite, #2B2B21) !important;
+}
+.sigad-collapse-btn {
+  color: var(--acc-grafite, #2B2B21) !important;
 }
