@@ -1,6 +1,8 @@
 @inject UserContext UserContext
+@inject IDemoProfileContext DemoContext
 
-<MudNavMenu Class="sigad-nav">
+<aside class="portal-sidebar sigad-sidebar" aria-label="Navigazione SIGAD">
+
     <div class="sigad-nav-brand">
         @if (!IsCollapsed)
         {
@@ -15,136 +17,146 @@
                        Color="Color.Inherit"
                        Size="Size.Small"
                        Class="sigad-collapse-btn"
+                       aria-label="Apri o chiudi il menu laterale"
                        OnClick="@(() => OnToggleDrawer.InvokeAsync())" />
     </div>
 
-    @NavLink("Dashboard", Icons.Material.Filled.Home, "/", NavLinkMatch.All)
+    <a class="portal-sidebar__back" href="/">
+        <span aria-hidden="true">&larr;</span> SIGAD
+    </a>
 
-    @if (_hasAnagraficheAccess)
-    {
-        @if (!IsCollapsed)
+    <div class="portal-sidebar__user">
+        <div class="portal-sidebar__user-avatar" aria-hidden="true">
+            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+        </div>
+        <div class="portal-sidebar__user-info">
+            <strong>@UserContext.Current?.Username</strong>
+            <span>@DemoContext.GetCurrentProfile().Figure</span>
+            @if (!string.IsNullOrWhiteSpace(DemoContext.GetCurrentProfile().OrganizationName))
+            {
+                <span>@DemoContext.GetCurrentProfile().OrganizationName</span>
+            }
+        </div>
+    </div>
+
+    <p class="portal-sidebar__area-label">GESTIONE ANAGRAFICHE</p>
+    <hr class="portal-sidebar__divider" />
+
+    <MudNavMenu Class="portal-sidebar__nav" Color="Color.Primary" Bordered="true">
+
+        @NavLink("Dashboard", Icons.Material.Filled.Home, "/", NavLinkMatch.All)
+
+        @if (_hasAnagraficheAccess)
         {
-            <MudDivider Class="my-2" />
-            <MudText Typo="Typo.overline" Class="sigad-nav-section">Anagrafiche</MudText>
+            @if (IsCollapsed)
+            {
+                @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+                {
+                    @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
+                }
+                @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
+                {
+                    @NavLink("Persone", Icons.Material.Filled.People, "/persone")
+                    @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
+                }
+                @if (UserContext.HasPermission("MODULE.INC.ACCESS"))
+                {
+                    @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
+                }
+                @if (UserContext.HasPermission("MODULE.CERT.ACCESS"))
+                {
+                    @NavLink("Certificazioni", Icons.Material.Filled.Verified, "/certificazioni")
+                }
+                @if (_hasRuAccess)
+                {
+                    @NavLink("Dipendenti", Icons.Material.Filled.Groups, "/risorse-umane/dipendenti")
+                }
+            }
+            else
+            {
+                <MudNavGroup Title="Anagrafiche"
+                             Icon="@Icons.Material.Filled.FolderOpen"
+                             @bind-Expanded="_anagraficheExpanded"
+                             Class="sigad-nav-group">
+                    <div class="sigad-nav-group-items">
+                        @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+                        {
+                            @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
+                        }
+                        @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
+                        {
+                            @NavLink("Persone", Icons.Material.Filled.People, "/persone")
+                            @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
+                        }
+                        @if (UserContext.HasPermission("MODULE.INC.ACCESS"))
+                        {
+                            @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
+                        }
+                        @if (UserContext.HasPermission("MODULE.CERT.ACCESS"))
+                        {
+                            @NavLink("Certificazioni", Icons.Material.Filled.Verified, "/certificazioni")
+                        }
+                        @if (_hasRuAccess)
+                        {
+                            @NavLink("Dipendenti", Icons.Material.Filled.Groups, "/risorse-umane/dipendenti")
+                        }
+                    </div>
+                </MudNavGroup>
+            }
         }
 
-        @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+        @if (UserContext.HasPermission("MODULE.TIPO.ACCESS"))
         {
-            @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
+            @if (IsCollapsed)
+            {
+                @NavLink("Tipologiche", Icons.Material.Filled.List, "/tipologiche")
+            }
+            else
+            {
+                <p class="portal-sidebar__subgroup-label">CONFIGURAZIONE</p>
+                @NavLink("Tipologiche", Icons.Material.Filled.List, "/tipologiche")
+            }
         }
-        @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
-        {
-            @NavLink("Persone", Icons.Material.Filled.People, "/persone")
-            @NavLink("Richieste GDPR", Icons.Material.Filled.GppGood, "/gdpr/richieste")
-            @NavLink("Esercizio Diritti", Icons.Material.Filled.Policy, "/gdpr/richieste-esercizio-diritti")
-            @NavLink("Registro Trattamenti", Icons.Material.Filled.MenuBook, "/gdpr/registro-trattamenti")
-            @NavLink("Data Breach", Icons.Material.Filled.WarningAmber, "/gdpr/data-breach")
-        }
-        @if (UserContext.HasPermission("MODULE.INC.ACCESS"))
-        {
-            @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
-        }
-        @if (_hasRuAccess)
-        {
-            @NavLink("Dipendenti", Icons.Material.Filled.Groups, "/risorse-umane/dipendenti")
-        }
-    }
 
-    @if (UserContext.HasPermission("MODULE.TIPO.ACCESS"))
-    {
-        @if (!IsCollapsed)
+        @if (_hasAdminAccess)
         {
-            <MudDivider Class="my-2" />
-            <MudText Typo="Typo.overline" Class="sigad-nav-section">Configurazione</MudText>
+            @if (IsCollapsed)
+            {
+                @if (UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+                {
+                    @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
+                }
+                @if (UserContext.HasPermission("ADMIN.ROLES.MANAGE"))
+                {
+                    @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
+                }
+                @if (UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+                {
+                    @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
+                }
+            }
+            else
+            {
+                <p class="portal-sidebar__subgroup-label">AMMINISTRAZIONE</p>
+                @if (UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+                {
+                    @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
+                }
+                @if (UserContext.HasPermission("ADMIN.ROLES.MANAGE"))
+                {
+                    @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
+                }
+                @if (UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+                {
+                    @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
+                }
+            }
         }
-        @NavLink("Tipologiche", Icons.Material.Filled.List, "/tipologiche")
-    }
 
-    @if (_hasAdminAccess)
-    {
-        @if (!IsCollapsed)
-        {
-            <MudDivider Class="my-2" />
-            <MudText Typo="Typo.overline" Class="sigad-nav-section">Amministrazione</MudText>
-        }
-        
-        @if (UserContext.HasPermission("ADMIN.USERS.MANAGE"))
-        {
-            @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
-        }
-        
-        @if (UserContext.HasPermission("ADMIN.ROLES.MANAGE"))
-        {
-            @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
-        }
-        
-        @if (UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
-        {
-            @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
-        }
-    }
+    </MudNavMenu>
 
-    @* Login entry is intentionally kept in the topbar; avoid duplicating it in the sidebar. *@
-</MudNavMenu>
+</aside>
 
 @code {
-    [Parameter] public bool IsCollapsed { get; set; }
-    [Parameter] public EventCallback OnToggleDrawer { get; set; }
-
-    private bool _isCollapsed => IsCollapsed;
-    
-    private bool _hasAnagraficheAccess =>
-        UserContext.HasPermission("MODULE.ORG.ACCESS")
-        || UserContext.HasPermission("MODULE.PERS.ACCESS")
-        || UserContext.HasPermission("MODULE.INC.ACCESS");
-
-    private bool _hasRuAccess =>
-        UserContext.HasPermission("HR.DIP.LIST")
-        || UserContext.HasPermission("HR.DIP.READ")
-        || UserContext.HasPermission("HR.DIP.CREATE")
-        || UserContext.HasPermission("HR.DIP.UPDATE")
-        || UserContext.HasPermission("HR.DIP.DELETE");
-
-    private bool _hasAdminAccess =>
-        UserContext.IsAdmin && UserContext.HasPermission("MODULE.ADMIN.ACCESS");
-
-    private RenderFragment NavLink(string label, string icon, string href, NavLinkMatch match = NavLinkMatch.Prefix)
-        => builder =>
-        {
-            if (IsCollapsed)
-            {
-                builder.OpenComponent<MudTooltip>(0);
-                builder.AddAttribute(1, "Text", label);
-                builder.AddAttribute(2, "Placement", Placement.Right);
-                builder.AddAttribute(3, "Class", "sigad-nav-tooltip");
-                builder.AddAttribute(4, "ChildContent", (RenderFragment)(tooltipBuilder =>
-                {
-                    tooltipBuilder.OpenComponent<MudNavLink>(10);
-                    tooltipBuilder.AddAttribute(11, "Href", href);
-                    tooltipBuilder.AddAttribute(12, "Icon", icon);
-                    tooltipBuilder.AddAttribute(13, "Match", match);
-                    tooltipBuilder.AddAttribute(14, "ActiveClass", "sigad-nav-active");
-                    tooltipBuilder.AddAttribute(15, "Class", "sigad-nav-link");
-                    tooltipBuilder.AddAttribute(16, "ChildContent", (RenderFragment)(childBuilder =>
-                    {
-                        // Collapsed (mini) menu: icon-only. Tooltip already contains the label.
-                    }));
-                    tooltipBuilder.CloseComponent();
-                }));
-                builder.CloseComponent();
-                return;
-            }
-
-            builder.OpenComponent<MudNavLink>(30);
-            builder.AddAttribute(31, "Href", href);
-            builder.AddAttribute(32, "Icon", icon);
-            builder.AddAttribute(33, "Match", match);
-            builder.AddAttribute(34, "ActiveClass", "sigad-nav-active");
-            builder.AddAttribute(35, "Class", "sigad-nav-link");
-            builder.AddAttribute(36, "ChildContent", (RenderFragment)(childBuilder =>
-            {
-                childBuilder.AddContent(40, label);
-            }));
-            builder.CloseComponent();
-        };
+    private SigadDemoProfile Profilo => DemoContext.GetCurrentProfile();
 }
