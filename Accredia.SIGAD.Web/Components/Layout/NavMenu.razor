@@ -65,7 +65,7 @@
                 }
                 @if (UserContext.HasPermission("MODULE.CERT.ACCESS"))
                 {
-                    @NavLink("Certificazioni", Icons.Material.Filled.Verified, "/certificazioni")
+                    @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                 }
                 @if (_hasRuAccess)
                 {
@@ -94,7 +94,7 @@
                         }
                         @if (UserContext.HasPermission("MODULE.CERT.ACCESS"))
                         {
-                            @NavLink("Certificazioni", Icons.Material.Filled.Verified, "/certificazioni")
+                            @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                         }
                         @if (_hasRuAccess)
                         {
