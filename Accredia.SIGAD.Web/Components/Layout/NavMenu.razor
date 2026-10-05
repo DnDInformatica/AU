@@ -3,24 +3,6 @@
 
 <aside class="portal-sidebar sigad-sidebar" aria-label="Navigazione SIGAD">
 
-    <div class="sigad-nav-brand">
-        @if (!IsCollapsed)
-        {
-            <div class="sigad-brand-left">
-                <div class="sigad-brand-meta">
-                    <MudText Typo="Typo.h6" Class="sigad-brand-title">SIGAD</MudText>
-                    <MudText Typo="Typo.caption" Class="sigad-brand-subtitle">Accredia</MudText>
-                </div>
-            </div>
-        }
-        <MudIconButton Icon="@(_isCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
-                       Color="Color.Inherit"
-                       Size="Size.Small"
-                       Class="sigad-collapse-btn"
-                       aria-label="Apri o chiudi il menu laterale"
-                       OnClick="@(() => OnToggleDrawer.InvokeAsync())" />
-    </div>
-
     <a class="portal-sidebar__back" href="/">
         <span aria-hidden="true">&larr;</span> SIGAD
     </a>

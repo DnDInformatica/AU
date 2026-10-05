@@ -20,6 +20,9 @@
 <MudLayout Class="sigad-shell">
     <MudAppBar Color="Color.Default" Elevation="0" Class="sigad-appbar">
         <div class="sigad-topbar-left">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
+                           aria-label="Apri o chiudi il menu laterale"
+                           OnClick="@(() => ToggleDrawer())" Class="mr-2" />
             <MudImage Src="/brand/logo-accredia.png" Alt="Accredia" Class="sigad-logo" />
         </div>
 

@@ -96,9 +96,10 @@
 ::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-icon,
 ::deep .portal-sidebar__nav .mud-nav-link .mud-icon-root {
     color: var(--acc-ocra-text, #8A5A00);
-    background: rgba(222, 126, 0, 0.12);
-    border-radius: 8px;
-    padding: 4px;
+    background: #ffffff;
+    border: 1px solid rgba(222, 126, 0, 0.45);
+    border-radius: 10px;
+    padding: 5px;
 }
 ::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-text {
     color: var(--acc-grafite, #2B2B21);
@@ -117,7 +118,8 @@
 ::deep .portal-sidebar__nav .mud-nav-link.active .mud-nav-link-icon,
 ::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active .mud-nav-link-icon {
     color: #ffffff;
-    background: var(--acc-ocra, #DE7E00);
+    background: var(--acc-grafite, #2B2B21);
+    border-color: var(--acc-grafite, #2B2B21);
 }
 ::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active .mud-nav-link-text {
     color: var(--acc-grafite, #2B2B21);
