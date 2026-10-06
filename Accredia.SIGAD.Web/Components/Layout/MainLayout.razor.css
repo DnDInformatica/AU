@@ -363,3 +363,10 @@
         padding: 4px 8px;
     }
 }
+
+/* AppBar sticky durante lo scroll della finestra */
+.sigad-appbar {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+}
