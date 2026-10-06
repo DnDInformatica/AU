@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 0.75rem 0.85rem;
+    padding: 1rem 0.85rem;
     background: #fffdf9;
     overflow-y: auto;
 }
@@ -89,17 +89,26 @@
 
 /* Nav: link con chip icona, testo grafite, stati flat */
 ::deep .portal-sidebar__nav .mud-nav-link {
-    border-radius: 10px;
-    padding: 6px 10px;
-    min-height: 40px;
+    min-height: 44px;
+    padding: 7px 10px;
+    border: 0 solid transparent;
+    border-left-width: 3px;
+    border-radius: 0;
+    transition-property: background-color, color, padding;
 }
-::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-icon,
-::deep .portal-sidebar__nav .mud-nav-link .mud-icon-root {
+::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-icon {
     color: var(--acc-ocra-text, #8A5A00);
     background: #ffffff;
     border: 1px solid rgba(222, 126, 0, 0.45);
     border-radius: 10px;
     padding: 5px;
+}
+::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-icon .mud-icon-root {
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
 }
 ::deep .portal-sidebar__nav .mud-nav-link .mud-nav-link-text {
     color: var(--acc-grafite, #2B2B21);
@@ -113,13 +122,17 @@
 }
 ::deep .portal-sidebar__nav .mud-nav-link.active,
 ::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active {
-    background-color: rgba(222, 126, 0, 0.10);
+    background-color: rgba(43, 43, 33, 0.10);
 }
 ::deep .portal-sidebar__nav .mud-nav-link.active .mud-nav-link-icon,
 ::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active .mud-nav-link-icon {
-    color: #ffffff;
-    background: var(--acc-grafite, #2B2B21);
-    border-color: var(--acc-grafite, #2B2B21);
+    color: var(--acc-ocra-text, #8A5A00) !important;
+    background: #ffffff;
+    border-color: rgba(222, 126, 0, 0.65);
+}
+::deep .portal-sidebar__nav .mud-nav-link.active .mud-nav-link-icon .mud-icon-root,
+::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active .mud-nav-link-icon .mud-icon-root {
+    color: var(--acc-ocra-text, #8A5A00) !important;
 }
 ::deep .portal-sidebar__nav .mud-nav-link.mud-nav-link-active .mud-nav-link-text {
     color: var(--acc-grafite, #2B2B21);
@@ -142,6 +155,54 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.2rem 0.2rem 0.65rem;
+}
+
+/* In modalita mini rimangono visibili soltanto le icone. */
+.sigad-sidebar--collapsed {
+    padding-inline: 0.45rem;
+    overflow-x: hidden;
+}
+
+.sigad-sidebar--collapsed .portal-sidebar__back {
+    height: 28px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    font-size: 0;
+    text-align: center;
+}
+
+.sigad-sidebar--collapsed .portal-sidebar__back span {
+    font-size: 18px;
+}
+
+.sigad-sidebar--collapsed .portal-sidebar__user {
+    justify-content: center;
+    padding: 0.55rem;
+}
+
+.sigad-sidebar--collapsed .portal-sidebar__user-info,
+.sigad-sidebar--collapsed .portal-sidebar__area-label,
+.sigad-sidebar--collapsed .portal-sidebar__divider,
+.sigad-sidebar--collapsed .portal-sidebar__subgroup-label,
+.sigad-sidebar--collapsed ::deep .mud-nav-link-text {
+    display: none;
+}
+
+.sigad-sidebar--collapsed ::deep .portal-sidebar__nav .mud-nav-link {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding-inline: 0;
+}
+
+.sigad-sidebar--collapsed ::deep .portal-sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.sigad-sidebar--collapsed ::deep .portal-sidebar__nav .mud-nav-link-icon {
+    margin-inline: 0;
 }
 .sigad-brand-title {
     color: var(--acc-grafite, #2B2B21) !important;

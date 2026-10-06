@@ -1,0 +1,54 @@
+/* ========================================
+   QuickDrawerHost.razor - Scoped Styles
+   Data: 18 Febbraio 2026
+   Slide-in animation e sticky header
+   ======================================== */
+
+/* ── SLIDE-IN ANIMATION ── */
+::deep .sigad-quickdrawer .mud-drawer-paper {
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ── STICKY HEADER DURING SCROLL ── */
+::deep .sigad-quickdrawer-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(43, 43, 33, 0.06);
+}
+
+/* ── FOCUS TRAP ENHANCEMENT ── */
+::deep .sigad-quickdrawer .mud-drawer-paper:focus-within {
+    outline: none;
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 960px) {
+    ::deep .sigad-quickdrawer .mud-drawer-paper {
+        width: 100% !important;
+        max-width: 100vw;
+    }
+
+    ::deep .sigad-quickdrawer-body {
+        padding: 12px;
+    }
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+    ::deep .sigad-quickdrawer {
+        display: none !important;
+    }
+}

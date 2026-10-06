@@ -22,8 +22,14 @@
         <div class="sigad-topbar-left">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                            aria-label="Apri o chiudi il menu laterale"
-                           OnClick="@(() => ToggleDrawer())" Class="mr-2" />
-            <MudImage Src="/brand/logo-accredia.png" Alt="Accredia" Class="sigad-logo" />
+                           OnClick="@(() => ToggleDrawer())" Class="sigad-menu-button" />
+            <a href="/" class="sigad-brand" aria-label="SIGAD - torna alla dashboard">
+                <MudImage Src="/brand/logo-accredia.png" Alt="Accredia" Class="sigad-logo" />
+                <span class="sigad-brand-copy">
+                    <span class="sigad-brand-eyebrow">Ente Italiano di Accreditamento</span>
+                    <span class="sigad-brand-name">SIGAD</span>
+                </span>
+            </a>
         </div>
 
         <div class="sigad-topbar-center">
@@ -42,9 +48,10 @@
                         <MudMenu Dense="true" Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Inherit"
                                  AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Class="sigad-demo-switcher">
                             <ActivatorContent>
-                                <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button">
-                                    <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" />
-                                    <MudText Typo="Typo.caption" Class="ml-2">@figuraCorrente</MudText>
+                                <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-demo-button">
+                                    <span class="sigad-demo-badge">DEV</span>
+                                    <span class="sigad-demo-role">@figuraCorrente</span>
+                                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
                                 </MudButton>
                             </ActivatorContent>
                             <ChildContent>
@@ -61,7 +68,7 @@
                     }
                     <MudMenu Dense="true" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                         <ActivatorContent>
-                            <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button">
+                            <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="sigad-user-button sigad-user-card">
                                 @if (!string.IsNullOrEmpty(GetUserProfileImageUrl()))
                                 {
                                     <MudAvatar Size="Size.Small" Image="@GetUserProfileImageUrl()" Class="sigad-avatar sigad-avatar-with-image" />
@@ -72,7 +79,11 @@
                                         @GetUserInitials()
                                     </MudAvatar>
                                 }
-                                <MudText Typo="Typo.body2" Class="ml-2">@GetUsername()</MudText>
+                                <span class="sigad-user-copy">
+                                    <span class="sigad-user-name">@GetUsername()</span>
+                                    <span class="sigad-user-role">@GetUserRoleSummary()</span>
+                                </span>
+                                <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" Class="sigad-user-chevron" />
                             </MudButton>
                         </ActivatorContent>
                         <ChildContent>
@@ -93,7 +104,7 @@
 
     <MudDrawer @bind-Open="_drawerOpen"
                Variant="DrawerVariant.Mini"
-               Width="260px"
+               Width="280px"
                MiniWidth="72px"
                Elevation="0"
                ClipMode="DrawerClipMode.Always"
