@@ -15,7 +15,7 @@ namespace Accredia.SIGAD.Web.Components.Shared;
 
 public partial class AccessDenied : ComponentBase
 {
-[Parameter] public string Title { get; set; } = "Accesso Negato";
+[Parameter] public string Title { get; set; } = "Accesso negato";
     [Parameter] public string Message { get; set; } = "Non hai i permessi necessari per accedere a questa pagina.";
 
     [Parameter] public bool ShowContactHint { get; set; }

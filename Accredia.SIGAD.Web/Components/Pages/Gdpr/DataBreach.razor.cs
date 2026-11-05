@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Gdpr;
 
@@ -45,10 +46,10 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
 
     private IReadOnlyList<DataBreachItem> _items = Array.Empty<DataBreachItem>();
     private DataBreachFormModel _form = DataBreachFormModel.CreateDefault();
-    private bool CanRead => UserContext.HasPermission("SIDAC.PERS.LIST") || UserContext.HasPermission("SIDAC.PERS.READ");
-    private bool CanCreate => UserContext.HasPermission("SIDAC.PERS.CREATE");
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("SIDAC.PERS.DELETE");
+    private bool CanRead => UserContext.HasPermission(PermessiSidac.Persone.Elenco) || UserContext.HasPermission(PermessiSidac.Persone.Lettura);
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Persone.Creazione);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Persone.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Persone.Cancellazione);
     private bool CanSave => _editId.HasValue ? CanUpdate : CanCreate;
 
     private IReadOnlyList<DataBreachItem> FilteredItems

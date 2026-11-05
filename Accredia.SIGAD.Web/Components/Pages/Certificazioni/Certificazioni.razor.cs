@@ -4,16 +4,17 @@ using Accredia.SIGAD.Web.Services;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Certificazioni;
 
 public partial class Certificazioni : ComponentBase
 {
-    private bool CanAccess => UserContext.HasPermission("SIDAC.MODULE.CERT.ACCESS");
-    private bool CanRead => UserContext.HasPermission("SIDAC.CERT.LIST") || UserContext.HasPermission("SIDAC.CERT.READ");
-    private bool CanCreate => UserContext.HasPermission("SIDAC.CERT.CREATE");
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.CERT.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("SIDAC.CERT.DELETE");
+    private bool CanAccess => UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso);
+    private bool CanRead => UserContext.HasPermission(PermessiSidac.Certificazioni.Elenco) || UserContext.HasPermission(PermessiSidac.Certificazioni.Lettura);
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Certificazioni.Creazione);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Certificazioni.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Certificazioni.Cancellazione);
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs =
     [
@@ -40,7 +41,7 @@ public partial class Certificazioni : ComponentBase
     {
         if (!CanRead)
         {
-            _errorMessage = "Accesso negato: permesso CERT.LIST/READ mancante.";
+            _errorMessage = "Il tuo profilo non consente di consultare le certificazioni.";
             return new TableData<CertificazioneListItem>
             {
                 Items = Array.Empty<CertificazioneListItem>(),
@@ -104,7 +105,7 @@ public partial class Certificazioni : ComponentBase
     {
         if (!CanCreate)
         {
-            Snackbar.Add("Accesso negato: permesso CERT.CREATE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di creare le certificazioni.", Severity.Error);
             return Task.CompletedTask;
         }
 
@@ -121,7 +122,7 @@ public partial class Certificazioni : ComponentBase
     {
         if (!CanUpdate)
         {
-            Snackbar.Add("Accesso negato: permesso CERT.UPDATE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di modificare le certificazioni.", Severity.Error);
             return;
         }
 
@@ -162,13 +163,13 @@ public partial class Certificazioni : ComponentBase
 
         if (IsEditMode && !CanUpdate)
         {
-            Snackbar.Add("Accesso negato: permesso CERT.UPDATE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di modificare le certificazioni.", Severity.Error);
             return;
         }
 
         if (!IsEditMode && !CanCreate)
         {
-            Snackbar.Add("Accesso negato: permesso CERT.CREATE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di creare le certificazioni.", Severity.Error);
             return;
         }
 
@@ -221,7 +222,7 @@ public partial class Certificazioni : ComponentBase
     {
         if (!CanDelete)
         {
-            Snackbar.Add("Accesso negato: permesso CERT.DELETE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di eliminare le certificazioni.", Severity.Error);
             return;
         }
 

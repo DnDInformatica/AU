@@ -86,8 +86,8 @@ private List<UserListDto> _users = new();
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
-            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+            _error = MessaggioErroreApi.Da(ex);
+            Snackbar.Add(MessaggioErroreApi.Da(ex), Severity.Error);
         }
         finally
         {
@@ -156,7 +156,7 @@ private List<UserListDto> _users = new();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+            Snackbar.Add(MessaggioErroreApi.Da(ex), Severity.Error);
         }
     }
 

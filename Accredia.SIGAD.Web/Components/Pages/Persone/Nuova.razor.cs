@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Persone;
 
@@ -43,7 +44,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     }
 
     private readonly FormModel _model = new();
-    private bool CanCreate => UserContext.HasPermission("SIDAC.PERS.CREATE");
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Persone.Creazione);
     private MudForm? _form;
     private bool _isSubmitting;
     private string? _errorMessage;
@@ -104,7 +105,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

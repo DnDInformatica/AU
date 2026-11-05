@@ -14,6 +14,7 @@
 @using Microsoft.JSInterop
 @using Accredia.SIGAD.Web.Models.Common
 
+<RichiedePermesso Permessi="@([PermessiSidac.Persone.Elenco, PermessiSidac.Persone.Lettura])">
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Persone"
                 Subtitle="Ricerca e gestione delle persone collegate."
@@ -56,3 +57,4 @@
                     BulkTotal="@_bulkTotal"
                     TableRefChanged="OnTableRefChanged" />
 </MudContainer>
+</RichiedePermesso>

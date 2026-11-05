@@ -3,6 +3,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
+<RichiedePermesso Permessi="@([PermessiSidac.Organizzazioni.Elenco, PermessiSidac.Organizzazioni.Lettura])">
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="@(_detail?.Denominazione ?? "Dettaglio organizzazione")"
                 Subtitle="@($"Scheda organizzazione #{Id}")"
@@ -777,3 +778,4 @@
         </MudPaper>
     }
 </MudContainer>
+</RichiedePermesso>

@@ -22,12 +22,13 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Nuovo : ComponentBase
 {
-    private bool CanCreate => UserContext.HasPermission("SIDAC.INC.CREATE");
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Incarichi.Creazione);
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     {
@@ -100,7 +101,7 @@ public partial class Nuovo : ComponentBase
         }
         catch (Exception ex)
         {
-            _lookupsError = ex.Message;
+            _lookupsError = MessaggioErroreApi.Da(ex);
             _ruoli = Array.Empty<LookupItem>();
         }
         finally
@@ -243,7 +244,7 @@ public partial class Nuovo : ComponentBase
 
         if (!CanCreate)
         {
-            _errorMessage = "Accesso negato: permesso INC.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare gli incarichi.";
             return;
         }
 
@@ -289,7 +290,7 @@ public partial class Nuovo : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

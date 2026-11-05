@@ -22,14 +22,15 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Dettaglio : ComponentBase
 {
-    private bool CanRead => UserContext.HasPermission("SIDAC.INC.LIST") || UserContext.HasPermission("SIDAC.INC.READ");
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.INC.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("SIDAC.INC.DELETE");
+    private bool CanRead => UserContext.HasPermission(PermessiSidac.Incarichi.Elenco) || UserContext.HasPermission(PermessiSidac.Incarichi.Lettura);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Incarichi.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Incarichi.Cancellazione);
 
     [Parameter] public int Id { get; set; }
 
@@ -75,7 +76,7 @@ public partial class Dettaglio : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -87,7 +88,7 @@ public partial class Dettaglio : ComponentBase
     {
         if (!CanUpdate)
         {
-            _errorMessage = "Accesso negato: permesso INC.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare gli incarichi.";
             return;
         }
 
@@ -98,7 +99,7 @@ public partial class Dettaglio : ComponentBase
     {
         if (!CanDelete)
         {
-            _errorMessage = "Accesso negato: permesso INC.DELETE mancante.";
+            _errorMessage = "Il tuo profilo non consente di eliminare gli incarichi.";
             return;
         }
 

@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane;
 
@@ -46,25 +47,25 @@ public partial class DettaglioDipendente : ComponentBase
     }
 
     private bool CanReadDipendente =>
-        (UserContext.HasPermission("SIDAC.HR.DIP.LIST") || UserContext.HasPermission("SIDAC.HR.DIP.READ"))
-        && UserContext.HasPermission("SIDAC.HR.PERSONA.READ");
-    private bool CanUpdateDipendente => UserContext.HasPermission("SIDAC.HR.DIP.UPDATE");
-    private bool CanDeleteDipendente => UserContext.HasPermission("SIDAC.HR.DIP.DELETE");
+        (UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Lettura))
+        && UserContext.HasPermission(PermessiSidac.RisorseUmane.LetturaPersona);
+    private bool CanUpdateDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Modifica);
+    private bool CanDeleteDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Cancellazione);
 
-    private bool CanCreateContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.CREATE");
-    private bool CanReadContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.LIST") || UserContext.HasPermission("SIDAC.HR.CONTRATTI.READ");
-    private bool CanUpdateContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.UPDATE");
-    private bool CanDeleteContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.DELETE");
+    private bool CanCreateContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Creazione);
+    private bool CanReadContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Lettura);
+    private bool CanUpdateContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Modifica);
+    private bool CanDeleteContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Cancellazione);
 
-    private bool CanCreateDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.CREATE");
-    private bool CanReadDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.LIST") || UserContext.HasPermission("SIDAC.HR.DOTAZIONI.READ");
-    private bool CanUpdateDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.UPDATE");
-    private bool CanDeleteDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.DELETE");
+    private bool CanCreateDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Creazione);
+    private bool CanReadDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Lettura);
+    private bool CanUpdateDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Modifica);
+    private bool CanDeleteDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Cancellazione);
 
-    private bool CanCreateFormazione => UserContext.HasPermission("SIDAC.HR.FORM.CREATE");
-    private bool CanReadFormazione => UserContext.HasPermission("SIDAC.HR.FORM.LIST") || UserContext.HasPermission("SIDAC.HR.FORM.READ");
-    private bool CanUpdateFormazione => UserContext.HasPermission("SIDAC.HR.FORM.UPDATE");
-    private bool CanDeleteFormazione => UserContext.HasPermission("SIDAC.HR.FORM.DELETE");
+    private bool CanCreateFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Creazione);
+    private bool CanReadFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Lettura);
+    private bool CanUpdateFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Modifica);
+    private bool CanDeleteFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Cancellazione);
 
     private bool _isLoading = true;
     private bool _isSaving;
@@ -199,7 +200,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanUpdateDipendente)
         {
-            _errorMessage = "Accesso negato: permesso HR.DIP.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare i dipendenti.";
             return;
         }
 
@@ -242,7 +243,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanUpdateDipendente)
         {
-            _errorMessage = "Accesso negato: permesso HR.DIP.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare i dipendenti.";
             return;
         }
 
@@ -302,7 +303,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanDeleteDipendente)
         {
-            _errorMessage = "Accesso negato: permesso HR.DIP.DELETE mancante.";
+            _errorMessage = "Il tuo profilo non consente di eliminare i dipendenti.";
             return;
         }
 
@@ -373,7 +374,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanCreateContratti)
         {
-            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare i contratti.";
             return;
         }
 
@@ -389,7 +390,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanUpdateContratti)
         {
-            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare i contratti.";
             return;
         }
 
@@ -438,8 +439,8 @@ public partial class DettaglioDipendente : ComponentBase
         if ((!_isEditingContratto && !CanCreateContratti) || (_isEditingContratto && !CanUpdateContratti))
         {
             _errorMessage = _isEditingContratto
-                ? "Accesso negato: permesso HR.CONTRATTI.UPDATE mancante."
-                : "Accesso negato: permesso HR.CONTRATTI.CREATE mancante.";
+                ? "Il tuo profilo non consente di modificare i contratti."
+                : "Il tuo profilo non consente di creare i contratti.";
             return;
         }
 
@@ -530,7 +531,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanDeleteContratti)
         {
-            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.DELETE mancante.";
+            _errorMessage = "Il tuo profilo non consente di eliminare i contratti.";
             return;
         }
 
@@ -559,7 +560,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanReadContratti)
         {
-            _errorMessage = "Accesso negato: permesso HR.CONTRATTI.LIST/READ mancante.";
+            _errorMessage = "Il tuo profilo non consente di consultare i contratti.";
             return;
         }
 
@@ -619,7 +620,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanCreateDotazioni)
         {
-            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare le dotazioni.";
             return;
         }
 
@@ -634,7 +635,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanUpdateDotazioni)
         {
-            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare le dotazioni.";
             return;
         }
 
@@ -680,8 +681,8 @@ public partial class DettaglioDipendente : ComponentBase
         if ((!_isEditingDotazione && !CanCreateDotazioni) || (_isEditingDotazione && !CanUpdateDotazioni))
         {
             _errorMessage = _isEditingDotazione
-                ? "Accesso negato: permesso HR.DOTAZIONI.UPDATE mancante."
-                : "Accesso negato: permesso HR.DOTAZIONI.CREATE mancante.";
+                ? "Il tuo profilo non consente di modificare le dotazioni."
+                : "Il tuo profilo non consente di creare le dotazioni.";
             return;
         }
 
@@ -769,7 +770,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanDeleteDotazioni)
         {
-            _errorMessage = "Accesso negato: permesso HR.DOTAZIONI.DELETE mancante.";
+            _errorMessage = "Il tuo profilo non consente di eliminare le dotazioni.";
             return;
         }
 
@@ -825,7 +826,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanCreateFormazione)
         {
-            _errorMessage = "Accesso negato: permesso HR.FORM.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare la formazione obbligatoria.";
             return;
         }
 
@@ -840,7 +841,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanUpdateFormazione)
         {
-            _errorMessage = "Accesso negato: permesso HR.FORM.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare la formazione obbligatoria.";
             return;
         }
 
@@ -885,8 +886,8 @@ public partial class DettaglioDipendente : ComponentBase
         if ((!_isEditingFormazione && !CanCreateFormazione) || (_isEditingFormazione && !CanUpdateFormazione))
         {
             _errorMessage = _isEditingFormazione
-                ? "Accesso negato: permesso HR.FORM.UPDATE mancante."
-                : "Accesso negato: permesso HR.FORM.CREATE mancante.";
+                ? "Il tuo profilo non consente di modificare la formazione obbligatoria."
+                : "Il tuo profilo non consente di creare la formazione obbligatoria.";
             return;
         }
 
@@ -966,7 +967,7 @@ public partial class DettaglioDipendente : ComponentBase
     {
         if (!CanDeleteFormazione)
         {
-            _errorMessage = "Accesso negato: permesso HR.FORM.DELETE mancante.";
+            _errorMessage = "Il tuo profilo non consente di eliminare la formazione obbligatoria.";
             return;
         }
 

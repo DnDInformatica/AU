@@ -126,7 +126,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

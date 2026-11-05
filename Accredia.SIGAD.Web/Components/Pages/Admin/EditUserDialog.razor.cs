@@ -59,7 +59,7 @@ public partial class EditUserDialog : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Errore: {ex.Message}";
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -100,7 +100,7 @@ public partial class EditUserDialog : ComponentBase
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+            Snackbar.Add(MessaggioErroreApi.Da(ex), Severity.Error);
         }
         finally
         {

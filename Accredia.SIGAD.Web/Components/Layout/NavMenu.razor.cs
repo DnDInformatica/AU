@@ -10,6 +10,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Layout;
 
@@ -25,20 +26,20 @@ public partial class NavMenu : ComponentBase
     private bool _isCollapsed => IsCollapsed;
 
     private bool _hasAnagraficheAccess =>
-        UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS")
-        || UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS")
-        || UserContext.HasPermission("SIDAC.MODULE.INC.ACCESS")
-        || UserContext.HasPermission("SIDAC.MODULE.CERT.ACCESS");
+        UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso)
+        || UserContext.HasPermission(PermessiSidac.Persone.Accesso)
+        || UserContext.HasPermission(PermessiSidac.Incarichi.Accesso)
+        || UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso);
 
     private bool _hasRuAccess =>
-        UserContext.HasPermission("SIDAC.HR.DIP.LIST")
-        || UserContext.HasPermission("SIDAC.HR.DIP.READ")
-        || UserContext.HasPermission("SIDAC.HR.DIP.CREATE")
-        || UserContext.HasPermission("SIDAC.HR.DIP.UPDATE")
-        || UserContext.HasPermission("SIDAC.HR.DIP.DELETE");
+        UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Elenco)
+        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Lettura)
+        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Creazione)
+        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Modifica)
+        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Cancellazione);
 
-    private bool _hasAdminAccess =>
-        UserContext.IsAdmin && UserContext.HasPermission("IAM.CONSOLE.ACCESS");
+    // Le capacità vengono dai permessi IAM, mai dal nome del ruolo.
+    private bool _hasAdminAccess => UserContext.HasPermission(PermessiIam.AccessoConsole);
 
     private RenderFragment NavLink(string label, string icon, string href, NavLinkMatch match = NavLinkMatch.Prefix)
         => builder =>

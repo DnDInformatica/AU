@@ -32,20 +32,20 @@
         {
             @if (IsCollapsed)
             {
-                @if (UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS"))
+                @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
                 {
                     @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
                 }
-                @if (UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS"))
+                @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
                 {
                     @NavLink("Persone", Icons.Material.Filled.People, "/persone")
                     @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
                 }
-                @if (UserContext.HasPermission("SIDAC.MODULE.INC.ACCESS"))
+                @if (UserContext.HasPermission(PermessiSidac.Incarichi.Accesso))
                 {
                     @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
                 }
-                @if (UserContext.HasPermission("SIDAC.MODULE.CERT.ACCESS"))
+                @if (UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso))
                 {
                     @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                 }
@@ -61,20 +61,20 @@
                              @bind-Expanded="_anagraficheExpanded"
                              Class="sigad-nav-group">
                     <div class="sigad-nav-group-items">
-                        @if (UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS"))
+                        @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
                         {
                             @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
                         }
-                        @if (UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS"))
+                        @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
                         {
                             @NavLink("Persone", Icons.Material.Filled.People, "/persone")
                             @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
                         }
-                        @if (UserContext.HasPermission("SIDAC.MODULE.INC.ACCESS"))
+                        @if (UserContext.HasPermission(PermessiSidac.Incarichi.Accesso))
                         {
                             @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
                         }
-                        @if (UserContext.HasPermission("SIDAC.MODULE.CERT.ACCESS"))
+                        @if (UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso))
                         {
                             @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                         }
@@ -87,7 +87,7 @@
             }
         }
 
-        @if (UserContext.HasPermission("SIDAC.MODULE.TIPO.ACCESS"))
+        @if (UserContext.HasPermission(PermessiSidac.Tipologiche.Accesso))
         {
             @if (IsCollapsed)
             {
@@ -104,15 +104,15 @@
         {
             @if (IsCollapsed)
             {
-                @if (UserContext.HasPermission("IAM.USERS.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestioneUtenti))
                 {
                     @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
                 }
-                @if (UserContext.HasPermission("IAM.ROLES.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestioneRuoli))
                 {
                     @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
                 }
-                @if (UserContext.HasPermission("IAM.PERMISSIONS.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestionePermessi))
                 {
                     @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
                 }
@@ -120,15 +120,15 @@
             else
             {
                 <p class="portal-sidebar__subgroup-label">AMMINISTRAZIONE</p>
-                @if (UserContext.HasPermission("IAM.USERS.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestioneUtenti))
                 {
                     @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")
                 }
-                @if (UserContext.HasPermission("IAM.ROLES.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestioneRuoli))
                 {
                     @NavLink("Gestione Ruoli", Icons.Material.Filled.AdminPanelSettings, "/admin/roles")
                 }
-                @if (UserContext.HasPermission("IAM.PERMISSIONS.MANAGE"))
+                @if (UserContext.HasPermission(PermessiIam.GestionePermessi))
                 {
                     @NavLink("Permessi", Icons.Material.Filled.VerifiedUser, "/admin/permissions")
                 }

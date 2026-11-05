@@ -28,11 +28,7 @@ internal sealed class UserContext
 
     public bool IsAuthenticated => Current is not null;
 
-    public bool IsAdmin => HasRole("SIGAD_ADMIN") || HasRole("SIGAD_SUPERADMIN");
-
-    public bool HasRole(string role)
-        => Current?.Roles.Any(r => string.Equals(r, role, StringComparison.OrdinalIgnoreCase)) ?? false;
-
+    // Nessun controllo sul nome del ruolo: le capacità vengono solo dai permessi IAM.
     public bool HasPermission(string permission)
         => Current?.Permissions.Any(p => string.Equals(p, permission, StringComparison.OrdinalIgnoreCase)) ?? false;
 

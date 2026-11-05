@@ -22,16 +22,17 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane;
 
 public partial class Dipendenti : ComponentBase
 {
 private bool CanRead =>
-        (UserContext.HasPermission("SIDAC.HR.DIP.LIST") || UserContext.HasPermission("SIDAC.HR.DIP.READ"))
-        && UserContext.HasPermission("SIDAC.HR.PERSONA.READ");
+        (UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Lettura))
+        && UserContext.HasPermission(PermessiSidac.RisorseUmane.LetturaPersona);
 
-    private bool CanCreate => UserContext.HasPermission("SIDAC.HR.DIP.CREATE");
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Creazione);
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     {
@@ -144,7 +145,7 @@ private bool CanRead =>
     {
         if (!CanCreate)
         {
-            _errorMessage = "Accesso negato: permesso HR.DIP.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare i dipendenti.";
             return;
         }
 

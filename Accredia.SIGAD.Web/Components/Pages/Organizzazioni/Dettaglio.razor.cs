@@ -130,7 +130,7 @@ public partial class Dettaglio : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Errore imprevisto: {ex.Message}";
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -235,7 +235,7 @@ public partial class Dettaglio : ComponentBase
         catch (Exception ex)
         {
             _sedi = Array.Empty<SedeItem>();
-            _sediError = $"Errore imprevisto: {ex.Message}";
+            _sediError = MessaggioErroreApi.Da(ex);
             _sediLoaded = false;
         }
         finally
@@ -290,7 +290,7 @@ public partial class Dettaglio : ComponentBase
         catch (Exception ex)
         {
             _unita = Array.Empty<UnitaOrganizzativaItem>();
-            _unitaError = $"Errore imprevisto: {ex.Message}";
+            _unitaError = MessaggioErroreApi.Da(ex);
             _unitaLoaded = false;
         }
         finally
@@ -355,7 +355,7 @@ public partial class Dettaglio : ComponentBase
         catch (Exception ex)
         {
             _incarichi = Array.Empty<IncaricoItem>();
-            _incarichiError = $"Errore imprevisto: {ex.Message}";
+            _incarichiError = MessaggioErroreApi.Da(ex);
             _incarichiLoaded = false;
         }
         finally
@@ -558,7 +558,7 @@ public partial class Dettaglio : ComponentBase
         catch (Exception ex)
         {
             _identificativi = Array.Empty<OrganizzazioneIdentificativoFiscaleItem>();
-            _identificativiError = $"Errore imprevisto: {ex.Message}";
+            _identificativiError = MessaggioErroreApi.Da(ex);
             _identificativiLoaded = false;
         }
         finally
@@ -714,7 +714,7 @@ public partial class Dettaglio : ComponentBase
         catch (Exception ex)
         {
             _gruppiIva = Array.Empty<GruppoIvaLinkedItem>();
-            _gruppiIvaError = $"Errore imprevisto: {ex.Message}";
+            _gruppiIvaError = MessaggioErroreApi.Da(ex);
             _gruppiIvaLoaded = false;
         }
         finally

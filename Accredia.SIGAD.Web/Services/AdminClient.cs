@@ -224,7 +224,7 @@ internal sealed class AdminClient
         }
         catch (Exception ex)
         {
-            return ApiResult<T>.Failure(ex.Message, null);
+            return ApiResult<T>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 }

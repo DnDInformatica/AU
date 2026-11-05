@@ -73,7 +73,7 @@ private bool _isLoading;
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error = MessaggioErroreApi.Da(ex);
         }
         finally
         {

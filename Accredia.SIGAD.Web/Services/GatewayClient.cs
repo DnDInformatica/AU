@@ -50,7 +50,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<TokenResponse>.Failure(ex.Message, null);
+            return ApiResult<TokenResponse>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -402,7 +402,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<DocumentoItem>.Failure(ex.Message, null);
+            return ApiResult<DocumentoItem>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -446,7 +446,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<DownloadedFileResult>.Failure(ex.Message, null);
+            return ApiResult<DownloadedFileResult>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -994,7 +994,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<T>.Failure(ex.Message, null);
+            return ApiResult<T>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -1024,7 +1024,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<T>.Failure(ex.Message, null);
+            return ApiResult<T>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -1054,7 +1054,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<T>.Failure(ex.Message, null);
+            return ApiResult<T>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -1081,7 +1081,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<object>.Failure(ex.Message, null);
+            return ApiResult<object>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 
@@ -1108,7 +1108,7 @@ internal sealed class GatewayClient
         }
         catch (Exception ex)
         {
-            return ApiResult<object>.Failure(ex.Message, null);
+            return ApiResult<object>.Failure(MessaggioErroreApi.Da(ex), null);
         }
     }
 }

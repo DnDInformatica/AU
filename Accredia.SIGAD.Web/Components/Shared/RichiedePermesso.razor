@@ -1,0 +1,19 @@
+@inject UserContext UserContext
+
+@* Mostra il contenuto della pagina solo a chi ha almeno uno dei permessi indicati;
+   altrimenti AccessDenied. La protezione dei dati resta nelle API: qui si evita
+   di aprire una pagina che risponderebbe solo con errori. I permessi sono già
+   caricati, perché MainLayout mostra la pagina solo dopo averli letti. *@
+@if (Permessi.Any(UserContext.HasPermission))
+{
+    @ChildContent
+}
+else
+{
+    <AccessDenied ShowContactHint="true" />
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Permessi { get; set; } = [];
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

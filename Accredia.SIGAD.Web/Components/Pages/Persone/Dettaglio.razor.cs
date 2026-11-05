@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Persone;
 
@@ -55,8 +56,8 @@ public partial class Dettaglio : ComponentBase
     private const int TabStorico = 8;
 
     private PersonaDetail? _detail;
-    private bool CanRead => UserContext.HasPermission("SIDAC.PERS.LIST") || UserContext.HasPermission("SIDAC.PERS.READ");
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
+    private bool CanRead => UserContext.HasPermission(PermessiSidac.Persone.Elenco) || UserContext.HasPermission(PermessiSidac.Persone.Lettura);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Persone.Modifica);
     private bool _isLoading = true;
     private string? _errorMessage;
     private int _activeTabIndex;

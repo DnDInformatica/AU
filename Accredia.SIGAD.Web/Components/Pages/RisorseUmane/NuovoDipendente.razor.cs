@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane;
 
@@ -35,7 +36,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
         new BreadcrumbItem("Nuovo")
     };
 
-    private bool CanCreateDipendente => UserContext.HasPermission("SIDAC.HR.DIP.CREATE");
+    private bool CanCreateDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Creazione);
 
     private sealed class FormModel
     {
@@ -139,7 +140,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     {
         if (!CanCreateDipendente)
         {
-            _errorMessage = "Accesso negato: permesso HR.DIP.CREATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di creare i dipendenti.";
             return;
         }
 
@@ -237,7 +238,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

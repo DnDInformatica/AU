@@ -1,11 +1,11 @@
 @page "/organizzazioni"
 @namespace Accredia.SIGAD.Web.Components.Pages.Organizzazioni
-
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Web
 
+<RichiedePermesso Permessi="@([PermessiSidac.Organizzazioni.Elenco, PermessiSidac.Organizzazioni.Lettura])">
 <MudContainer MaxWidth="MaxWidth.False">
 
     <PageHeader Title="Organizzazioni"
@@ -61,4 +61,4 @@
                            ListReturnUrl="@BuildReturnUrl()" />
 
 </MudContainer>
-
+</RichiedePermesso>
