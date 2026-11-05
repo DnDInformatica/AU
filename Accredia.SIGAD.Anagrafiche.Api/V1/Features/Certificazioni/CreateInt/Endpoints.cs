@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Certificazioni.GetByIdInt;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/certificazioni/{response.CertificazioneId}";
                 return Results.Created(location, response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.CERT.CREATE", "SIDAC.INC.CREATE")
                 .Produces<CertificazioneDetailDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());

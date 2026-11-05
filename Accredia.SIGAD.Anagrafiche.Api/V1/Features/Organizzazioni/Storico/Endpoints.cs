@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.Storico;
@@ -56,7 +57,7 @@ internal static class Endpoints
                 var response = await Handler.GetIncarichiAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<IReadOnlyList<IncaricoStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.INC.LIST", "SIDAC.INC.READ").Produces<IReadOnlyList<IncaricoStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
 
         ApiVersioning.MapVersionedGet(app, "/organizzazioni/{id:int}/storico/relazioni", "OrganizzazioniGetStoricoRelazioni", async (
                 int id,

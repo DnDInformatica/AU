@@ -73,7 +73,8 @@ if (app.Environment.IsDevelopment())
 
 // Health (unversioned)
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
-    .Produces<HealthResponse>(StatusCodes.Status200OK);
+    .Produces<HealthResponse>(StatusCodes.Status200OK)
+    .AllowAnonymous();
 
 app.MapEndpointConfigurations();
 

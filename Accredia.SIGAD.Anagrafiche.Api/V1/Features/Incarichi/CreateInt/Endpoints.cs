@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Incarichi.GetByIdInt;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/incarichi/{response.IncaricoId}";
                 return Results.Created(location, response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.INC.CREATE")
                 .Produces<IncaricoDetailDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
