@@ -47,8 +47,8 @@ public partial class Modifica : ComponentBase
     }
 
     private PersonaDetail? _detail;
-    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Persone.Modifica);
-    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Persone.Cancellazione);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSigad.Persone.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSigad.Persone.Cancellazione);
     private bool _isLoading = true;
     private string? _errorMessage;
     private readonly FormModel _model = new();

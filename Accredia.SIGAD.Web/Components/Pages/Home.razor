@@ -11,7 +11,7 @@
     @* Niente KPI né attività recenti finché non ci sono dati veri: numeri fissi
        nel codice farebbero credere a valori che non esistono. *@
     <MudGrid Spacing="3">
-        @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
+        @if (UserContext.HasPermission(PermessiSigad.Organizzazioni.Accesso))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
@@ -21,7 +21,7 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
+        @if (UserContext.HasPermission(PermessiSigad.Persone.Accesso))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">

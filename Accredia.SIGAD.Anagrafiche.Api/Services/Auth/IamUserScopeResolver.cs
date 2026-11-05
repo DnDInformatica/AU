@@ -27,8 +27,8 @@ WHERE EntraObjectId = @Oid
 
     // Contratto di lettura di IAM (script IAM 20261105_08): le viste dicono che
     // cosa vale oggi (utente e ruolo attivi, assegnazione non scaduta, organismo
-    // non cancellato) e applicano la regola dei destinatari: SIDAC e IAM sono
-    // solo per uso interno. Solo i permessi delle applicazioni SIDAC e IAM, dai
+    // non cancellato) e applicano la regola dei destinatari: SIGAD e IAM sono
+    // solo per uso interno. Solo i permessi delle applicazioni SIGAD e IAM, dai
     // ruoli globali: i permessi di un'altra applicazione (PORTALE.*) qui non
     // valgono. IAM resta finche' le pagine di amministrazione di SIGAD non
     // passano alla console IAM.
@@ -37,7 +37,7 @@ SELECT DISTINCT Permesso
 FROM IAM.vw_PermessiEffettivi
 WHERE UtenteId = @UtenteId
   AND Origine = N'GLOBALE'
-  AND Applicazione IN (N'SIDAC', N'IAM');";
+  AND Applicazione IN (N'SIGAD', N'IAM');";
 
     private const string SqlOrganismi = @"
 SELECT DISTINCT OrganizzazioneId

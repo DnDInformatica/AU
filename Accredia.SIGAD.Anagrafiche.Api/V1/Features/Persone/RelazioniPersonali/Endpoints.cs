@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Persone.RelazioniPersonali;
 
@@ -19,7 +20,7 @@ internal static class Endpoints
                 var response = await Handler.LookupsAsync(command, connectionFactory, cancellationToken);
                 return Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<TipoRelazionePersonaleLookupItem>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
 
@@ -36,7 +37,7 @@ internal static class Endpoints
                 var response = await Handler.ListAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaRelazionePersonaleDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -65,7 +66,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.CREATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Creazione)
                 .Produces<PersonaRelazionePersonaleDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)
@@ -95,7 +96,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.UPDATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Modifica)
                 .Produces<PersonaRelazionePersonaleDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)
@@ -120,7 +121,7 @@ internal static class Endpoints
                     _ => Results.NoContent()
                 };
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.DELETE")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Cancellazione)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

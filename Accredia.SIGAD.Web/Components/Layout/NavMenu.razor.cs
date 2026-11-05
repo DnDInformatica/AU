@@ -26,17 +26,17 @@ public partial class NavMenu : ComponentBase
     private bool _isCollapsed => IsCollapsed;
 
     private bool _hasAnagraficheAccess =>
-        UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso)
-        || UserContext.HasPermission(PermessiSidac.Persone.Accesso)
-        || UserContext.HasPermission(PermessiSidac.Incarichi.Accesso)
-        || UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso);
+        UserContext.HasPermission(PermessiSigad.Organizzazioni.Accesso)
+        || UserContext.HasPermission(PermessiSigad.Persone.Accesso)
+        || UserContext.HasPermission(PermessiSigad.Incarichi.Accesso)
+        || UserContext.HasPermission(PermessiSigad.Certificazioni.Accesso);
 
     private bool _hasRuAccess =>
-        UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Elenco)
-        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Lettura)
-        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Creazione)
-        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Modifica)
-        || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Cancellazione);
+        UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Elenco)
+        || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Lettura)
+        || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Creazione)
+        || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Modifica)
+        || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Cancellazione);
 
     // Le capacità vengono dai permessi IAM, mai dal nome del ruolo.
     private bool _hasAdminAccess => UserContext.HasPermission(PermessiIam.AccessoConsole);

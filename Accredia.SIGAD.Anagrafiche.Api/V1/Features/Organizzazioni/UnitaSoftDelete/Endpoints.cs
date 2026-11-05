@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.UnitaSoftDelete;
 
@@ -25,7 +26,7 @@ internal static class Endpoints
                 var ok = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return ok ? Results.NoContent() : Results.NotFound();
             },
-            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Organizzazioni.Modifica)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

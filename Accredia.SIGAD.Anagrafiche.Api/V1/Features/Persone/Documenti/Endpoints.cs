@@ -2,6 +2,7 @@ using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.Services.DocumentStorage;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Persone.Documenti;
 
@@ -25,7 +26,7 @@ internal static class Endpoints
                 var items = await Handler.ListAsync(command, connectionFactory, cancellationToken);
                 return items is null ? Results.NotFound() : Results.Ok(items);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.READ", "SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.DocumentiPersona.Lettura, PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaDocumentoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -81,7 +82,7 @@ internal static class Endpoints
                         statusCode: StatusCodes.Status503ServiceUnavailable);
                 }
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.CREATE", "SIDAC.PERS.CREATE", "SIDAC.PERS.UPDATE")
+            builder => builder.RichiedePermesso(PermessiSigad.DocumentiPersona.Caricamento, PermessiSigad.Persone.Creazione, PermessiSigad.Persone.Modifica)
                 .DisableAntiforgery()
                 .Accepts<UploadRequest>("multipart/form-data")
                 .Produces<PersonaDocumentoDto>(StatusCodes.Status201Created)
@@ -134,7 +135,7 @@ internal static class Endpoints
                         statusCode: StatusCodes.Status503ServiceUnavailable);
                 }
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.READ", "SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.DocumentiPersona.Lettura, PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status503ServiceUnavailable)
@@ -162,7 +163,7 @@ internal static class Endpoints
                     _ => Results.NoContent()
                 };
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.DELETE", "SIDAC.PERS.DELETE")
+            builder => builder.RichiedePermesso(PermessiSigad.DocumentiPersona.Eliminazione, PermessiSigad.Persone.Cancellazione)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

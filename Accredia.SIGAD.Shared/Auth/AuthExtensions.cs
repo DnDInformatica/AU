@@ -58,7 +58,7 @@ public static class AuthExtensions
                     if (DevAuth.IsEnabled(env)) return DevAuth.Schema;
                 }
 #endif
-                // SIDAC e' solo per uso interno: nessuno schema per External ID.
+                // SIGAD e' solo per uso interno: nessuno schema per External ID.
                 return AuthSchemes.Workforce;
             };
         });

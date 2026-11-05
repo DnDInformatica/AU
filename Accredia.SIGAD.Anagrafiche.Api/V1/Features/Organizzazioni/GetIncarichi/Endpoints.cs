@@ -1,5 +1,6 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.GetIncarichi;
 
@@ -23,7 +24,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.INC.LIST", "SIDAC.INC.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Incarichi.Elenco, PermessiSigad.Incarichi.Lettura)
                 .Produces<IReadOnlyList<IncaricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

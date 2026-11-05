@@ -15,9 +15,9 @@ namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Incarichi
 {
-    private bool CanRead => UserContext.HasPermission(PermessiSidac.Incarichi.Elenco) || UserContext.HasPermission(PermessiSidac.Incarichi.Lettura);
-    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Incarichi.Creazione);
-    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Incarichi.Cancellazione);
+    private bool CanRead => UserContext.HasPermission(PermessiSigad.Incarichi.Elenco) || UserContext.HasPermission(PermessiSigad.Incarichi.Lettura);
+    private bool CanCreate => UserContext.HasPermission(PermessiSigad.Incarichi.Creazione);
+    private bool CanDelete => UserContext.HasPermission(PermessiSigad.Incarichi.Cancellazione);
 
     [Parameter, SupplyParameterFromQuery(Name = "q")]
     public string? Q { get; set; }

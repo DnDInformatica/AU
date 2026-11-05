@@ -2,6 +2,7 @@ using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Tipologiche.Api;
 using Accredia.SIGAD.Tipologiche.Api.Database;
 using Accredia.SIGAD.Tipologiche.Api.V1.Features.Lookups;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Tipologiche.Api.V1.Features.Tipologiche.List;
 
@@ -21,7 +22,7 @@ internal static class Endpoints
 
                 return await Handler.Handle(query, metadataProvider, cancellationToken);
             },
-            builder => builder.RichiedePermesso("SIDAC.TIPO.LIST", "SIDAC.TIPO.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Tipologiche.Elenco, PermessiSigad.Tipologiche.Lettura)
                 .Produces<ListResponse>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
     }

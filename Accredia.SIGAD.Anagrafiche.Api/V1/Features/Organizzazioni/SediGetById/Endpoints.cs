@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.GetSedi;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.SediGetById;
 
@@ -24,7 +25,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Organizzazioni.Elenco, PermessiSigad.Organizzazioni.Lettura)
                 .Produces<SedeDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

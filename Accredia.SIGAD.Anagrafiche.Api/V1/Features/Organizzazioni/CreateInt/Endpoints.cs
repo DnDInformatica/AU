@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.CreateInt;
 
@@ -30,7 +31,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/organizzazioni/{response.OrganizzazioneId}";
                 return Results.Created(location, response);
             },
-            builder => builder.RichiedePermesso("SIDAC.ORG.CREATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Organizzazioni.Creazione)
                 .Produces<V1.Features.Organizzazioni.GetByIdInt.OrganizzazioneDetailDto>(StatusCodes.Status201Created)
                 .ProducesValidationProblem());
     }

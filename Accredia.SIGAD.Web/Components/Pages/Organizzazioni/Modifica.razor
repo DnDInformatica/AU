@@ -7,7 +7,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
-<RichiedePermesso Permessi="@([PermessiSidac.Organizzazioni.Modifica])">
+<RichiedePermesso Permessi="@([PermessiSigad.Organizzazioni.Modifica])">
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica organizzazione"
                 Subtitle="@(_detail is null ? $"Organizzazione #{Id}" : _detail.Denominazione)"

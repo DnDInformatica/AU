@@ -28,7 +28,7 @@ namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Modifica : ComponentBase
 {
-    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Incarichi.Modifica);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSigad.Incarichi.Modifica);
 
     [Parameter] public int Id { get; set; }
 

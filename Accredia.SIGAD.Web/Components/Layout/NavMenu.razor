@@ -32,20 +32,20 @@
         {
             @if (IsCollapsed)
             {
-                @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
+                @if (UserContext.HasPermission(PermessiSigad.Organizzazioni.Accesso))
                 {
                     @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
                 }
-                @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
+                @if (UserContext.HasPermission(PermessiSigad.Persone.Accesso))
                 {
                     @NavLink("Persone", Icons.Material.Filled.People, "/persone")
                     @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
                 }
-                @if (UserContext.HasPermission(PermessiSidac.Incarichi.Accesso))
+                @if (UserContext.HasPermission(PermessiSigad.Incarichi.Accesso))
                 {
                     @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
                 }
-                @if (UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso))
+                @if (UserContext.HasPermission(PermessiSigad.Certificazioni.Accesso))
                 {
                     @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                 }
@@ -61,20 +61,20 @@
                              @bind-Expanded="_anagraficheExpanded"
                              Class="sigad-nav-group">
                     <div class="sigad-nav-group-items">
-                        @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
+                        @if (UserContext.HasPermission(PermessiSigad.Organizzazioni.Accesso))
                         {
                             @NavLink("Organizzazioni", Icons.Material.Filled.Business, "/organizzazioni")
                         }
-                        @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
+                        @if (UserContext.HasPermission(PermessiSigad.Persone.Accesso))
                         {
                             @NavLink("Persone", Icons.Material.Filled.People, "/persone")
                             @NavLink("Documenti", Icons.Material.Filled.Folder, "/documenti")
                         }
-                        @if (UserContext.HasPermission(PermessiSidac.Incarichi.Accesso))
+                        @if (UserContext.HasPermission(PermessiSigad.Incarichi.Accesso))
                         {
                             @NavLink("Incarichi", Icons.Material.Filled.Badge, "/incarichi")
                         }
-                        @if (UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso))
+                        @if (UserContext.HasPermission(PermessiSigad.Certificazioni.Accesso))
                         {
                             @NavLink("Certificazioni", Icons.Material.Filled.Badge, "/certificazioni")
                         }
@@ -87,7 +87,7 @@
             }
         }
 
-        @if (UserContext.HasPermission(PermessiSidac.Tipologiche.Accesso))
+        @if (UserContext.HasPermission(PermessiSigad.Tipologiche.Accesso))
         {
             @if (IsCollapsed)
             {
