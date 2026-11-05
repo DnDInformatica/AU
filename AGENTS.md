@@ -148,5 +148,12 @@ Prima di validare le modifiche, verificare che:
 
 Fine delle istruzioni.
 
+## Avvio di ogni sessione: documentazione SIAC
+
+- Prima di qualsiasi analisi dei dati SIAC, leggere le Extended Properties `MS_Description` pertinenti nel database SQL Server di staging `accredia_staging_siac`, per le tabelle e colonne coinvolte. Considerarle documentazione del significato, della granularità, della provenienza e delle trasformazioni dei dati.
+- Verificare i dati e la struttura nella sorgente PostgreSQL `siac_anthesi` quando l'analisi riguarda il sistema SIAC originale. Distinguere sempre le descrizioni dello staging dai dati della sorgente: una Extended Property non dimostra da sola che il dato sorgente abbia ancora lo stesso contenuto.
+- Se una descrizione manca, è incompleta o contraddice i dati osservati, segnalarlo esplicitamente; non dedurre il significato dei campi dal solo nome.
+- Applicare questa lettura anche quando SIAC viene confrontato con FileMaker, SIDAC o il Modello B. Citare nell'analisi le tabelle, le colonne e le Extended Properties effettivamente consultate.
+
 
 

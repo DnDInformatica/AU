@@ -1,74 +1,25 @@
-﻿@font-face {
-    font-family: "Montserrat";
-    src: url("/brand/fonts/Montserrat-Bold.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* Temporary: map 800 to existing 700 face until UX team provides ExtraBold asset. */
-@font-face {
-    font-family: "Montserrat";
-    src: url("/brand/fonts/Montserrat-Bold.woff2") format("woff2");
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Open Sans";
-    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* Temporary: let browser synthesize weights until UX team provides 600/700 assets. */
-@font-face {
-    font-family: "Open Sans";
-    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Open Sans";
-    src: url("/brand/fonts/OpenSans-Regular.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Roboto Mono";
-    src: url("/brand/fonts/RobotoMono-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
 :root {
-    --sigad-graphite: #1a1a2e;
-    --sigad-ocra: #d4a574;
+    /* Alias ai token condivisi IO-01-01 (accredia-tokens.css) */
+    --sigad-graphite: var(--acc-grafite, #2B2B21);
+    --sigad-ocra: var(--acc-ocra, #DE7E00);
     --sigad-ecru: #f8f7f5;
     --sigad-white: #ffffff;
-    --sigad-text-secondary: #666666;
-    --sigad-text-disabled: #bdbdbd;
-    --sigad-info: #0277bd;
-    --sigad-success: #2e7d32;
-    --sigad-warning: #f57c00;
-    --sigad-error: #c62828;
-    /* Mockup-inspired primitives */
-    --sigad-line: rgba(26, 26, 46, 0.12);
-    --sigad-shadow: 0 10px 28px rgba(26, 26, 46, 0.10);
+    --sigad-text-secondary: var(--acc-text-secondary, #5F5E5A);
+    --sigad-text-disabled: var(--acc-text-disabled, #BDBDBD);
+    --sigad-info: var(--acc-blu-indaco, #004C97);
+    --sigad-success: var(--acc-verde, #008264);
+    --sigad-warning: var(--acc-ocra-text, #8A5A00);
+    --sigad-error: var(--acc-rosso, #BA0C2F);
+    /* Primitive neutre */
+    --sigad-line: rgba(43, 43, 33, 0.12);
+    --sigad-shadow: 0 10px 28px rgba(43, 43, 33, 0.10);
     --sigad-radius: 16px;
-    --sigad-focus: var(--sigad-ocra);
+    --sigad-focus: var(--acc-focus-ring, #2B2B21);
 }
 
 html, body {
     height: 100%;
-    font-family: "Open Sans", Arial, sans-serif;
+    font-family: "Open Sans Accredia", Arial, sans-serif;
     background-color: var(--sigad-ecru);
     color: var(--sigad-graphite);
 }
@@ -85,6 +36,7 @@ a {
 
 .sigad-shell {
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 .sigad-appbar {
@@ -127,7 +79,7 @@ a {
 
 .sigad-topbar-collapse {
     margin-right: 4px;
-    border: 1px solid rgba(26, 26, 46, 0.12);
+    border: 1px solid rgba(43, 43, 33, 0.12);
     border-radius: 10px;
     width: 38px;
     height: 38px;
@@ -140,7 +92,7 @@ a {
 }
 
 .sigad-app-title {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     letter-spacing: 0.08em;
     margin-left: 8px;
 }
@@ -173,7 +125,7 @@ a {
     justify-content: space-between;
     margin-top: 12px;
     padding-top: 8px;
-    border-top: 1px solid rgba(26, 26, 46, 0.08);
+    border-top: 1px solid rgba(43, 43, 33, 0.08);
 }
 
 .sigad-search-group-title {
@@ -195,7 +147,7 @@ a {
 }
 
 .sigad-search-item:hover {
-    background-color: rgba(26, 26, 46, 0.06);
+    background-color: rgba(43, 43, 33, 0.06);
 }
 
 .sigad-search-subtitle {
@@ -222,14 +174,14 @@ a {
     text-transform: none;
     border-radius: 999px;
     padding: 6px 10px;
-    border: 1px solid rgba(26, 26, 46, 0.10);
+    border: 1px solid rgba(43, 43, 33, 0.10);
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(8px);
 }
 
     .sigad-user-button:hover {
-        background: rgba(212, 165, 116, 0.10);
-        border-color: rgba(212, 165, 116, 0.45);
+        background: rgba(222, 126, 0, 0.10);
+        border-color: rgba(222, 126, 0, 0.45);
     }
 
 .sigad-avatar {
@@ -244,10 +196,12 @@ a {
     background: var(--sigad-graphite);
     color: rgba(255, 255, 255, 0.87);
     overflow: hidden;
+    overflow-x: hidden;
 }
 
 .sigad-nav {
     padding: 12px 8px;
+    overflow-x: hidden;
 }
 
 .sigad-nav-brand {
@@ -300,7 +254,7 @@ a {
 }
 
 .sigad-brand-title {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
     letter-spacing: 0.04em;
     color: rgba(255, 255, 255, 0.87);
@@ -326,8 +280,8 @@ a {
     }
 
     .sigad-collapse-btn:hover {
-        background: rgba(212, 165, 116, 0.12);
-        border-color: rgba(212, 165, 116, 0.55);
+        background: rgba(222, 126, 0, 0.12);
+        border-color: rgba(222, 126, 0, 0.55);
     }
 
 .sigad-nav-section {
@@ -340,107 +294,16 @@ a {
     text-transform: uppercase;
 }
 
-.sigad-nav-link {
-    border-radius: 14px;
-    margin: 4px 8px;
-    padding: 10px 12px;
-    min-height: 44px;
-}
-
-    .sigad-nav-link.mud-nav-link-active,
-    .sigad-nav-link.sigad-nav-active {
-        background-color: rgba(212, 165, 116, 0.2);
-        outline: 1px solid rgba(212, 165, 116, 0.35);
-        position: relative;
-    }
-
-.sigad-nav-active {
-    background-color: rgba(212, 165, 116, 0.2);
-}
-
-.sigad-nav-link.mud-nav-link-active::before,
-.sigad-nav-link.sigad-nav-active::before {
-    content: "";
-    position: absolute;
-    left: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 22px;
-    border-radius: 10px;
-    background: var(--sigad-ocra);
-    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.16);
-}
-
-.sigad-nav-link:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-/* MudNavLink internal layout: icons and text for dark drawer */
-.sigad-nav-link .mud-nav-link-icon {
-    color: rgba(255, 255, 255, 0.54);
-    min-width: 22px;
-    margin-right: 10px;
-}
-
-.sigad-nav-link .mud-nav-link-text {
-    font-weight: 800;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: rgba(255, 255, 255, 0.87);
-}
-
-.sigad-nav-link:hover .mud-nav-link-icon {
-    color: var(--sigad-ocra);
-}
-
-.sigad-nav-link.mud-nav-link-active .mud-nav-link-icon,
-.sigad-nav-link.sigad-nav-active .mud-nav-link-icon {
-    color: var(--sigad-ocra);
-}
-
-/* Collapsed drawer: icon tiles */
-.sigad-drawer.sigad-drawer-collapsed .sigad-nav-link {
-    width: 56px;
-    height: 48px;
-    margin: 6px auto;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.mud-nav-link-active,
-    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.sigad-nav-active {
-        outline: 1px solid rgba(212, 165, 116, 0.35);
-    }
-
-        /* The left active marker doesn't work well in collapsed mode. */
-        .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.mud-nav-link-active::before,
-        .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link.sigad-nav-active::before {
-            display: none;
-        }
-
-    .sigad-drawer.sigad-drawer-collapsed .sigad-nav-link .mud-nav-link-icon {
-        min-width: auto;
-        margin: 0;
-        width: 24px;
-        height: 24px;
-        display: grid;
-        place-items: center;
-        line-height: 0;
-    }
+/* NavMenu link visual states are defined in NavMenu.razor.css to keep styles component-scoped. */
 
 .sigad-nav-tooltip .mud-tooltip-content {
-    font-family: "Open Sans", Arial, sans-serif;
+    font-family: "Open Sans Accredia", Arial, sans-serif;
     font-weight: 700;
     font-size: 12px;
     letter-spacing: 0.04em;
     padding: 8px 10px;
     border-radius: 12px;
-    background: rgba(26, 26, 46, 0.92);
+    background: rgba(43, 43, 33, 0.92);
     color: var(--sigad-white);
     box-shadow: var(--sigad-shadow);
 }
@@ -451,16 +314,16 @@ a {
 }
 
     .sigad-admin-rolelist .mud-list-item:hover {
-        background: rgba(26, 26, 46, 0.04);
+        background: rgba(43, 43, 33, 0.04);
     }
 
     .sigad-admin-rolelist .mud-list-item.mud-selected-item {
-        background: rgba(212, 165, 116, 0.18);
-        border: 1px solid rgba(212, 165, 116, 0.55);
+        background: rgba(222, 126, 0, 0.18);
+        border: 1px solid rgba(222, 126, 0, 0.55);
     }
 
 .sigad-auth-layout .mud-appbar {
-    border-bottom: 1px solid rgba(26, 26, 46, 0.08);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.08);
 }
 
 .sigad-auth-content {
@@ -470,7 +333,8 @@ a {
 }
 
 .main-content {
-    padding: 24px 32px 40px;
+    /* Keep content below fixed MudAppBar; preserve design spacing. */
+    padding: calc(var(--mud-appbar-height, 64px) + 24px) 32px 40px;
     max-width: 1440px;
     margin: 0 auto;
     width: 100%;
@@ -486,7 +350,7 @@ a {
 }
 
 .sigad-page-title {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
 }
 
@@ -524,7 +388,7 @@ a {
     }
 
     .sigad-breadcrumb-link:focus-visible {
-        outline: 2px solid var(--sigad-ocra, #d4a574);
+        outline: 2px solid var(--sigad-ocra, #DE7E00);
         outline-offset: 2px;
         border-radius: 2px;
     }
@@ -570,17 +434,17 @@ a {
 }
 
 .sigad-table-wrap .mud-table thead th {
-    font-family: "Open Sans", Arial, sans-serif;
+    font-family: "Open Sans Accredia", Arial, sans-serif;
     font-weight: 800;
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgba(26, 26, 46, 0.70);
-    border-bottom: 1px solid rgba(26, 26, 46, 0.10);
+    color: rgba(43, 43, 33, 0.70);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.10);
 }
 
 .sigad-table-wrap .mud-table tbody tr:hover {
-    background: rgba(212, 165, 116, 0.06);
+    background: rgba(222, 126, 0, 0.06);
 }
 
 .sigad-state-chip {
@@ -723,7 +587,7 @@ a {
 }
 
 .sigad-kpi-value {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
 }
 
@@ -748,7 +612,7 @@ a {
 .sigad-quickdrawer .mud-drawer-paper {
     border-left: 1px solid var(--sigad-line);
     background: var(--sigad-white);
-    box-shadow: 0 18px 44px rgba(26, 26, 46, 0.22);
+    box-shadow: 0 18px 44px rgba(43, 43, 33, 0.22);
 }
 
 .sigad-quickdrawer-header {
@@ -757,7 +621,7 @@ a {
     justify-content: space-between;
     gap: 12px;
     padding: 16px 16px 10px 16px;
-    border-bottom: 1px solid rgba(26, 26, 46, 0.10);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.10);
 }
 
 .sigad-quickdrawer-body {
@@ -766,7 +630,7 @@ a {
 
 .sigad-quickdrawer-actions {
     padding: 12px 16px 16px 16px;
-    border-top: 1px solid rgba(26, 26, 46, 0.10);
+    border-top: 1px solid rgba(43, 43, 33, 0.10);
 }
 
 /* ── Design System §4.2: Hero Card ── */
@@ -784,7 +648,7 @@ a {
 }
 
 .sigad-hero-title {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
 }
 
@@ -830,7 +694,7 @@ a {
 
 /* ── Design System §5.3: Monospace column (P.IVA, CF, codes) ── */
 .sigad-mono {
-    font-family: "Roboto Mono", monospace;
+    font-family: "Roboto Mono Accredia", monospace;
     font-size: 0.85rem;
     letter-spacing: 0.02em;
 }
@@ -882,6 +746,74 @@ a {
     }
 
     .main-content {
-        padding: 16px 20px 32px;
+        padding: calc(var(--mud-appbar-height, 56px) + 16px) 20px 32px;
     }
+}
+
+/* Shell istituzionale condivisa con Accredia.Portal.
+   Queste regole sono globali perché MudAppBar e MudDrawer sono root generati
+   da MudBlazor e non ereditano sempre lo scope CSS del layout Razor. */
+.sigad-appbar {
+    height: 80px !important;
+    min-height: 80px !important;
+    background: rgba(255, 255, 255, 0.97) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.72);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.12);
+    box-shadow: 0 10px 28px rgba(43, 43, 33, 0.05) !important;
+    backdrop-filter: blur(18px);
+}
+
+.sigad-appbar .mud-toolbar {
+    height: 78px !important;
+    min-height: 78px !important;
+    padding-inline: 24px;
+}
+
+.sigad-drawer {
+    top: 80px !important;
+    height: calc(100vh - 80px) !important;
+}
+
+@media (max-width: 960px) {
+    .sigad-appbar,
+    .sigad-appbar .mud-toolbar {
+        height: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .sigad-drawer {
+        top: 64px !important;
+        height: calc(100vh - 64px) !important;
+    }
+
+    /* Su tablet/mobile il drawer mini non deve riservare 72 px al contenuto. */
+    .sigad-drawer.mud-drawer--closed {
+        width: 280px !important;
+        transform: translateX(-100%);
+        visibility: hidden;
+    }
+
+    .sigad-drawer.mud-drawer--open {
+        width: 280px !important;
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 0 18px 60px rgba(43, 43, 33, 0.24);
+    }
+
+    .mud-layout > .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* ── Scroll singolo a livello finestra (come Portale): niente doppia scrollbar ── */
+.mud-main-content {
+    overflow: visible !important;
+}
+.mud-layout {
+    overflow-y: visible !important;
+}
+html, body {
+    overflow: hidden !important;
+    height: 100%;
 }

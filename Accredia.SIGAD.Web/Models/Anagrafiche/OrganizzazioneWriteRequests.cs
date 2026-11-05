@@ -23,3 +23,17 @@ public sealed record UpdateOrganizzazioneRequest(
     string? OggettoSociale,
     DateTime? DataIscrizioneIscrizioneRI,
     DateTime? DataCostituzione);
+
+public sealed record CreateOrganizzazioneIdentificativoRequest(
+    string PaeseISO2,
+    string TipoIdentificativo,
+    string Valore,
+    bool Principale,
+    string? Note);
+
+public sealed record UpdateOrganizzazioneIdentificativoRequest(
+    string PaeseISO2,
+    string TipoIdentificativo,
+    string Valore,
+    bool Principale,
+    string? Note);

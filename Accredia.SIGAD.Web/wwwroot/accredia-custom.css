@@ -8,20 +8,17 @@
    ======================================== */
 
 :root {
-    --accredia-primary: #00519E;
-    --accredia-secondary: #E30613;
-    --accredia-accent: #F39200;
-}
-
-.mud-theme-primary,
-.mud-theme-provider {
-    --mud-palette-primary: var(--accredia-primary) !important;
+    /* Alias ai token condivisi IO-01-01 (accredia-tokens.css).
+       Nessun override di --mud-palette-*: il colore passa solo dal MudTheme. */
+    --accredia-primary: var(--acc-grafite, #2B2B21);
+    --accredia-secondary: var(--acc-rosso, #BA0C2F);
+    --accredia-accent: var(--acc-ocra, #DE7E00);
 }
 
 .font-monospace {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--acc-font-meta, "Roboto Mono Accredia"), monospace;
     font-size: 0.875rem;
-    color: #555;
+    color: var(--acc-text-secondary, #5F5E5A);
 }
 
 .fw-bold {
@@ -288,7 +285,7 @@
 }
 
 .det-hero-name {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
     font-size: 1.65rem;
     line-height: 1.15;
@@ -312,7 +309,7 @@
     align-items: stretch;
     gap: 0;
     margin-top: 16px;
-    background: rgba(26, 26, 46, 0.025);
+    background: rgba(43, 43, 33, 0.025);
     border: 1px solid var(--sigad-line);
     border-radius: 12px;
     padding: 10px 0;
@@ -393,14 +390,14 @@
     justify-content: flex-end;
     gap: 2px;
     padding: 4px 12px;
-    background: rgba(26, 26, 46, 0.02);
-    border-bottom: 1px solid rgba(26, 26, 46, 0.05);
+    background: rgba(43, 43, 33, 0.02);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.05);
 }
 
 /* ── Tab header (orizzontale — Position.Top) ── */
 .det-tabs .mud-tabs-tabbar {
     border-bottom: 1px solid var(--sigad-line);
-    background: rgba(26, 26, 46, 0.015);
+    background: rgba(43, 43, 33, 0.015);
 }
 
 /* ── Tab header (verticale — Position.Left):
@@ -408,7 +405,7 @@
 .det-tabs.mud-tabs-vertical .mud-tabs-tabbar {
     border-bottom: none;
     border-right: 1px solid var(--sigad-line);
-    background: rgba(26, 26, 46, 0.015);
+    background: rgba(43, 43, 33, 0.015);
 }
 
 /* ── Vertical tabs: mantiene lo stesso allineamento del mode top ── */
@@ -419,7 +416,7 @@
 
 /* ── Tab button styling ── */
 .det-tabs .mud-tab {
-    font-family: "Open Sans", Arial, sans-serif;
+    font-family: "Open Sans Accredia", Arial, sans-serif;
     font-weight: 700;
     font-size: 0.82rem;
     letter-spacing: 0.02em;
@@ -432,7 +429,7 @@
 
 .det-tabs .mud-tab:hover {
     color: var(--sigad-graphite);
-    background: rgba(212, 165, 116, 0.06);
+    background: rgba(222, 126, 0, 0.06);
 }
 
 .det-tabs .mud-tab.mud-tab-active {
@@ -536,8 +533,8 @@
 
 /* ── SECTION CARD (inside tabs) ── */
 .det-section-card {
-    background: rgba(26, 26, 46, 0.018);
-    border: 1px solid rgba(26, 26, 46, 0.07);
+    background: rgba(43, 43, 33, 0.018);
+    border: 1px solid rgba(43, 43, 33, 0.07);
     border-radius: 14px;
     padding: 20px 24px;
     height: 100%;
@@ -551,7 +548,7 @@
     gap: 8px;
     margin-bottom: 16px;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(26, 26, 46, 0.06);
+    border-bottom: 1px solid rgba(43, 43, 33, 0.06);
 }
 
 .det-section-icon {
@@ -560,7 +557,7 @@
 }
 
 .det-section-title {
-    font-family: "Montserrat", Arial, sans-serif;
+    font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
     font-size: 0.95rem;
     letter-spacing: 0.01em;
@@ -569,7 +566,7 @@
 
 .det-section-divider {
     height: 1px;
-    background: rgba(26, 26, 46, 0.08);
+    background: rgba(43, 43, 33, 0.08);
     margin: 16px 0;
 }
 

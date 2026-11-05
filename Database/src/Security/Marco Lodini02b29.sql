@@ -1,0 +1,5 @@
+CREATE USER [Marco Lodini02b29] FOR EXTERNAL PROVIDER;
+
+
+GO
+

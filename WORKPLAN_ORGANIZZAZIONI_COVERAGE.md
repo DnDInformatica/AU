@@ -21,6 +21,15 @@ Stati ammessi:
 - `DONE`
 - `REOPEN`
 
+## Guardrail UI Nav (obbligatorio)
+
+- Non alterare la configurazione hover nativa MudBlazor validata.
+- Preservare:
+  - `Accredia.SIGAD.Web/Components/Theme/SigadTheme.cs` (`HoverOpacity = 0.08`, `ActionDefault = "rgba(255, 255, 255, 0.87)"`)
+  - `Accredia.SIGAD.Web/Components/Layout/NavMenu.razor` (`MudNavMenu Color="Color.Primary" Bordered="true"`)
+  - `Accredia.SIGAD.Web/Components/Layout/NavMenu.razor.css` (`--mud-palette-action-default-hover` per drawer scuro)
+- Eventuali modifiche su hover/selezione menu richiedono verifica visiva esplicita prima/dopo.
+
 ## Criterio di completamento tabella
 
 Una tabella e "coperta" quando:

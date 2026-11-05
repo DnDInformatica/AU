@@ -1,0 +1,52 @@
+/* ========================================
+   GlobalSearch.razor - Scoped Styles  
+   Data: 18 Febbraio 2026
+   Loading states e visual feedback
+   ======================================== */
+
+/* ── LOADING SPINNER CUSTOM COLOR ── */
+::deep .sigad-search .mud-progress-circular {
+    color: var(--sigad-ocra, #DE7E00);
+}
+
+::deep .sigad-search .mud-progress-circular svg circle {
+    stroke: var(--sigad-ocra, #DE7E00);
+}
+
+/* ── FOCUS STATE ENHANCEMENT ── */
+::deep .sigad-search-input:focus-within {
+    outline: 2px solid var(--sigad-ocra, #DE7E00);
+    outline-offset: 2px;
+    border-radius: 24px;
+}
+
+/* ── SKELETON LOADING ── */
+::deep .sigad-search-loading-skeleton {
+    height: 48px;
+    background: linear-gradient(
+        90deg,
+        rgba(43, 43, 33, 0.04) 25%,
+        rgba(222, 126, 0, 0.08) 50%,
+        rgba(43, 43, 33, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+@keyframes loading-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 600px) {
+    ::deep .sigad-search-input .mud-input-control {
+        font-size: 13px;
+    }
+}

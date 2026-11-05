@@ -1,0 +1,5 @@
+CREATE USER [Accredia-AzureSQL-Dev] FOR EXTERNAL PROVIDER;
+
+
+GO
+

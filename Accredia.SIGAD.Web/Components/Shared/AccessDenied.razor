@@ -23,16 +23,3 @@
         </MudButton>
     </MudAlert>
 </MudContainer>
-
-@code {
-    [Parameter] public string Title { get; set; } = "Accesso Negato";
-    [Parameter] public string Message { get; set; } = "Non hai i permessi necessari per accedere a questa pagina.";
-
-    [Parameter] public bool ShowContactHint { get; set; }
-
-    [Parameter] public string ReturnHref { get; set; } = "/";
-    [Parameter] public string ReturnLabel { get; set; } = "Torna alla Home";
-
-    [Parameter] public string? Class { get; set; }
-}
-

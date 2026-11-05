@@ -1,0 +1,37 @@
+<div>
+    <div class="sigad-search-group">
+        <MudText Typo="Typo.overline" Class="sigad-search-group-title">@Title</MudText>
+        <MudText Typo="Typo.caption" Class="sigad-search-group-count">@Group.TotalCount</MudText>
+    </div>
+
+    @if (Group.Items.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Class="sigad-search-empty">Nessun risultato</MudText>
+    }
+    else
+    {
+        <MudList T="SearchItem" Dense="true" Class="sigad-search-list">
+            @foreach (var item in Group.Items)
+            {
+                <MudListItem T="SearchItem"
+                             OnClick="@((MouseEventArgs _) => OnItemClick(item))"
+                             Class="sigad-search-item">
+                    <MudText Typo="Typo.body2">@item.Title</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                    {
+                        <MudText Typo="Typo.caption" Class="sigad-search-subtitle">@item.Subtitle</MudText>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(item.CodiceFiscale) || !string.IsNullOrWhiteSpace(item.PartitaIVA))
+                    {
+                        <div class="sigad-search-id-grid">
+                            <MudText Typo="Typo.caption" Class="sigad-search-subtitle">CF: @(string.IsNullOrWhiteSpace(item.CodiceFiscale) ? "-" : item.CodiceFiscale)</MudText>
+                            <MudText Typo="Typo.caption" Class="sigad-search-subtitle">P.IVA: @(string.IsNullOrWhiteSpace(item.PartitaIVA) ? "-" : item.PartitaIVA)</MudText>
+                        </div>
+                    }
+                </MudListItem>
+            }
+        </MudList>
+    }
+</div>

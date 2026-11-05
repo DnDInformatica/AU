@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Accredia.SIGAD.Web.Models.Auth;
 using Accredia.SIGAD.Web.Models.Anagrafiche;
@@ -351,6 +352,110 @@ internal sealed class GatewayClient
     public async Task<ApiResult<object>> DeletePersonaUtenteAsync(int personaId, int personaUtenteId, CancellationToken cancellationToken)
         => await DeleteAsync($"anagrafiche/v1/persone/{personaId}/utente/{personaUtenteId}", cancellationToken);
 
+    public async Task<ApiResult<IReadOnlyList<DocumentoItem>>> GetPersonaDocumentiAsync(
+        int personaId,
+        bool includeDeleted,
+        CancellationToken cancellationToken)
+        => await GetAsync<IReadOnlyList<DocumentoItem>>(
+            $"anagrafiche/v1/persone/{personaId}/documenti?includeDeleted={(includeDeleted ? "true" : "false")}",
+            cancellationToken);
+
+    public async Task<ApiResult<DocumentoItem>> UploadPersonaDocumentoAsync(
+        int personaId,
+        CreatePersonaDocumentoRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(request.Content);
+            if (!string.IsNullOrWhiteSpace(request.ContentType))
+            {
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(request.ContentType);
+            }
+
+            content.Add(fileContent, "file", request.FileName);
+            if (!string.IsNullOrWhiteSpace(request.Note))
+            {
+                content.Add(new StringContent(request.Note), "note");
+            }
+
+            var response = await _httpClient.PostAsync($"anagrafiche/v1/persone/{personaId}/documenti", content, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<DocumentoItem>(cancellationToken);
+                return data is null
+                    ? ApiResult<DocumentoItem>.Failure("Risposta non valida.", response.StatusCode)
+                    : ApiResult<DocumentoItem>.Success(data, response.StatusCode);
+            }
+
+            var error = await response.Content.ReadAsStringAsync(cancellationToken);
+            return ApiResult<DocumentoItem>.Failure(string.IsNullOrWhiteSpace(error) ? "Upload documento fallito." : error, response.StatusCode);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult<DocumentoItem>.Failure("Gateway non raggiungibile.", null);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiResult<DocumentoItem>.Failure("Timeout chiamata API (Gateway non disponibile o lento).", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResult<DocumentoItem>.Failure(ex.Message, null);
+        }
+    }
+
+    public async Task<ApiResult<DownloadedFileResult>> DownloadPersonaDocumentoAsync(
+        int personaId,
+        int documentoId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"anagrafiche/v1/persone/{personaId}/documenti/{documentoId}/download",
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+                var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                    ?? response.Content.Headers.ContentDisposition?.FileName
+                    ?? $"documento-{documentoId}";
+                fileName = fileName.Trim('"');
+
+                return ApiResult<DownloadedFileResult>.Success(
+                    new DownloadedFileResult(fileName, contentType, bytes),
+                    response.StatusCode);
+            }
+
+            var error = await response.Content.ReadAsStringAsync(cancellationToken);
+            return ApiResult<DownloadedFileResult>.Failure(
+                string.IsNullOrWhiteSpace(error) ? "Download documento fallito." : error,
+                response.StatusCode);
+        }
+        catch (HttpRequestException)
+        {
+            return ApiResult<DownloadedFileResult>.Failure("Gateway non raggiungibile.", null);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiResult<DownloadedFileResult>.Failure("Timeout chiamata API (Gateway non disponibile o lento).", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResult<DownloadedFileResult>.Failure(ex.Message, null);
+        }
+    }
+
+    public async Task<ApiResult<object>> DeletePersonaDocumentoAsync(
+        int personaId,
+        int documentoId,
+        CancellationToken cancellationToken)
+        => await DeleteAsync($"anagrafiche/v1/persone/{personaId}/documenti/{documentoId}", cancellationToken);
+
     public async Task<ApiResult<IReadOnlyList<TipoDirittoInteressatoLookupItem>>> GetRichiesteGdprLookupsAsync(CancellationToken cancellationToken)
         => await GetAsync<IReadOnlyList<TipoDirittoInteressatoLookupItem>>("anagrafiche/v1/persone/richieste-gdpr/lookups", cancellationToken);
 
@@ -507,6 +612,33 @@ internal sealed class GatewayClient
         return await GetAsync<PagedResponse<IncaricoListItem>>(url, cancellationToken);
     }
 
+    public async Task<ApiResult<PagedResponse<CertificazioneListItem>>> SearchCertificazioniAsync(
+        string? query,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var url = $"anagrafiche/v1/certificazioni/search?q={Uri.EscapeDataString(query ?? string.Empty)}&page={page}&pageSize={pageSize}";
+        return await GetAsync<PagedResponse<CertificazioneListItem>>(url, cancellationToken);
+    }
+
+    public async Task<ApiResult<CertificazioneDetail>> GetCertificazioneDetailAsync(int certificazioneId, CancellationToken cancellationToken)
+        => await GetAsync<CertificazioneDetail>($"anagrafiche/v1/certificazioni/{certificazioneId}", cancellationToken);
+
+    public async Task<ApiResult<CertificazioneDetail>> CreateCertificazioneAsync(
+        CreateCertificazioneRequest request,
+        CancellationToken cancellationToken)
+        => await PostAsync<CertificazioneDetail>("anagrafiche/v1/certificazioni", request, cancellationToken);
+
+    public async Task<ApiResult<CertificazioneDetail>> UpdateCertificazioneAsync(
+        int certificazioneId,
+        UpdateCertificazioneRequest request,
+        CancellationToken cancellationToken)
+        => await PutAsync<CertificazioneDetail>($"anagrafiche/v1/certificazioni/{certificazioneId}", request, cancellationToken);
+
+    public async Task<ApiResult<object>> SoftDeleteCertificazioneAsync(int certificazioneId, CancellationToken cancellationToken)
+        => await DeleteAsync($"anagrafiche/v1/certificazioni/{certificazioneId}", cancellationToken);
+
     public async Task<ApiResult<IncaricoDetail>> GetIncaricoDetailAsync(int incaricoId, CancellationToken cancellationToken)
         => await GetAsync<IncaricoDetail>($"anagrafiche/v1/incarichi/{incaricoId}", cancellationToken);
 
@@ -600,6 +732,31 @@ internal sealed class GatewayClient
 
     public async Task<ApiResult<IReadOnlyList<OrganizzazioneIdentificativoFiscaleItem>>> GetOrganizzazioneIdentificativiAsync(int organizzazioneId, CancellationToken cancellationToken)
         => await GetAsync<IReadOnlyList<OrganizzazioneIdentificativoFiscaleItem>>($"anagrafiche/v1/organizzazioni/{organizzazioneId}/identificativi", cancellationToken);
+
+    public async Task<ApiResult<OrganizzazioneIdentificativoFiscaleItem>> CreateOrganizzazioneIdentificativoAsync(
+        int organizzazioneId,
+        CreateOrganizzazioneIdentificativoRequest request,
+        CancellationToken cancellationToken)
+        => await PostAsync<OrganizzazioneIdentificativoFiscaleItem>($"anagrafiche/v1/organizzazioni/{organizzazioneId}/identificativi", request, cancellationToken);
+
+    public async Task<ApiResult<OrganizzazioneIdentificativoFiscaleItem>> UpdateOrganizzazioneIdentificativoAsync(
+        int organizzazioneId,
+        int identificativoId,
+        UpdateOrganizzazioneIdentificativoRequest request,
+        CancellationToken cancellationToken)
+        => await PutAsync<OrganizzazioneIdentificativoFiscaleItem>($"anagrafiche/v1/organizzazioni/{organizzazioneId}/identificativi/{identificativoId}", request, cancellationToken);
+
+    public async Task<ApiResult<object>> DeleteOrganizzazioneIdentificativoAsync(
+        int organizzazioneId,
+        int identificativoId,
+        CancellationToken cancellationToken)
+        => await DeleteAsync($"anagrafiche/v1/organizzazioni/{organizzazioneId}/identificativi/{identificativoId}", cancellationToken);
+
+    public async Task<ApiResult<IReadOnlyList<GruppoIvaItem>>> GetGruppiIvaAsync(CancellationToken cancellationToken)
+        => await GetAsync<IReadOnlyList<GruppoIvaItem>>("anagrafiche/v1/organizzazioni/gruppi-iva", cancellationToken);
+
+    public async Task<ApiResult<IReadOnlyList<GruppoIvaMembroItem>>> GetGruppoIvaMembriAsync(int gruppoIvaId, CancellationToken cancellationToken)
+        => await GetAsync<IReadOnlyList<GruppoIvaMembroItem>>($"anagrafiche/v1/organizzazioni/gruppi-iva/{gruppoIvaId}/membri", cancellationToken);
 
     public async Task<ApiResult<PagedResponse<DipendenteDettaglioCompletoListItem>>> GetDipendentiDettaglioCompletoAsync(
         string? q,

@@ -93,6 +93,8 @@ internal sealed class AdminClient
 
     // ==========================================
     // ROLE MANAGEMENT
+    // Ruoli e permessi da IAM (endpoint in Anagrafiche.Api): Identity.Api e lo
+    // schema Identity non governano piu' i permessi effettivi.
     // ==========================================
 
     /// <summary>
@@ -100,7 +102,7 @@ internal sealed class AdminClient
     /// </summary>
     public async Task<ApiResult<List<RoleDto>>> GetRolesAsync(CancellationToken cancellationToken)
     {
-        return await GetAsync<List<RoleDto>>("identity/v1/roles", cancellationToken);
+        return await GetAsync<List<RoleDto>>("anagrafiche/v1/iam/ruoli", cancellationToken);
     }
 
     /// <summary>
@@ -108,7 +110,7 @@ internal sealed class AdminClient
     /// </summary>
     public async Task<ApiResult<RolePermissionsResponse>> GetRolePermissionsAsync(string roleId, CancellationToken cancellationToken)
     {
-        var url = $"identity/v1/roles/{roleId}/permissions";
+        var url = $"anagrafiche/v1/iam/ruoli/{roleId}/permessi";
         return await GetAsync<RolePermissionsResponse>(url, cancellationToken);
     }
 
@@ -118,7 +120,7 @@ internal sealed class AdminClient
     public async Task<ApiResult> UpdateRolePermissionsAsync(string roleId, List<string> permissions, CancellationToken cancellationToken)
     {
         var request = new UpdateRolePermissionsRequest { Permissions = permissions };
-        var response = await _httpClient.PutAsJsonAsync($"identity/v1/roles/{roleId}/permissions", request, cancellationToken);
+        var response = await _httpClient.PutAsJsonAsync($"anagrafiche/v1/iam/ruoli/{roleId}/permessi", request, cancellationToken);
         
         if (response.IsSuccessStatusCode)
         {
@@ -138,7 +140,7 @@ internal sealed class AdminClient
     /// </summary>
     public async Task<ApiResult<List<PermissionDto>>> GetPermissionsAsync(CancellationToken cancellationToken)
     {
-        return await GetAsync<List<PermissionDto>>("identity/v1/permissions", cancellationToken);
+        return await GetAsync<List<PermissionDto>>("anagrafiche/v1/iam/permessi", cancellationToken);
     }
 
     // ==========================================

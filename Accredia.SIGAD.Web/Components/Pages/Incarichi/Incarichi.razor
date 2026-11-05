@@ -1,0 +1,69 @@
+@page "/incarichi"
+@namespace Accredia.SIGAD.Web.Components.Pages.Incarichi
+@inject GatewayClient GatewayClient
+@inject QuickDrawerService QuickDrawer
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject UserContext UserContext
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@using System.Text
+@using Microsoft.JSInterop
+@using Accredia.SIGAD.Web.Models.Common
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Incarichi"
+                Subtitle="Monitoraggio e gestione degli incarichi."
+                BreadcrumbItems="@_breadcrumbs"
+                PrimaryActionLabel="Nuovo incarico"
+                PrimaryActionIcon="@Icons.Material.Filled.Add"
+                PrimaryActionDisabled="@(!CanCreate)"
+                OnPrimaryAction="CreateNew" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <IncarichiFilters Query="@_query"
+                     QueryChanged="OnQueryChanged"
+                     ActiveFiltersCount="@_activeFiltersCount"
+                     Expanded="@_filtersExpanded"
+                     ExpandedChanged="OnFiltersExpandedChanged"
+                     OnApply="ApplyFilters"
+                     OnReset="ResetFilters"
+                     QueryFieldRefChanged="OnQueryFieldRefChanged" />
+
+    <IncarichiResults Items="_items"
+                      ServerData="LoadIncarichi"
+                      ResultsHint="@_resultsHint"
+                      IsLoading="@(_table?.Loading == true)"
+                      Query="@_query"
+                      EmptyMessage="@_emptyMessage"
+                      OnRowClick="OnRowClick"
+                      OnQuickPreview="OpenQuickPreview"
+                      OnCreateNew="CreateNew"
+                      OnExportSelected="OnExportSelected"
+                      OnDeleteSelected="OnDeleteSelected"
+                      SelectedItems="@_selectedItems"
+                      SelectedItemsChanged="OnSelectedItemsChanged"
+                      BulkInProgress="@_bulkInProgress"
+                      BulkCurrent="@_bulkCurrent"
+                      BulkTotal="@_bulkTotal"
+                      CanCreate="@CanCreate"
+                      CanDelete="@CanDelete"
+                      CanExport="@CanRead"
+                      TableRefChanged="OnTableRefChanged" />
+</MudContainer>

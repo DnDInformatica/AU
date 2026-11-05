@@ -1,0 +1,6 @@
+CREATE SCHEMA [Eventi]
+    AUTHORIZATION [dbo];
+
+
+GO
+

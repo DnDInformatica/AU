@@ -52,21 +52,3 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
-
-@code {
-    private bool _authInitialized;
-
-    private static bool IsAllowAnonymous(Type pageType)
-        => Attribute.IsDefined(pageType, typeof(AllowAnonymousAttribute), inherit: true);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // AuthProvider uses ProtectedSessionStorage which needs JS. Initialize as soon as the app renders.
-        if (firstRender && !_authInitialized)
-        {
-            _authInitialized = true;
-            TokenService.MarkJsAvailable();
-            await AuthProvider.InitializeAsync();
-        }
-    }
-}

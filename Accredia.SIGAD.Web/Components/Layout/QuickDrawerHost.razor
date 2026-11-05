@@ -41,30 +41,3 @@
         }
     }
 </MudDrawer>
-
-@code {
-    protected override void OnInitialized()
-    {
-        DrawerService.Changed += OnChanged;
-    }
-
-    private void OnChanged()
-        => InvokeAsync(StateHasChanged);
-
-    private void Close()
-        => DrawerService.Close();
-
-    private void OnOpenChanged(bool open)
-    {
-        if (!open)
-        {
-            DrawerService.Close();
-        }
-    }
-
-    public void Dispose()
-    {
-        DrawerService.Changed -= OnChanged;
-    }
-}
-

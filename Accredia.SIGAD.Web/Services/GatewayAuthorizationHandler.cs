@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Accredia.SIGAD.Web.Auth;
 using Microsoft.AspNetCore.Http;
@@ -40,19 +41,22 @@ internal sealed class GatewayAuthorizationHandler : DelegatingHandler
     private readonly TokenService _tokenService;
     private readonly TokenRefreshService _tokenRefreshService;
     private readonly ILogger<GatewayAuthorizationHandler> _logger;
+    private readonly IHostEnvironment _env;
 
     public GatewayAuthorizationHandler(
         ProtectedSessionStorage sessionStorage,
         IHttpContextAccessor httpContextAccessor,
         TokenService tokenService,
         TokenRefreshService tokenRefreshService,
-        ILogger<GatewayAuthorizationHandler> logger)
+        ILogger<GatewayAuthorizationHandler> logger,
+        IHostEnvironment env)
     {
         _sessionStorage = sessionStorage;
         _httpContextAccessor = httpContextAccessor;
         _tokenService = tokenService;
         _tokenRefreshService = tokenRefreshService;
         _logger = logger;
+        _env = env;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -69,7 +73,25 @@ internal sealed class GatewayAuthorizationHandler : DelegatingHandler
             request.Headers.TryAddWithoutValidation(CorrelationIdHeader, correlationId);
         }
 
-        // 2. PROACTIVE CHECK: Controlla se il token sta per scadere
+        // 2. PROFILO DI SVILUPPO: propaga l'identita' alle API e salta la
+        //    gestione dei token, che dipende da Identity.Api (in dismissione).
+        //    Le API risolvono l'oid su IAM esattamente come in esercizio.
+#if DEBUG
+        if (Accredia.SIGAD.Shared.Auth.DevAuth.IsEnabled(_env))
+        {
+            var devOid = Accredia.SIGAD.Shared.Auth.DevAuth.OidPredefinito;
+            if (!string.IsNullOrWhiteSpace(devOid)
+                && !request.Headers.Contains(Accredia.SIGAD.Shared.Auth.DevAuth.HeaderOid))
+            {
+                request.Headers.TryAddWithoutValidation(
+                    Accredia.SIGAD.Shared.Auth.DevAuth.HeaderOid, devOid);
+            }
+
+            return await SendWithCancellationHandlingAsync(request, cancellationToken);
+        }
+#endif
+
+        // 3. PROACTIVE CHECK: Controlla se il token sta per scadere
         // (Solo se non stiamo chiamando /auth/login o /auth/refresh per evitare loop)
         var isAuthEndpoint = request.RequestUri?.AbsolutePath.Contains("/auth/") == true;
         if (!isAuthEndpoint)
@@ -95,7 +117,7 @@ internal sealed class GatewayAuthorizationHandler : DelegatingHandler
         }
 
         // 4. Invia la richiesta
-        var response = await base.SendAsync(request, cancellationToken);
+        var response = await SendWithCancellationHandlingAsync(request, cancellationToken);
 
         // 5. REACTIVE 401 HANDLING: Se riceviamo 401, prova a refreshare e retry
         // (Solo se non stiamo già chiamando /auth per evitare loop infiniti)
@@ -125,7 +147,7 @@ internal sealed class GatewayAuthorizationHandler : DelegatingHandler
                 }
 
                 // Retry (seconda chiamata, max 1 retry per evitare loop)
-                var retryResponse = await base.SendAsync(retryRequest, cancellationToken);
+                var retryResponse = await SendWithCancellationHandlingAsync(retryRequest, cancellationToken);
                 
                 if (retryResponse.IsSuccessStatusCode)
                 {
@@ -192,5 +214,43 @@ internal sealed class GatewayAuthorizationHandler : DelegatingHandler
         }
 
         return clone;
+    }
+
+    private async Task<HttpResponseMessage> SendWithCancellationHandlingAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await base.SendAsync(request, cancellationToken);
+        }
+        catch (TaskCanceledException ex) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogDebug(
+                ex,
+                "HTTP request annullata dal chiamante: {Method} {Path}",
+                request.Method,
+                request.RequestUri?.PathAndQuery);
+
+            return new HttpResponseMessage((HttpStatusCode)499)
+            {
+                RequestMessage = request,
+                Content = new StringContent("Request annullata dal client.")
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Timeout HTTP verso Gateway: {Method} {Path}",
+                request.Method,
+                request.RequestUri?.PathAndQuery);
+
+            return new HttpResponseMessage(HttpStatusCode.GatewayTimeout)
+            {
+                RequestMessage = request,
+                Content = new StringContent("Timeout chiamata verso Gateway.")
+            };
+        }
     }
 }

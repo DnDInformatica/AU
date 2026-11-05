@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Accredia.SIGAD.RisorseUmane.Bff.Api.Services;
 
 namespace Accredia.SIGAD.RisorseUmane.Bff.Api.V1.Features.DipendentiDettaglio;
@@ -31,7 +31,7 @@ internal static class Endpoints
 
                 if (hrStatus != HttpStatusCode.OK || hrPage is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(hrStatus, "RisorseUmane");
                 }
 
                 var personaIds = hrPage.Items.Select(x => x.PersonaId).Distinct().ToArray();
@@ -67,9 +67,7 @@ internal static class Endpoints
                 var firstError = results.FirstOrDefault(x => x.Item2 != 0);
                 if (firstError.Item2 != 0)
                 {
-                    return firstError.Item2 == StatusCodes.Status502BadGateway
-                        ? Results.Problem("Persona not found in Anagrafiche.", statusCode: StatusCodes.Status502BadGateway)
-                        : Results.Problem("Downstream Anagrafiche error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.ProblemaDaCodice(firstError.Item2, "Anagrafiche");
                 }
 
                 foreach (var r in results)
@@ -90,6 +88,8 @@ internal static class Endpoints
             builder => builder
                 .Produces<PagedResponse<DipendenteDettaglioListItemDto>>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status502BadGateway)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
 
         ApiVersioning.MapVersionedGet(app, "/dipendenti/{id:int}/dettaglio", "DipendentiDettaglioGetById", async (
@@ -106,19 +106,19 @@ internal static class Endpoints
 
                 if (hrStatus != HttpStatusCode.OK || dipendente is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(hrStatus, "RisorseUmane");
                 }
 
                 var (anStatus, persona) = await anagrafiche.GetPersonaByIdAsync(dipendente.PersonaId, cancellationToken);
                 if (anStatus == HttpStatusCode.NotFound)
                 {
                     // Invariant violation: HR references a missing Persona.
-                    return Results.Problem("Persona not found in Anagrafiche.", statusCode: StatusCodes.Status502BadGateway);
+                    return RispostaDownstream.ProblemaDaCodice(StatusCodes.Status502BadGateway, "Anagrafiche");
                 }
 
                 if (anStatus != HttpStatusCode.OK || persona is null)
                 {
-                    return Results.Problem("Downstream Anagrafiche error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(anStatus, "Anagrafiche");
                 }
 
                 return Results.Ok(new DipendenteDettaglioDto(dipendente, persona));
@@ -127,6 +127,8 @@ internal static class Endpoints
                 .Produces<DipendenteDettaglioDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesProblem(StatusCodes.Status502BadGateway)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
 
         ApiVersioning.MapVersionedGet(app, "/dipendenti/dettaglio-completo", "DipendentiDettaglioCompletoList", async (
@@ -154,7 +156,7 @@ internal static class Endpoints
 
                 if (hrStatus != HttpStatusCode.OK || hrPage is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(hrStatus, "RisorseUmane");
                 }
 
                 var anagraficheIncludeDeleted = includeDeletedAnagrafiche ?? false;
@@ -193,9 +195,7 @@ internal static class Endpoints
                 var firstError = results.FirstOrDefault(x => x.StatusCode != 0);
                 if (firstError.StatusCode != 0)
                 {
-                    return firstError.StatusCode == StatusCodes.Status502BadGateway
-                        ? Results.Problem("Persona not found in Anagrafiche.", statusCode: StatusCodes.Status502BadGateway)
-                        : Results.Problem("Downstream Anagrafiche error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.ProblemaDaCodice(firstError.StatusCode, "Anagrafiche");
                 }
 
                 foreach (var result in results)
@@ -212,6 +212,8 @@ internal static class Endpoints
             builder => builder
                 .Produces<PagedResponse<DipendenteDettaglioCompletoListItemDto>>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status502BadGateway)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
 
         ApiVersioning.MapVersionedGet(app, "/dipendenti/{id:int}/dettaglio-completo", "DipendentiDettaglioCompletoGetById", async (
@@ -229,7 +231,7 @@ internal static class Endpoints
 
                 if (hrStatus != HttpStatusCode.OK || dipendente is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(hrStatus, "RisorseUmane");
                 }
 
                 var result = await GetPersonaCompletaAsync(
@@ -240,9 +242,7 @@ internal static class Endpoints
 
                 if (result.StatusCode != 0 || result.Value is null)
                 {
-                    return result.StatusCode == StatusCodes.Status502BadGateway
-                        ? Results.Problem("Persona not found in Anagrafiche.", statusCode: StatusCodes.Status502BadGateway)
-                        : Results.Problem("Downstream Anagrafiche error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.ProblemaDaCodice(result.StatusCode, "Anagrafiche");
                 }
 
                 return Results.Ok(new DipendenteDettaglioCompletoDto(dipendente, result.Value));
@@ -251,6 +251,8 @@ internal static class Endpoints
                 .Produces<DipendenteDettaglioCompletoDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesProblem(StatusCodes.Status502BadGateway)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
 
         ApiVersioning.MapVersionedGet(app, "/persone/lookup", "PersoneLookup", async (
@@ -271,7 +273,7 @@ internal static class Endpoints
                 var (status, response) = await anagrafiche.SearchPersoneAsync(q.Trim(), page, pageSize, cancellationToken);
                 if (status != HttpStatusCode.OK || response is null)
                 {
-                    return Results.Problem("Downstream Anagrafiche error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(status, "Anagrafiche");
                 }
 
                 var items = response.Items
@@ -292,6 +294,8 @@ internal static class Endpoints
             builder => builder
                 .Produces<PagedResponse<PersonaLookupItemDto>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem()
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
     }
 
@@ -361,7 +365,7 @@ internal static class Endpoints
     private static int MapAnagraficheStatus(HttpStatusCode statusCode)
         => statusCode == HttpStatusCode.NotFound
             ? StatusCodes.Status502BadGateway
-            : StatusCodes.Status503ServiceUnavailable;
+            : RispostaDownstream.Codice(statusCode);
 }
 
 internal sealed record DipendenteDettaglioDto(

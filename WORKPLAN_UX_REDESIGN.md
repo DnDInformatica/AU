@@ -19,6 +19,15 @@ Principi:
 - **API contract-driven**: DTO e response shape stabili; evitare placeholder (Guid.NewGuid/int finti) in produzione.
 - “Team UX/Design available”: assumo la possibilità di iterare su visual e microcopy, quindi la struttura deve essere facilmente raffinabile.
 
+## Guardrail UI Nav (obbligatorio)
+
+- Non alterare la configurazione hover nativa MudBlazor validata.
+- Preservare:
+  - `Accredia.SIGAD.Web/Components/Theme/SigadTheme.cs` (`HoverOpacity = 0.08`, `ActionDefault = "rgba(255, 255, 255, 0.87)"`)
+  - `Accredia.SIGAD.Web/Components/Layout/NavMenu.razor` (`MudNavMenu Color="Color.Primary" Bordered="true"`)
+  - `Accredia.SIGAD.Web/Components/Layout/NavMenu.razor.css` (`--mud-palette-action-default-hover` per drawer scuro)
+- Eventuali modifiche su hover/selezione menu richiedono verifica visiva esplicita prima/dopo.
+
 ## 1. Stato Attuale (Repo)
 
 ### 1.1 Frontend (Blazor Server + MudBlazor)
@@ -206,6 +215,85 @@ Checklist (minimo):
 - Performance:
   - Paginazione server-side ovunque, debounce search, timeouts e cancellation token
   - Validazione HA: session affinity o state management per Blazor Server (se multi-istanzato)
+
+Stato M8 (aggiornato 2026-02-19):
+- DONE:
+  - Hardening segreti/config WebDav (password via env var con fail-fast startup).
+  - Error handling storage documenti con `503` standardizzato (`ProblemDetails`) su indisponibilita provider.
+  - Endpoint health dedicato storage (`GET /health/document-storage`) in `Anagrafiche.Api`.
+  - Esposizione health storage via Gateway anonima (`GET /anagrafiche/health/document-storage`) per diagnostica operativa.
+  - Pagina `/system-status` estesa con check dedicato `Storage documenti`.
+  - Smoke runtime completato:
+    - diretto `7003`: `/health` e `/health/document-storage` -> `200`;
+    - via gateway `7100`: `/anagrafiche/health/document-storage` -> `200` anonimo.
+  - Failure-mode verificato (WebDav auth KO):
+    - con password errata endpoint storage health ritorna `503` con `ProblemDetails` coerente (`detail: WebDav auth fallita (401)`), sia diretto sia via gateway.
+  - Alerting operativo storage implementato:
+    - monitor periodico background con soglia/intervallo configurabili (`DocumentStorage:Monitoring`);
+    - log `ALERT` su failure consecutive e `RECOVERY` su rientro health;
+    - runbook operativo dedicato (`RUNBOOK_DOCUMENT_STORAGE_ALERTING.md`).
+  - Hardening performance `/system-status`:
+    - check health eseguiti in parallelo (`Task.WhenAll`) con cancellazione reload precedente;
+    - timeout per singolo check con token linked.
+  - Predisposizione HA gateway:
+    - `LoadBalancingPolicy=LeastRequests`;
+    - `SessionAffinity` (`HashCookie`, `SIGAD_AFF`, `Redistribute`) su `ClusterDefaults`.
+  - Checklist finale M8 introdotta: `M8_RELEASE_CHECKLIST.md`.
+  - Script di validazione finale staging-ready aggiunto:
+    - `scripts/m8_staging_validation.ps1` (PASS/FAIL/WARN su health, storage health, login, affinity cookie).
+  - Ambiente Docker temporaneo predisposto per staging-like locale:
+    - `Dockerfile.service` (build/publish riusabile per i servizi .NET),
+    - `docker-compose.staging.yml` (SQL + Identity + Tipologiche + Anagrafiche + Gateway + Web),
+    - `.env.staging.example` e guida operativa `DOCKER_STAGING.md`.
+  - Predisposto scenario HA Web locale:
+    - key ring condiviso configurabile (`DataProtection:KeysPath` / `DataProtection__KeysPath`) nel Web;
+    - stack HA (`docker-compose.staging.ha.yml` + `docker/haproxy/web-ha.cfg`);
+    - script validazione sticky+key ring: `scripts/m8_web_ha_validation.ps1`.
+  - Smoke HA locale completato:
+    - `m8_web_ha_validation.ps1` eseguito con esito `PASS` (sticky `WEBNODE` + key ring condiviso) su `http://localhost:7010`.
+  - Preflight segreti/env per release introdotto:
+    - `scripts/m8_release_env_validation.ps1` (check variabili obbligatorie, rilevazione placeholder/debolezze).
+- TODO:
+  - Eseguire validazione in staging multi-istanza Web (ingress/LB reale) con `scripts/m8_web_ha_validation.ps1` e chiudere i gate di go-live della checklist M8.
+  - Eseguire validazione segreti/env direttamente in pipeline staging/prod usando `scripts/m8_release_env_validation.ps1`.
+
+### M9 - Certificazioni (regole implementative)
+Obiettivo: completare il dominio `Certificazioni` mantenendo piena coerenza con pattern gia in uso (Identity, Gateway, API vertical slice, Web UX).
+
+Regole obbligatorie (allineate all'esistente):
+- Permessi:
+  - introdurre `MODULE.CERT.ACCESS` per visibilita modulo/menu (non riusare `MODULE.INC.ACCESS` oltre la fase transitoria);
+  - introdurre azioni `CERT.LIST`, `CERT.READ`, `CERT.CREATE`, `CERT.UPDATE`, `CERT.DELETE`;
+  - aggiornare seed permessi/ruoli in `Accredia.SIGAD.Identity.Api/Data/IdentitySeeder.cs`.
+- Gateway:
+  - aggiungere policy dedicate in `Accredia.SIGAD.Gateway/Program.cs` (`CertRead/Create/Update/Delete`) con fallback claim coerente con gli altri moduli;
+  - mappare route `anagrafiche/v1/certificazioni/...` in `Accredia.SIGAD.Gateway/appsettings.json` con `AuthorizationPolicy` per metodo HTTP.
+- API Anagrafiche:
+  - usare struttura vertical slice per feature (`EndpointConfiguration`, `Endpoints`, `Handler`, `Validator`, `Requests/Contracts`);
+  - usare endpoint versionati con `ApiVersioning.MapVersionedGet/Post/Put/Delete`;
+  - validare input sempre e restituire `Results.ValidationProblem(...)` su errori di dominio;
+  - adottare soft-delete e audit fields in linea con M6/M7 (no hard delete).
+- Contratti e naming:
+  - DTO stabili e tipizzati, niente placeholder;
+  - naming coerente: route `kebab-case`, resource `certificazioni`, query `includeDeleted` per viste estese.
+- Web (Blazor):
+  - mantenere route esistente `/certificazioni` e `PageHeader/Breadcrumb/AccessDenied`;
+  - sostituire gating pagina/menu da `MODULE.INC.ACCESS` a `MODULE.CERT.ACCESS`;
+  - usare pattern UI gia consolidato: `loading/empty/error`, drawer/form CRUD, paginazione server-side, debounce ricerca.
+- Sicurezza/operativita:
+  - nessun log di segreti/token;
+  - endpoint auth-failure solo `401/403` (no redirect/html);
+  - health check invariati, senza regressioni su `/system-status`.
+- Test minimi:
+  - API integration test per list/detail/create/update/soft-delete + validation errors;
+  - smoke gateway policy (permesso presente/assente);
+  - smoke Web su visibilita menu/azioni per ruolo (`SUPERADMIN`, `OPERATORE`, `LETTURA`).
+
+Accettazione M9:
+- utente con `MODULE.CERT.ACCESS` + `CERT.LIST` vede lista certificazioni;
+- utente con soli permessi read non vede azioni write;
+- create/update/delete rispettano policy e validazioni;
+- nessuna regressione su moduli `Persone/Organizzazioni/Incarichi/Documenti`.
 
 ## Chiusura punti aperti (2026-02-16)
 

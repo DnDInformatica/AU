@@ -37,15 +37,15 @@ if %ERRORLEVEL%==0 (
 echo.
 
 REM === STEP 2: Verifica SQL Server ===
-echo [2/5] Verifica connessione SQL Server (porta 1434)...
-powershell -Command "$t = Test-NetConnection -ComputerName localhost -Port 1434 -WarningAction SilentlyContinue; if($t.TcpTestSucceeded) { exit 0 } else { exit 1 }"
+echo [2/5] Verifica raggiungibilita' Azure SQL (database dei servizi)...
+REM I servizi usano Azure SQL (Accredia_SIDAC) con Active Directory Default:
+REM il vecchio SQL locale sulla porta 1434 non e' piu' richiesto.
+powershell -Command "$t = Test-NetConnection -ComputerName accsqlmigration-sql-itn-dev.database.windows.net -Port 1433 -WarningAction SilentlyContinue; if($t.TcpTestSucceeded) { exit 0 } else { exit 1 }"
 if %ERRORLEVEL%==0 (
-    echo       [OK] SQL Server raggiungibile
+    echo       [OK] Azure SQL raggiungibile
 ) else (
-    echo       [ERRORE] SQL Server non raggiungibile sulla porta 1434
-    echo       Verificare che Docker/SQL Server sia avviato
-    pause
-    exit /b 1
+    echo       [AVVISO] Azure SQL non raggiungibile ora: il DB serverless e' forse in auto-pausa.
+    echo       L'avvio prosegue comunque: la prima connessione riattivera' il database.
 )
 echo.
 

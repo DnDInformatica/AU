@@ -1,0 +1,58 @@
+@page "/persone"
+@namespace Accredia.SIGAD.Web.Components.Pages.Persone
+@inject GatewayClient GatewayClient
+@inject QuickDrawerService QuickDrawer
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@using System.Text
+@using Microsoft.JSInterop
+@using Accredia.SIGAD.Web.Models.Common
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Persone"
+                Subtitle="Ricerca e gestione delle persone collegate."
+                BreadcrumbItems="@_breadcrumbs"
+                PrimaryActionLabel="Nuova persona"
+                PrimaryActionIcon="@Icons.Material.Filled.Add"
+                OnPrimaryAction="CreateNew" />
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <PersoneFilters Query="@_query"
+                    QueryChanged="OnQueryChanged"
+                    ActiveFiltersCount="@_activeFiltersCount"
+                    Expanded="@_filtersExpanded"
+                    ExpandedChanged="OnFiltersExpandedChanged"
+                    OnApply="ApplyFilters"
+                    OnReset="ResetFilters"
+                    QueryFieldRefChanged="OnQueryFieldRefChanged" />
+
+    <PersoneResults Items="_items"
+                    ServerData="LoadPersone"
+                    ResultsHint="@_resultsHint"
+                    IsLoading="@(_table?.Loading == true)"
+                    Query="@_query"
+                    EmptyMessage="@_emptyMessage"
+                    OnRowClick="OnRowClick"
+                    OnQuickPreview="OpenQuickPreview"
+                    OnCreateNew="CreateNew"
+                    OnExportSelected="OnExportSelected"
+                    OnDeleteSelected="OnDeleteSelected"
+                    SelectedItems="@_selectedItems"
+                    SelectedItemsChanged="OnSelectedItemsChanged"
+                    BulkInProgress="@_bulkInProgress"
+                    BulkCurrent="@_bulkCurrent"
+                    BulkTotal="@_bulkTotal"
+                    TableRefChanged="OnTableRefChanged" />
+</MudContainer>

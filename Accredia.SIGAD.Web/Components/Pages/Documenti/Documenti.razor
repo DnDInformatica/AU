@@ -1,0 +1,11 @@
+@page "/documenti"
+@namespace Accredia.SIGAD.Web.Components.Pages.Documenti
+@using Accredia.SIGAD.Web.Components.Shared
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Documenti"
+                Subtitle="Gestione documenti persona: upload, lista, download e soft delete."
+                BreadcrumbItems="@_breadcrumbs" />
+
+    <PersonaDocumentiPanel PersonaId="PersonaId" AllowPersonaSelection="true" />
+</MudContainer>

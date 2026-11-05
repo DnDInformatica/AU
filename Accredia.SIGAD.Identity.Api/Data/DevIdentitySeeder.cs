@@ -82,6 +82,7 @@ internal sealed class DevIdentitySeeder
             ("MODULE.ORG.ACCESS", "Accesso modulo organizzazioni", "ORG", "MODULE"),
             ("MODULE.PERS.ACCESS", "Accesso modulo persone", "PERS", "MODULE"),
             ("MODULE.INC.ACCESS", "Accesso modulo incarichi", "INC", "MODULE"),
+            ("MODULE.CERT.ACCESS", "Accesso modulo certificazioni", "CERT", "MODULE"),
             ("MODULE.TIPO.ACCESS", "Accesso modulo tipologie", "TIPO", "MODULE"),
             ("MODULE.ADMIN.ACCESS", "Accesso modulo amministrazione", "ADMIN", "MODULE"),
             ("ADMIN.USERS.MANAGE", "Gestione utenti", "ADMIN", "ACTION"),
@@ -105,6 +106,12 @@ internal sealed class DevIdentitySeeder
             ("INC.CREATE", "Creazione incarichi", "INC", "ACTION"),
             ("INC.UPDATE", "Aggiornamento incarichi", "INC", "ACTION"),
             ("INC.DELETE", "Cancellazione incarichi", "INC", "ACTION"),
+
+            ("CERT.LIST", "Elenco certificazioni", "CERT", "ACTION"),
+            ("CERT.READ", "Lettura certificazioni", "CERT", "ACTION"),
+            ("CERT.CREATE", "Creazione certificazioni", "CERT", "ACTION"),
+            ("CERT.UPDATE", "Aggiornamento certificazioni", "CERT", "ACTION"),
+            ("CERT.DELETE", "Cancellazione certificazioni", "CERT", "ACTION"),
 
             ("TIPO.LIST", "Elenco tipologie", "TIPO", "ACTION"),
             ("TIPO.READ", "Lettura tipologie", "TIPO", "ACTION"),

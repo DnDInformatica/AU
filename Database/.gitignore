@@ -1,0 +1,6 @@
+bin/
+obj/
+_drift/
+_baseline/
+*.dacpac
+*.user

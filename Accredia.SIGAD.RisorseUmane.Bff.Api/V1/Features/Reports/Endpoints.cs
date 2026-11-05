@@ -24,7 +24,7 @@ internal static class Endpoints
                 var (status, value) = await risorseUmane.GetFormazioneInScadenzaAsync(windowDays, cancellationToken);
                 if (status != HttpStatusCode.OK || value is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(status, "RisorseUmane");
                 }
 
                 return Results.Ok(value);
@@ -32,6 +32,8 @@ internal static class Endpoints
             builder => builder
                 .Produces<IReadOnlyCollection<FormazioneInScadenzaDto>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem()
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
 
         ApiVersioning.MapVersionedGet(app, "/report/dotazioni-non-restituite-cessati", "BffReportDotazioniNonRestituiteCessati", async (
@@ -41,13 +43,15 @@ internal static class Endpoints
                 var (status, value) = await risorseUmane.GetDotazioniNonRestituiteCessatiAsync(cancellationToken);
                 if (status != HttpStatusCode.OK || value is null)
                 {
-                    return Results.Problem("Downstream RisorseUmane error.", statusCode: StatusCodes.Status503ServiceUnavailable);
+                    return RispostaDownstream.Problema(status, "RisorseUmane");
                 }
 
                 return Results.Ok(value);
             },
             builder => builder
                 .Produces<IReadOnlyCollection<DotazioneNonRestituitaCessatoDto>>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .ProducesProblem(StatusCodes.Status503ServiceUnavailable));
     }
 }

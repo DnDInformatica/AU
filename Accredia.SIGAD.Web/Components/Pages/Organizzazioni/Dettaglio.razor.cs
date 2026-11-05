@@ -9,7 +9,7 @@ using Accredia.SIGAD.Web.Models.Anagrafiche;
 using Accredia.SIGAD.Web.Models.Common;
 using Accredia.SIGAD.Web.Services;
 
-namespace Accredia.SIGAD.Web.Components.Pages.Dettagli.Organizzazioni;
+namespace Accredia.SIGAD.Web.Components.Pages.Organizzazioni;
 
 public partial class Dettaglio : ComponentBase
 {
@@ -60,6 +60,16 @@ public partial class Dettaglio : ComponentBase
     private string? _sediSearch;
     private string? _unitaSearch;
     private string? _incarichiSearch;
+    private IReadOnlyList<OrganizzazioneIdentificativoFiscaleItem> _identificativi = Array.Empty<OrganizzazioneIdentificativoFiscaleItem>();
+    private bool _identificativiLoading;
+    private bool _identificativiLoaded;
+    private string? _identificativiError;
+    private int? _identificativoEditId;
+    private IdentificativoFormModel _identificativoForm = new();
+    private IReadOnlyList<GruppoIvaLinkedItem> _gruppiIva = Array.Empty<GruppoIvaLinkedItem>();
+    private bool _gruppiIvaLoading;
+    private bool _gruppiIvaLoaded;
+    private string? _gruppiIvaError;
 
     // ── Breadcrumbs ──
     private List<Models.Common.BreadcrumbItem> _breadcrumbs = new()
@@ -149,9 +159,9 @@ public partial class Dettaglio : ComponentBase
     private string GetSideTabStyle(int tabIndex)
     {
         var isActive = _activeTabIndex == tabIndex;
-        var border = isActive ? "#d4a574" : "transparent";
+        var border = isActive ? "#DE7E00" : "transparent";
         var background = isActive ? "rgba(212, 165, 116, 0.08)" : "transparent";
-        var color = isActive ? "#d4a574" : "#1a1a2e";
+        var color = isActive ? "#DE7E00" : "#2B2B21";
         var weight = isActive ? "600" : "500";
 
         return $"border-radius:0;justify-content:flex-end;text-align:right;border-right:3px solid {border};background:{background};color:{color};font-weight:{weight};";
@@ -175,6 +185,11 @@ public partial class Dettaglio : ComponentBase
         else if (index == 3)
         {
             await EnsureIncarichiLoadedAsync();
+        }
+        else if (index == 4)
+        {
+            await EnsureIdentificativiLoadedAsync();
+            await EnsureGruppiIvaLoadedAsync();
         }
     }
 
@@ -505,6 +520,210 @@ public partial class Dettaglio : ComponentBase
     private static string DisplayStatoIncarico(string? statoIncarico)
         => string.IsNullOrWhiteSpace(statoIncarico) ? "N/D" : statoIncarico;
 
+    private bool CanSaveIdentificativo =>
+        !string.IsNullOrWhiteSpace(_identificativoForm.PaeseISO2)
+        && !string.IsNullOrWhiteSpace(_identificativoForm.TipoIdentificativo)
+        && !string.IsNullOrWhiteSpace(_identificativoForm.Valore);
+
+    private string SaveIdentificativoLabel => _identificativoEditId.HasValue ? "Aggiorna identificativo" : "Aggiungi identificativo";
+
+    private async Task EnsureIdentificativiLoadedAsync(bool force = false)
+    {
+        if (_identificativiLoading) return;
+        if (_identificativiLoaded && !force) return;
+
+        _identificativiLoading = true;
+        _identificativiError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = await GatewayClient.GetOrganizzazioneIdentificativiAsync(Id, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _identificativi = (result.Data ?? Array.Empty<OrganizzazioneIdentificativoFiscaleItem>())
+                    .OrderByDescending(static x => x.Principale)
+                    .ThenBy(static x => x.TipoIdentificativo, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(static x => x.Valore, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                _identificativiLoaded = true;
+            }
+            else
+            {
+                _identificativi = Array.Empty<OrganizzazioneIdentificativoFiscaleItem>();
+                _identificativiError = result.Error ?? "Errore nel caricamento identificativi.";
+                _identificativiLoaded = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _identificativi = Array.Empty<OrganizzazioneIdentificativoFiscaleItem>();
+            _identificativiError = $"Errore imprevisto: {ex.Message}";
+            _identificativiLoaded = false;
+        }
+        finally
+        {
+            _identificativiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SaveIdentificativoAsync()
+    {
+        if (!CanSaveIdentificativo || _identificativiLoading)
+            return;
+
+        _identificativiError = null;
+        _identificativiLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = _identificativoEditId.HasValue
+                ? await GatewayClient.UpdateOrganizzazioneIdentificativoAsync(
+                    Id,
+                    _identificativoEditId.Value,
+                    new UpdateOrganizzazioneIdentificativoRequest(
+                        _identificativoForm.PaeseISO2.Trim().ToUpperInvariant(),
+                        _identificativoForm.TipoIdentificativo.Trim().ToUpperInvariant(),
+                        _identificativoForm.Valore.Trim(),
+                        _identificativoForm.Principale,
+                        string.IsNullOrWhiteSpace(_identificativoForm.Note) ? null : _identificativoForm.Note.Trim()),
+                    CancellationToken.None)
+                : await GatewayClient.CreateOrganizzazioneIdentificativoAsync(
+                    Id,
+                    new CreateOrganizzazioneIdentificativoRequest(
+                        _identificativoForm.PaeseISO2.Trim().ToUpperInvariant(),
+                        _identificativoForm.TipoIdentificativo.Trim().ToUpperInvariant(),
+                        _identificativoForm.Valore.Trim(),
+                        _identificativoForm.Principale,
+                        string.IsNullOrWhiteSpace(_identificativoForm.Note) ? null : _identificativoForm.Note.Trim()),
+                    CancellationToken.None);
+
+            if (!result.IsSuccess)
+            {
+                _identificativiError = result.Error ?? "Operazione non riuscita.";
+                return;
+            }
+
+            ResetIdentificativoForm();
+            await EnsureIdentificativiLoadedAsync(force: true);
+        }
+        finally
+        {
+            _identificativiLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void EditIdentificativo(OrganizzazioneIdentificativoFiscaleItem item)
+    {
+        _identificativoEditId = item.Id;
+        _identificativoForm = new IdentificativoFormModel
+        {
+            PaeseISO2 = item.PaeseISO2,
+            TipoIdentificativo = item.TipoIdentificativo,
+            Valore = item.Valore,
+            Principale = item.Principale,
+            Note = item.Note
+        };
+    }
+
+    private void ResetIdentificativoForm()
+    {
+        _identificativoEditId = null;
+        _identificativoForm = new IdentificativoFormModel();
+    }
+
+    private async Task DeleteIdentificativoAsync(int identificativoId)
+    {
+        _identificativiError = null;
+        var result = await GatewayClient.DeleteOrganizzazioneIdentificativoAsync(Id, identificativoId, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            _identificativiError = result.Error ?? "Errore durante la cancellazione identificativo.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (_identificativoEditId == identificativoId)
+        {
+            ResetIdentificativoForm();
+        }
+
+        await EnsureIdentificativiLoadedAsync(force: true);
+    }
+
+    private async Task EnsureGruppiIvaLoadedAsync(bool force = false)
+    {
+        if (_gruppiIvaLoading) return;
+        if (_gruppiIvaLoaded && !force) return;
+
+        _gruppiIvaLoading = true;
+        _gruppiIvaError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var gruppiResult = await GatewayClient.GetGruppiIvaAsync(CancellationToken.None);
+            if (!gruppiResult.IsSuccess || gruppiResult.Data is null)
+            {
+                _gruppiIva = Array.Empty<GruppoIvaLinkedItem>();
+                _gruppiIvaError = gruppiResult.Error ?? "Errore nel caricamento gruppi IVA.";
+                _gruppiIvaLoaded = false;
+                return;
+            }
+
+            var groups = gruppiResult.Data;
+            var memberTasks = groups
+                .Select(async gruppo =>
+                {
+                    var membriResult = await GatewayClient.GetGruppoIvaMembriAsync(gruppo.GruppoIvaId, CancellationToken.None);
+                    return (gruppo, membriResult);
+                })
+                .ToArray();
+
+            var pairs = await Task.WhenAll(memberTasks);
+            var linked = new List<GruppoIvaLinkedItem>();
+
+            foreach (var (gruppo, membriResult) in pairs)
+            {
+                var membri = membriResult.IsSuccess ? membriResult.Data ?? Array.Empty<GruppoIvaMembroItem>() : Array.Empty<GruppoIvaMembroItem>();
+                var membership = membri.FirstOrDefault(m => m.OrganizzazioneId == Id);
+                var isCapogruppo = gruppo.OrganizzazioneCapogruppoId == Id || membership?.IsCapogruppo == true;
+                if (membership is null && !isCapogruppo)
+                    continue;
+
+                linked.Add(new GruppoIvaLinkedItem(
+                    gruppo.GruppoIvaId,
+                    gruppo.PartitaIvaGruppo,
+                    gruppo.Denominazione,
+                    gruppo.StatoGruppo,
+                    isCapogruppo,
+                    membership?.StatoMembro,
+                    membership?.RuoloNelGruppo,
+                    membership?.DataAdesione));
+            }
+
+            _gruppiIva = linked
+                .OrderByDescending(static x => x.IsCapogruppo)
+                .ThenBy(static x => x.Denominazione, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            _gruppiIvaLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            _gruppiIva = Array.Empty<GruppoIvaLinkedItem>();
+            _gruppiIvaError = $"Errore imprevisto: {ex.Message}";
+            _gruppiIvaLoaded = false;
+        }
+        finally
+        {
+            _gruppiIvaLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     private static Color GetStatoColor(byte? statoId) => statoId switch
     {
         1 => Color.Success,
@@ -520,4 +739,23 @@ public partial class Dettaglio : ComponentBase
         3 => "Cessata",
         _ => "N/D",
     };
+
+    private sealed class IdentificativoFormModel
+    {
+        public string PaeseISO2 { get; set; } = "IT";
+        public string TipoIdentificativo { get; set; } = "PIVA";
+        public string Valore { get; set; } = string.Empty;
+        public bool Principale { get; set; } = true;
+        public string? Note { get; set; }
+    }
+
+    private sealed record GruppoIvaLinkedItem(
+        int GruppoIvaId,
+        string PartitaIvaGruppo,
+        string Denominazione,
+        string StatoGruppo,
+        bool IsCapogruppo,
+        string? StatoMembro,
+        string? RuoloNelGruppo,
+        DateTime? DataAdesione);
 }

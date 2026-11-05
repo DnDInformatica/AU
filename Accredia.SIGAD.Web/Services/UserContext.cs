@@ -5,14 +5,20 @@ namespace Accredia.SIGAD.Web.Services;
 
 internal sealed class UserContext
 {
-    private readonly GatewayClient _gatewayClient;
-    private readonly AuthenticationStateProvider _authStateProvider;
+    private readonly IDemoProfileContext? _demoContext;
+    private readonly GatewayClient? _gatewayClient;
+    private readonly AuthenticationStateProvider? _authStateProvider;
     private readonly ILogger<UserContext> _logger;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private bool _loaded;
 
-    public UserContext(GatewayClient gatewayClient, AuthenticationStateProvider authStateProvider, ILogger<UserContext> logger)
+    public UserContext(
+        IDemoProfileContext? demoContext,
+        GatewayClient? gatewayClient,
+        AuthenticationStateProvider? authStateProvider,
+        ILogger<UserContext> logger)
     {
+        _demoContext = demoContext;
         _gatewayClient = gatewayClient;
         _authStateProvider = authStateProvider;
         _logger = logger;
@@ -42,6 +48,26 @@ internal sealed class UserContext
         {
             if (_loaded)
             {
+                return;
+            }
+
+            // Funzionamento Portale: identita' dal profilo demo, nessuna chiamata /me.
+            if (_demoContext is { IsEnabled: true })
+            {
+                var profile = _demoContext.GetCurrentProfile();
+                Current = new MeResponse(
+                    UserId: profile.Role,
+                    Username: profile.DisplayName,
+                    Roles: profile.Roles,
+                    Permissions: profile.Permissions);
+                _loaded = true;
+                return;
+            }
+
+            if (_authStateProvider is null || _gatewayClient is null)
+            {
+                Current = null;
+                _loaded = true;
                 return;
             }
 
@@ -76,5 +102,14 @@ internal sealed class UserContext
     {
         _loaded = false;
         Current = null;
+    }
+
+    /// <summary>Invalida la cache quando cambia il profilo demo (switcher ruoli).</summary>
+    public void OnDemoProfileChanged()
+    {
+        if (_demoContext is { IsEnabled: true })
+        {
+            Reset();
+        }
     }
 }

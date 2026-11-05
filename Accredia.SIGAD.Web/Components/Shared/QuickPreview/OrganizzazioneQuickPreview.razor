@@ -1,0 +1,35 @@
+@namespace Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+<MudStack Spacing="2">
+    <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.subtitle2">Dati principali</MudText>
+        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="@GetStatoColor(Item.StatoAttivitaId)">
+            @GetStatoLabel(Item.StatoAttivitaId)
+        </MudChip>
+    </MudStack>
+
+    <MudDivider />
+
+    <MudGrid Spacing="1">
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Denominazione</MudText>
+            <MudText Typo="Typo.body2" Style="font-weight:800">@Item.Denominazione</MudText>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.caption">Ragione sociale</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.RagioneSociale)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">P.IVA</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.PartitaIVA)</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.caption">Codice Fiscale</MudText>
+            <MudText Typo="Typo.body2">@ValueOrDash(Item.CodiceFiscale)</MudText>
+        </MudItem>
+    </MudGrid>
+</MudStack>

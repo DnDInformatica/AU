@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Accredia Design Tokens v1.0 — 05-10-2026
+   Fonte: manuale IO-01-01 rev.00 "Istruzione operativa d'uso Corporate
+   Identity" (03-12-2024) + specifica ACCREDIA_WEB_DESIGN_SYSTEM_UNIFICATO.md
+
+   QUESTO FILE È CONDIVISO TRA I DUE PROGETTI, copia bit-identica:
+     - Accredia.SIGAD.Web/wwwroot/accredia-tokens.css
+     - Accredia.Portal.Web/wwwroot/styles/accredia-tokens.css
+   Qualsiasi modifica va riportata su entrambe le copie.
+   ========================================================================== */
+
+/* --- Font brand (famiglie namespaced per evitare collisioni di sistema) ---
+   Pendenza: OpenSans 600/700 e Montserrat 800 autentici sono in attesa del
+   brand asset pack; finché non arrivano, i pesi dichiarati mappano sul file
+   più vicino disponibile (400 / 700). */
+
+@font-face {
+  font-family: "Montserrat Accredia";
+  src: url("/fonts/Montserrat-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montserrat Accredia";
+  src: url("/fonts/Montserrat-Bold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Open Sans Accredia";
+  src: url("/fonts/OpenSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Open Sans Accredia";
+  src: url("/fonts/OpenSans-Regular.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Open Sans Accredia";
+  src: url("/fonts/OpenSans-Regular.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto Mono Accredia";
+  src: url("/fonts/RobotoMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* --- Palette istituzionale IO-01-01 --- */
+  --acc-grafite: #2B2B21;        /* primario: azioni, testo, superfici scure */
+  --acc-grafite-deep: #1E1E1A;   /* fondo tema scuro */
+  --acc-grafite-mid: #4A473F;    /* grafite intermedia: hover, bordi decisi */
+  --acc-ocra: #DE7E00;           /* accento: filetti, indicatori, badge. MAI fondo saturo su grandi superfici */
+  --acc-ocra-50: #EEBE80;        /* accento su fondi scuri / tema scuro */
+  --acc-ocra-text: #8A5A00;      /* l'unico ocra ammesso come testo su fondo chiaro */
+  --acc-ecru: #FCF2E5;           /* superfici strutturate: intestazioni tabelle, pannelli, chip */
+  --acc-blu-indaco: #004C97;     /* link, info, selezioni informative */
+  --acc-verde: #008264;          /* successo */
+  --acc-rosso: #BA0C2F;          /* errore, criticità che richiedono azione */
+  --acc-bianco: #FFFFFF;
+
+  /* --- Testo e linee --- */
+  --acc-text-secondary: #5F5E5A;
+  --acc-text-disabled: #BDBDBD;
+  --acc-line: rgba(43, 43, 33, 0.12);
+  --acc-line-strong: rgba(43, 43, 33, 0.2);
+  --acc-zebra: #FDFCF9;          /* righe alternate tabelle: zebratura tenue */
+
+  /* --- Tipografia --- */
+  --acc-font-heading: "Montserrat Accredia", "Segoe UI", sans-serif;
+  --acc-font-body: "Open Sans Accredia", "Segoe UI", sans-serif;
+  --acc-font-meta: "Roboto Mono Accredia", monospace;
+
+  /* --- Focus --- */
+  --acc-focus-ring: var(--acc-grafite);      /* su fondo chiaro */
+  --acc-focus-ring-dark: var(--acc-ocra-50); /* su fondo scuro */
+}

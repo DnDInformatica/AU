@@ -48,3 +48,11 @@ nul
 **/*.nupkg
 .nuget/
 **/*.nupkg
+
+# Segreti e chiavi locali: mai in git
+.env
+**/.keys/
+*.pfx
+
+# Documenti caricati in sviluppo (dati personali)
+**/App_Data/
