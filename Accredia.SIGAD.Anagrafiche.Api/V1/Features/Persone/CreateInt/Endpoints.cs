@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Persone.CreateInt;
 
@@ -31,7 +32,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/persone/{response.PersonaId}";
                 return Results.Created(location, response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.CREATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Creazione)
                 .Produces<V1.Features.Persone.GetByIdInt.PersonaDetailDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());

@@ -20,18 +20,18 @@ public partial class PersonaDocumentiPanel : ComponentBase
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private bool CanRead =>
-        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Lettura)
-        || UserContext.HasPermission(PermessiSidac.Persone.Elenco)
-        || UserContext.HasPermission(PermessiSidac.Persone.Lettura);
+        UserContext.HasPermission(PermessiSigad.DocumentiPersona.Lettura)
+        || UserContext.HasPermission(PermessiSigad.Persone.Elenco)
+        || UserContext.HasPermission(PermessiSigad.Persone.Lettura);
 
     private bool CanCreate =>
-        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Caricamento)
-        || UserContext.HasPermission(PermessiSidac.Persone.Creazione)
-        || UserContext.HasPermission(PermessiSidac.Persone.Modifica);
+        UserContext.HasPermission(PermessiSigad.DocumentiPersona.Caricamento)
+        || UserContext.HasPermission(PermessiSigad.Persone.Creazione)
+        || UserContext.HasPermission(PermessiSigad.Persone.Modifica);
 
     private bool CanDelete =>
-        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Eliminazione)
-        || UserContext.HasPermission(PermessiSidac.Persone.Cancellazione);
+        UserContext.HasPermission(PermessiSigad.DocumentiPersona.Eliminazione)
+        || UserContext.HasPermission(PermessiSigad.Persone.Cancellazione);
 
     private bool _loading;
     private bool _uploading;

@@ -2,6 +2,7 @@ using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Incarichi.GetByIdInt;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Incarichi.UpdateInt;
 
@@ -26,7 +27,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.INC.UPDATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Incarichi.Modifica)
                 .Produces<IncaricoDetailDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

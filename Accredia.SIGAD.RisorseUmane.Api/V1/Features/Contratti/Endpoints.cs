@@ -1,5 +1,6 @@
 ﻿using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.RisorseUmane.Api.Database;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.RisorseUmane.Api.V1.Features.Contratti;
 
@@ -11,7 +12,7 @@ internal static class Endpoints
             async (int id, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.GetByIdAsync(id, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.LIST", "SIDAC.HR.CONTRATTI.READ")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Elenco, PermessiSigad.RisorseUmane.Contratti.Lettura)
                 .Produces<ContrattoDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -19,7 +20,7 @@ internal static class Endpoints
             async (int dipendenteId, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.ListByDipendenteAsync(dipendenteId, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.LIST", "SIDAC.HR.CONTRATTI.READ")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Elenco, PermessiSigad.RisorseUmane.Contratti.Lettura)
                 .Produces<IReadOnlyCollection<ContrattoDto>>(StatusCodes.Status200OK));
 
         ApiVersioning.MapVersionedPost(app, "/dipendenti/{dipendenteId:int}/contratti", "CreateContratto",
@@ -34,7 +35,7 @@ internal static class Endpoints
                 return await Handler.CreateAsync(dipendenteId, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.CREATE")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Creazione)
                 .Produces<ContrattoCreateResponse>(StatusCodes.Status201Created)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
@@ -51,7 +52,7 @@ internal static class Endpoints
                 return await Handler.UpdateAsync(dipendenteId, id, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.UPDATE")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Modifica)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -61,7 +62,7 @@ internal static class Endpoints
             async (int dipendenteId, int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.SoftDeleteAsync(dipendenteId, id, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.DELETE")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Cancellazione)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -69,7 +70,7 @@ internal static class Endpoints
             async (int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.StoricoAsync(id, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("SIDAC.HR.CONTRATTI.LIST", "SIDAC.HR.CONTRATTI.READ")
+                .RichiedePermesso(PermessiSigad.RisorseUmane.Contratti.Elenco, PermessiSigad.RisorseUmane.Contratti.Lettura)
                 .Produces<IReadOnlyCollection<ContrattoStoricoDto>>(StatusCodes.Status200OK));
     }
 }

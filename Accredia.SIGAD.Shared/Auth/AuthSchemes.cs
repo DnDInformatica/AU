@@ -3,9 +3,9 @@ using Microsoft.Extensions.Hosting;
 namespace Accredia.SIGAD.Shared.Auth;
 
 /// <summary>
-/// Nomi degli schemi di autenticazione. SIDAC e' solo per uso interno
+/// Nomi degli schemi di autenticazione. SIGAD e' solo per uso interno
 /// (decisione del 2026-11-05): accetta il solo tenant istituzionale. Referenti
-/// dei CAB e ispettori (External ID) usano il Portale, non SIDAC; eventuali
+/// dei CAB e ispettori (External ID) usano il Portale, non SIGAD; eventuali
 /// consulenti entrano come ospiti del tenant istituzionale. L'emittente
 /// stabilisce CHI e' il soggetto; ruoli, permessi e ambito provengono sempre
 /// da IAM. Riferimento: AF-31 cap. 2.

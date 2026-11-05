@@ -9,8 +9,9 @@
 ## Decisioni dell'utente (2026-11-05)
 
 1. **Nomi:** la banca dati è Accredia_SIDAC; il portale per le anagrafiche è
-   **SIGAD**. Nei testi dell'interfaccia si scrive «SIGAD». I codici dei
-   permessi restano con il prefisso `SIDAC.` (applicazione IAM `SIDAC`).
+   **SIGAD**. Nei testi dell'interfaccia si scrive «SIGAD». Anche in IAM
+   l'applicazione diventa `SIGAD`, con i permessi `SIGAD.*` (script IAM
+   `20261105_09`): il codice identifica l'applicazione, non il database.
 2. **Stile:** un foglio di stile comune, copiato identico nei due progetti
    come `accredia-tokens.css` e `AccrediaTheme.cs`.
 3. **Dev Inspector:** strumento solo per sviluppo e collaudo; nelle
@@ -20,21 +21,21 @@
 
 - Tema e token identici al Portale (cambiano solo namespace e fine riga).
 - Il Web non accede al database: solo HTTP verso il Gateway.
-- Permessi da IAM (`/v1/me`), prefissati `SIDAC.`/`IAM.`; lingua italiana;
+- Permessi da IAM (`/v1/me`), prefissati `SIGAD.`/`IAM.`; lingua italiana;
   skip link.
 
 ## Piano
 
 | Fase | Contenuto | Stato |
 |---|---|---|
-| 1. Correttezza | costanti `PermessiSidac`/`PermessiIam` al posto dei codici scritti come testo; niente capacità dal nome del ruolo (`IsAdmin`); profili demo solo interni; controllo dei permessi nelle pagine scoperte (`RichiedePermesso`); messaggi d'errore comprensibili (`MessaggioErroreApi`); niente codici tecnici nei messaggi; Home senza KPI e attività inventati | fatta (questo branch) |
+| 1. Correttezza | costanti `PermessiSigad`/`PermessiIam` (prima `PermessiSidac`) al posto dei codici scritti come testo; niente capacità dal nome del ruolo (`IsAdmin`); profili demo solo interni; controllo dei permessi nelle pagine scoperte (`RichiedePermesso`); messaggi d'errore comprensibili (`MessaggioErroreApi`); niente codici tecnici nei messaggi; Home senza KPI e attività inventati | fatta (questo branch) |
 | 2. Lingua e accessibilità | localizzazione italiana di MudBlazor (paginatori), testi inglesi e pagina d'errore, testi autoreferenziali, un `h1` per pagina (anche per il focus alla navigazione), etichette dei pulsanti con sola icona, `PageTitle` su tutte le pagine | da fare |
 | 3. Stile | foglio di stile operativo condiviso (copia identica), via ombre, gradiente, maiuscolo spaziato, hero; Bootstrap e stili inline da togliere gradualmente; registro delle icone condiviso | dopo la validazione della Corporate Identity |
 | 4. Strumenti | `data-dev-component`/`data-dev-source` sulle 63 componenti, controllo in build; Dev Inspector caricato solo in Development e assente in Release | da fare |
 
 ## Fase 1: dettagli
 
-- `Accredia.SIGAD.Shared/Permessi/PermessiSidac.cs`: 58 codici del catalogo
+- `Accredia.SIGAD.Shared/Permessi/PermessiSigad.cs`: 58 codici del catalogo
   IAM; nel Web 196 testi sostituiti, nessun codice sconosciuto.
 - `NavMenu`: la sezione Amministrazione dipende da `IAM.CONSOLE.ACCESS`, non
   più dai ruoli `SIGAD_ADMIN`/`SIGAD_SUPERADMIN`; tolti `IsAdmin` e

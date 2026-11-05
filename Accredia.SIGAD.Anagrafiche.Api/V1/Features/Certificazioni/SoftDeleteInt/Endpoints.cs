@@ -1,6 +1,7 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Certificazioni.SoftDeleteInt;
 
@@ -24,7 +25,7 @@ internal static class Endpoints
                 var ok = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return ok ? Results.NoContent() : Results.NotFound();
             },
-            builder => builder.RichiedePermesso("SIDAC.CERT.DELETE", "SIDAC.INC.DELETE")
+            builder => builder.RichiedePermesso(PermessiSigad.Certificazioni.Cancellazione, PermessiSigad.Incarichi.Cancellazione)
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

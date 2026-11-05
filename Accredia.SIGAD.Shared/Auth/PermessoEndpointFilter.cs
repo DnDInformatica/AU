@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Shared.Auth;
 
@@ -11,8 +12,8 @@ namespace Accredia.SIGAD.Shared.Auth;
 /// dell'emittente. Il controllo risiede nel servizio e non nel gateway, perche'
 /// e' nel servizio che l'identita' e' stata risolta; il gateway instrada.
 ///
-/// Uso: .RichiedePermesso("SIDAC.HR.DIP.CREATE") oppure, per i casi in cui piu'
-/// permessi sono equivalenti, .RichiedePermesso("SIDAC.HR.DIP.LIST", "SIDAC.HR.DIP.READ").
+/// Uso: .RichiedePermesso(PermessiSigad.RisorseUmane.Dipendenti.Creazione) oppure, per i casi in cui piu'
+/// permessi sono equivalenti, .RichiedePermesso(PermessiSigad.RisorseUmane.Dipendenti.Elenco, PermessiSigad.RisorseUmane.Dipendenti.Lettura).
 /// </summary>
 public sealed class PermessoEndpointFilter : IEndpointFilter
 {

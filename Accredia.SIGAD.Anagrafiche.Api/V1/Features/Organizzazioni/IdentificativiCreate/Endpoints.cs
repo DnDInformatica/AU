@@ -2,6 +2,7 @@ using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.GetIdentificativi;
 using Microsoft.AspNetCore.Mvc;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.IdentificativiCreate;
 
@@ -32,7 +33,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
+            builder => builder.RichiedePermesso(PermessiSigad.Organizzazioni.Modifica)
                 .Produces<IdentificativoDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)

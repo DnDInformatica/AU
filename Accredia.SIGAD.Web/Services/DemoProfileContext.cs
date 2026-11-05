@@ -89,20 +89,20 @@ public sealed record SigadDemoProfile(
 public static class SigadDemoProfiles
 {
     private static readonly string[] TuttiIPermessi =
-        Costanti(typeof(PermessiSidac)).Concat(Costanti(typeof(PermessiIam))).ToArray();
+        Costanti(typeof(PermessiSigad)).Concat(Costanti(typeof(PermessiIam))).ToArray();
 
     // Sola consultazione: elenchi, letture e accesso ai moduli, senza dati del
     // personale né documenti della persona (dati personali).
-    private static readonly string[] PermessiConsultazione = Costanti(typeof(PermessiSidac))
-        .Where(c => c.EndsWith(".LIST") || c.EndsWith(".READ") || c.StartsWith("SIDAC.MODULE."))
-        .Where(c => !c.StartsWith("SIDAC.HR.") && !c.StartsWith("SIDAC.PERS.DOC."))
+    private static readonly string[] PermessiConsultazione = Costanti(typeof(PermessiSigad))
+        .Where(c => c.EndsWith(".LIST") || c.EndsWith(".READ") || c.StartsWith("SIGAD.MODULE."))
+        .Where(c => !c.StartsWith("SIGAD.HR.") && !c.StartsWith("SIGAD.PERS.DOC."))
         .ToArray();
 
     // Personale interno, più la consultazione delle organizzazioni (script IAM 20261105_05).
     private static readonly string[] PermessiRisorseUmane =
-        Costanti(typeof(PermessiSidac.RisorseUmane))
-            .Concat([PermessiSidac.DocumentiPersona.Lettura, PermessiSidac.Organizzazioni.Accesso,
-                     PermessiSidac.Organizzazioni.Elenco, PermessiSidac.Organizzazioni.Lettura])
+        Costanti(typeof(PermessiSigad.RisorseUmane))
+            .Concat([PermessiSigad.DocumentiPersona.Lettura, PermessiSigad.Organizzazioni.Accesso,
+                     PermessiSigad.Organizzazioni.Elenco, PermessiSigad.Organizzazioni.Lettura])
             .ToArray();
 
     public static IReadOnlyList<SigadDemoProfile> Build()

@@ -56,8 +56,8 @@ public partial class Dettaglio : ComponentBase
     private const int TabStorico = 8;
 
     private PersonaDetail? _detail;
-    private bool CanRead => UserContext.HasPermission(PermessiSidac.Persone.Elenco) || UserContext.HasPermission(PermessiSidac.Persone.Lettura);
-    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Persone.Modifica);
+    private bool CanRead => UserContext.HasPermission(PermessiSigad.Persone.Elenco) || UserContext.HasPermission(PermessiSigad.Persone.Lettura);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSigad.Persone.Modifica);
     private bool _isLoading = true;
     private string? _errorMessage;
     private int _activeTabIndex;

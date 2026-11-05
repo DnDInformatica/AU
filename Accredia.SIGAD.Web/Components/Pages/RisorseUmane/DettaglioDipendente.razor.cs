@@ -47,25 +47,25 @@ public partial class DettaglioDipendente : ComponentBase
     }
 
     private bool CanReadDipendente =>
-        (UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Lettura))
-        && UserContext.HasPermission(PermessiSidac.RisorseUmane.LetturaPersona);
-    private bool CanUpdateDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Modifica);
-    private bool CanDeleteDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Cancellazione);
+        (UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Elenco) || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Lettura))
+        && UserContext.HasPermission(PermessiSigad.RisorseUmane.LetturaPersona);
+    private bool CanUpdateDipendente => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Modifica);
+    private bool CanDeleteDipendente => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Cancellazione);
 
-    private bool CanCreateContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Creazione);
-    private bool CanReadContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Lettura);
-    private bool CanUpdateContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Modifica);
-    private bool CanDeleteContratti => UserContext.HasPermission(PermessiSidac.RisorseUmane.Contratti.Cancellazione);
+    private bool CanCreateContratti => UserContext.HasPermission(PermessiSigad.RisorseUmane.Contratti.Creazione);
+    private bool CanReadContratti => UserContext.HasPermission(PermessiSigad.RisorseUmane.Contratti.Elenco) || UserContext.HasPermission(PermessiSigad.RisorseUmane.Contratti.Lettura);
+    private bool CanUpdateContratti => UserContext.HasPermission(PermessiSigad.RisorseUmane.Contratti.Modifica);
+    private bool CanDeleteContratti => UserContext.HasPermission(PermessiSigad.RisorseUmane.Contratti.Cancellazione);
 
-    private bool CanCreateDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Creazione);
-    private bool CanReadDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Lettura);
-    private bool CanUpdateDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Modifica);
-    private bool CanDeleteDotazioni => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dotazioni.Cancellazione);
+    private bool CanCreateDotazioni => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dotazioni.Creazione);
+    private bool CanReadDotazioni => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dotazioni.Elenco) || UserContext.HasPermission(PermessiSigad.RisorseUmane.Dotazioni.Lettura);
+    private bool CanUpdateDotazioni => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dotazioni.Modifica);
+    private bool CanDeleteDotazioni => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dotazioni.Cancellazione);
 
-    private bool CanCreateFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Creazione);
-    private bool CanReadFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Elenco) || UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Lettura);
-    private bool CanUpdateFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Modifica);
-    private bool CanDeleteFormazione => UserContext.HasPermission(PermessiSidac.RisorseUmane.Formazione.Cancellazione);
+    private bool CanCreateFormazione => UserContext.HasPermission(PermessiSigad.RisorseUmane.Formazione.Creazione);
+    private bool CanReadFormazione => UserContext.HasPermission(PermessiSigad.RisorseUmane.Formazione.Elenco) || UserContext.HasPermission(PermessiSigad.RisorseUmane.Formazione.Lettura);
+    private bool CanUpdateFormazione => UserContext.HasPermission(PermessiSigad.RisorseUmane.Formazione.Modifica);
+    private bool CanDeleteFormazione => UserContext.HasPermission(PermessiSigad.RisorseUmane.Formazione.Cancellazione);
 
     private bool _isLoading = true;
     private bool _isSaving;

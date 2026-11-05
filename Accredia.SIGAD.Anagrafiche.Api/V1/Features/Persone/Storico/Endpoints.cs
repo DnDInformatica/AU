@@ -1,5 +1,6 @@
 using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Persone.Storico;
 
@@ -19,7 +20,7 @@ internal static class Endpoints
                 var response = await Handler.GetPersonaAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -36,7 +37,7 @@ internal static class Endpoints
                 var response = await Handler.GetEmailAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaEmailStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -53,7 +54,7 @@ internal static class Endpoints
                 var response = await Handler.GetTelefoniAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaTelefonoStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -70,7 +71,7 @@ internal static class Endpoints
                 var response = await Handler.GetIndirizziAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaIndirizzoStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -87,7 +88,7 @@ internal static class Endpoints
                 var response = await Handler.GetQualificheAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaQualificaStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -104,7 +105,7 @@ internal static class Endpoints
                 var response = await Handler.GetTitoliStudioAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaTitoloStudioStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -121,7 +122,7 @@ internal static class Endpoints
                 var response = await Handler.GetRelazioniPersonaliAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaRelazionePersonaleStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -138,7 +139,7 @@ internal static class Endpoints
                 var response = await Handler.GetUtenteAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<PersonaUtenteStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -155,7 +156,7 @@ internal static class Endpoints
                 var response = await Handler.GetConsensiAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<ConsensoPersonaStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -172,7 +173,7 @@ internal static class Endpoints
                 var response = await Handler.GetRegistroTrattamentiAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<RegistroTrattamentiStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -189,7 +190,7 @@ internal static class Endpoints
                 var response = await Handler.GetRichiestaGdprAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<RichiestaGdprStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -206,7 +207,7 @@ internal static class Endpoints
                 var response = await Handler.GetRichiestaEsercizioDirittiAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<RichiestaEsercizioDirittiStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -223,7 +224,7 @@ internal static class Endpoints
                 var response = await Handler.GetDataBreachAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
+            builder => builder.RichiedePermesso(PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura)
                 .Produces<IReadOnlyList<DataBreachStoricoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

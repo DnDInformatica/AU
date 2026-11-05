@@ -36,7 +36,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
         new BreadcrumbItem("Nuovo")
     };
 
-    private bool CanCreateDipendente => UserContext.HasPermission(PermessiSidac.RisorseUmane.Dipendenti.Creazione);
+    private bool CanCreateDipendente => UserContext.HasPermission(PermessiSigad.RisorseUmane.Dipendenti.Creazione);
 
     private sealed class FormModel
     {

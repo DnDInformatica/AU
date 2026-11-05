@@ -30,8 +30,8 @@ public sealed class CurrentUser : ICurrentUser
         Principal?.Identity?.AuthenticationType == AuthSchemes.Workforce;
 
     // I valori corrispondono a IAM.Utente.EntraProvider gia' in uso nel modello.
-    // SIDAC e' solo per uso interno: un'identita' esterna (ENTRA_ESTERNO) non
-    // viene cercata in IAM e non accede, anche se avesse ruoli con permessi SIDAC.
+    // SIGAD e' solo per uso interno: un'identita' esterna (ENTRA_ESTERNO) non
+    // viene cercata in IAM e non accede, anche se avesse ruoli con permessi SIGAD.
     private string? Provider => Principal?.Identity?.AuthenticationType switch
     {
         AuthSchemes.Workforce => "ENTRA_AZIENDALE",

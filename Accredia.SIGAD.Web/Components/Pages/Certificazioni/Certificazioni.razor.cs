@@ -10,11 +10,11 @@ namespace Accredia.SIGAD.Web.Components.Pages.Certificazioni;
 
 public partial class Certificazioni : ComponentBase
 {
-    private bool CanAccess => UserContext.HasPermission(PermessiSidac.Certificazioni.Accesso);
-    private bool CanRead => UserContext.HasPermission(PermessiSidac.Certificazioni.Elenco) || UserContext.HasPermission(PermessiSidac.Certificazioni.Lettura);
-    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Certificazioni.Creazione);
-    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Certificazioni.Modifica);
-    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Certificazioni.Cancellazione);
+    private bool CanAccess => UserContext.HasPermission(PermessiSigad.Certificazioni.Accesso);
+    private bool CanRead => UserContext.HasPermission(PermessiSigad.Certificazioni.Elenco) || UserContext.HasPermission(PermessiSigad.Certificazioni.Lettura);
+    private bool CanCreate => UserContext.HasPermission(PermessiSigad.Certificazioni.Creazione);
+    private bool CanUpdate => UserContext.HasPermission(PermessiSigad.Certificazioni.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSigad.Certificazioni.Cancellazione);
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs =
     [
