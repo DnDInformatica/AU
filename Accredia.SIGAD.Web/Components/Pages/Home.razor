@@ -14,7 +14,7 @@
         @if (UserContext.HasPermission(PermessiSigad.Organizzazioni.Accesso))
         {
             <MudItem xs="12" md="4">
-                <MudPaper Class="sigad-card" Elevation="0">
+                <MudPaper Class="sigad-card d-flex flex-column align-start gap-1" Elevation="0">
                     <MudText Typo="Typo.h6">Organizzazioni</MudText>
                     <MudText Typo="Typo.caption">Stato, tipologie, sedi, incarichi.</MudText>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/organizzazioni">Apri</MudButton>
@@ -24,7 +24,7 @@
         @if (UserContext.HasPermission(PermessiSigad.Persone.Accesso))
         {
             <MudItem xs="12" md="4">
-                <MudPaper Class="sigad-card" Elevation="0">
+                <MudPaper Class="sigad-card d-flex flex-column align-start gap-1" Elevation="0">
                     <MudText Typo="Typo.h6">Persone</MudText>
                     <MudText Typo="Typo.caption">Ricerca per nome, codice fiscale o partita IVA.</MudText>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/persone">Apri</MudButton>
@@ -34,7 +34,7 @@
         @if (UserContext.HasPermission(PermessiIam.AccessoConsole))
         {
             <MudItem xs="12" md="4">
-                <MudPaper Class="sigad-card" Elevation="0">
+                <MudPaper Class="sigad-card d-flex flex-column align-start gap-1" Elevation="0">
                     <MudText Typo="Typo.h6">Admin</MudText>
                     <MudText Typo="Typo.caption">Ruoli, permessi e audit.</MudText>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/admin">Apri</MudButton>
