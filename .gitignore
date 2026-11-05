@@ -56,3 +56,6 @@ nul
 
 # Documenti caricati in sviluppo (dati personali)
 **/App_Data/
+
+# File di prova locali (possono contenere stringhe di connessione)
+tmp_*.cs
