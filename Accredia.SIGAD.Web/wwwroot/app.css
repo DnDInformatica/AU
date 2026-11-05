@@ -331,7 +331,10 @@ a {
     padding: calc(var(--mud-appbar-height, 64px) + 24px) 32px 40px;
     max-width: 1440px;
     margin: 0 auto;
-    width: 100%;
+    /* auto, non 100%: MudBlazor sposta il contenuto con un margine sinistro pari al
+       menu laterale; con 100% il margine si sommava e la pagina usciva a destra
+       sotto i 1720 px di larghezza. */
+    width: auto;
 }
 
 .sigad-page-header {
