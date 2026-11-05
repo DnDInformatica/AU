@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Tipologiche.Api;
 using Accredia.SIGAD.Tipologiche.Api.Database;
 
@@ -19,7 +20,7 @@ internal static class Endpoints
 
                 return await Handler.Handle(query, connectionFactory, cancellationToken);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.TIPO.LIST", "SIDAC.TIPO.READ")
                 .Produces<DetailResponse>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

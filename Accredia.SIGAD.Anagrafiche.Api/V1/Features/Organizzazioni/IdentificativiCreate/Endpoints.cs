@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.GetIdentificativi;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
                 .Produces<IdentificativoDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)

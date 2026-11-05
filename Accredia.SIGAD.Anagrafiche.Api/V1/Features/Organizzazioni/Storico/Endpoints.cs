@@ -18,7 +18,7 @@ internal static class Endpoints
                 var response = await Handler.GetOrganizzazioneAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<IReadOnlyList<OrganizzazioneStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ").Produces<IReadOnlyList<OrganizzazioneStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
 
         ApiVersioning.MapVersionedGet(app, "/organizzazioni/{id:int}/storico/unita-organizzative", "OrganizzazioniGetStoricoUnita", async (
                 int id,
@@ -31,7 +31,7 @@ internal static class Endpoints
                 var response = await Handler.GetUnitaAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<IReadOnlyList<UnitaOrganizzativaStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ").Produces<IReadOnlyList<UnitaOrganizzativaStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
 
         ApiVersioning.MapVersionedGet(app, "/organizzazioni/{id:int}/storico/sedi", "OrganizzazioniGetStoricoSedi", async (
                 int id,
@@ -44,7 +44,7 @@ internal static class Endpoints
                 var response = await Handler.GetSediAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<IReadOnlyList<SedeStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ").Produces<IReadOnlyList<SedeStoricoDto>>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
 
         ApiVersioning.MapVersionedGet(app, "/organizzazioni/{id:int}/storico/incarichi", "OrganizzazioniGetStoricoIncarichi", async (
                 int id,
@@ -70,7 +70,7 @@ internal static class Endpoints
                 var response = await Handler.GetRelazioniAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<RelazioniStoricoResponse>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ").Produces<RelazioniStoricoResponse>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
 
         ApiVersioning.MapVersionedGet(app, "/organizzazioni/{id:int}/storico/attributi", "OrganizzazioniGetStoricoAttributi", async (
                 int id,
@@ -83,6 +83,6 @@ internal static class Endpoints
                 var response = await Handler.GetAttributiAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder.Produces<AttributiStoricoResponse>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ").Produces<AttributiStoricoResponse>(StatusCodes.Status200OK).Produces(StatusCodes.Status404NotFound).ProducesValidationProblem());
     }
 }

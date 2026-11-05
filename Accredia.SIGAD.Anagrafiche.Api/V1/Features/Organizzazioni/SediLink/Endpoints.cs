@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,7 @@ internal static class Endpoints
                 var response = await Handler.ListAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.LIST", "SIDAC.ORG.READ")
                 .Produces<IReadOnlyList<OrganizzazioneSedeLinkDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -50,7 +51,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
                 .Produces<OrganizzazioneSedeLinkDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)
@@ -73,7 +74,7 @@ internal static class Endpoints
                 var result = await Handler.UnlinkAsync(command, connectionFactory, cancellationToken);
                 return result == Handler.UnlinkResult.NotFound ? Results.NotFound() : Results.NoContent();
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
