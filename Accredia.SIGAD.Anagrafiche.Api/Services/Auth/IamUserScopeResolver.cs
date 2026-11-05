@@ -25,29 +25,25 @@ WHERE EntraObjectId = @Oid
   AND Attivo = 1
   AND DataCancellazione IS NULL;";
 
-    // Nota: le tabelle di associazione (UtenteRuolo, RuoloPermesso) non hanno
-    // la colonna Attivo: la validita' e' data dalla sola DataCancellazione.
-    // Solo i permessi delle applicazioni SIDAC e IAM: i ruoli sono trasversali,
-    // i permessi di un'altra applicazione (PORTALE.*) qui non valgono. IAM resta
-    // finche' le pagine di amministrazione di SIGAD non passano alla console IAM.
+    // Contratto di lettura di IAM (script IAM 20261105_08): le viste dicono che
+    // cosa vale oggi (utente e ruolo attivi, assegnazione non scaduta, organismo
+    // non cancellato) e applicano la regola dei destinatari: SIDAC e IAM sono
+    // solo per uso interno. Solo i permessi delle applicazioni SIDAC e IAM, dai
+    // ruoli globali: i permessi di un'altra applicazione (PORTALE.*) qui non
+    // valgono. IAM resta finche' le pagine di amministrazione di SIGAD non
+    // passano alla console IAM.
     private const string SqlPermessi = @"
-SELECT DISTINCT p.Codice
-FROM IAM.UtenteRuolo ur
-JOIN IAM.RuoloPermesso rp ON rp.RuoloSistemaId = ur.RuoloSistemaId
-JOIN IAM.Permesso p       ON p.PermessoId      = rp.PermessoId
-JOIN IAM.Applicazione a   ON a.ApplicazioneId  = p.ApplicazioneId
-WHERE ur.UtenteId = @UtenteId
-  AND ur.DataCancellazione IS NULL
-  AND rp.DataCancellazione IS NULL
-  AND p.Attivo = 1 AND p.DataCancellazione IS NULL
-  AND a.Codice IN (N'SIDAC', N'IAM') AND a.Attivo = 1 AND a.DataCancellazione IS NULL;";
+SELECT DISTINCT Permesso
+FROM IAM.vw_PermessiEffettivi
+WHERE UtenteId = @UtenteId
+  AND Origine = N'GLOBALE'
+  AND Applicazione IN (N'SIDAC', N'IAM');";
 
     private const string SqlOrganismi = @"
-SELECT OrganizzazioneOdCId
-FROM IAM.UtenteOdC
+SELECT DISTINCT OrganizzazioneId
+FROM IAM.vw_AssegnazioniEffettive
 WHERE UtenteId = @UtenteId
-  AND Attivo = 1 AND DataCancellazione IS NULL
-  AND (DataScadenza IS NULL OR DataScadenza >= CAST(SYSUTCDATETIME() AS date));";
+  AND Origine = N'ODC';";
 
     private const string SqlIspettore = @"
 SELECT TOP 1 IspettoreId
