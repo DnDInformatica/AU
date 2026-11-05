@@ -98,6 +98,7 @@ public static class IdentitySeeder
             NewPerm("MODULE.ORG.ACCESS", "Accesso modulo organizzazioni", "ORG", "MODULE", now),
             NewPerm("MODULE.PERS.ACCESS", "Accesso modulo persone", "PERS", "MODULE", now),
             NewPerm("MODULE.INC.ACCESS", "Accesso modulo incarichi", "INC", "MODULE", now),
+            NewPerm("MODULE.CERT.ACCESS", "Accesso modulo certificazioni", "CERT", "MODULE", now),
             NewPerm("MODULE.TIPO.ACCESS", "Accesso modulo tipologie", "TIPO", "MODULE", now),
             NewPerm("MODULE.ADMIN.ACCESS", "Accesso modulo amministrazione", "ADMIN", "MODULE", now),
 
@@ -118,6 +119,12 @@ public static class IdentitySeeder
             NewPerm("INC.CREATE", "Creazione incarichi", "INC", "ACTION", now),
             NewPerm("INC.UPDATE", "Aggiornamento incarichi", "INC", "ACTION", now),
             NewPerm("INC.DELETE", "Cancellazione incarichi", "INC", "ACTION", now),
+
+            NewPerm("CERT.LIST", "Elenco certificazioni", "CERT", "ACTION", now),
+            NewPerm("CERT.READ", "Lettura certificazioni", "CERT", "ACTION", now),
+            NewPerm("CERT.CREATE", "Creazione certificazioni", "CERT", "ACTION", now),
+            NewPerm("CERT.UPDATE", "Aggiornamento certificazioni", "CERT", "ACTION", now),
+            NewPerm("CERT.DELETE", "Cancellazione certificazioni", "CERT", "ACTION", now),
 
             NewPerm("TIPO.LIST", "Elenco tipologie", "TIPO", "ACTION", now),
             NewPerm("TIPO.READ", "Lettura tipologie", "TIPO", "ACTION", now),
@@ -182,10 +189,11 @@ public static class IdentitySeeder
         {
             await AssignPermissionsByCodesAsync(db, adminRole.Id, new[]
             {
-                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.TIPO.ACCESS", "MODULE.ADMIN.ACCESS",
+                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.CERT.ACCESS", "MODULE.TIPO.ACCESS", "MODULE.ADMIN.ACCESS",
                 "ORG.LIST", "ORG.READ", "ORG.CREATE", "ORG.UPDATE", "ORG.DELETE",
                 "PERS.LIST", "PERS.READ", "PERS.CREATE", "PERS.UPDATE", "PERS.DELETE",
                 "INC.LIST", "INC.READ", "INC.CREATE", "INC.UPDATE", "INC.DELETE",
+                "CERT.LIST", "CERT.READ", "CERT.CREATE", "CERT.UPDATE", "CERT.DELETE",
                 "TIPO.LIST", "TIPO.READ", "TIPO.CREATE", "TIPO.UPDATE", "TIPO.DELETE",
                 "HR.PERSONA.READ",
                 "HR.DIP.LIST", "HR.DIP.READ", "HR.DIP.CREATE", "HR.DIP.UPDATE", "HR.DIP.DELETE",
@@ -200,10 +208,11 @@ public static class IdentitySeeder
         {
             await AssignPermissionsByCodesAsync(db, operRole.Id, new[]
             {
-                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.TIPO.ACCESS",
+                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.CERT.ACCESS", "MODULE.TIPO.ACCESS",
                 "ORG.LIST", "ORG.READ", "ORG.UPDATE",
                 "PERS.LIST", "PERS.READ", "PERS.UPDATE",
                 "INC.LIST", "INC.READ", "INC.UPDATE",
+                "CERT.LIST", "CERT.READ", "CERT.UPDATE",
                 "TIPO.LIST", "TIPO.READ", "TIPO.UPDATE",
                 "HR.PERSONA.READ",
                 "HR.DIP.LIST", "HR.DIP.READ", "HR.DIP.UPDATE",
@@ -217,10 +226,11 @@ public static class IdentitySeeder
         {
             await AssignPermissionsByCodesAsync(db, readRole.Id, new[]
             {
-                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.TIPO.ACCESS",
+                "MODULE.ORG.ACCESS", "MODULE.PERS.ACCESS", "MODULE.INC.ACCESS", "MODULE.CERT.ACCESS", "MODULE.TIPO.ACCESS",
                 "ORG.LIST", "ORG.READ",
                 "PERS.LIST", "PERS.READ",
                 "INC.LIST", "INC.READ",
+                "CERT.LIST", "CERT.READ",
                 "TIPO.LIST", "TIPO.READ",
                 "HR.PERSONA.READ",
                 "HR.DIP.LIST", "HR.DIP.READ",

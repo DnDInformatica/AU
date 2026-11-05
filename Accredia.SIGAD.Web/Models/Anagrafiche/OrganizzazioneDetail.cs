@@ -41,6 +41,36 @@ public sealed record OrganizzazioneIdentificativoFiscaleItem(
     bool Principale,
     string? Note);
 
+public sealed record GruppoIvaItem(
+    int GruppoIvaId,
+    string PartitaIvaGruppo,
+    string Denominazione,
+    string? CodiceGruppo,
+    DateTime DataCostituzione,
+    DateTime? DataApprovazione,
+    string? ProtocolloAgenziaEntrate,
+    string? NumeroProvvedimento,
+    string StatoGruppo,
+    DateTime? DataCessazione,
+    string? MotivoCessazione,
+    int? OrganizzazioneCapogruppoId,
+    string? Note,
+    string? DocumentazioneRiferimento);
+
+public sealed record GruppoIvaMembroItem(
+    int GruppoIvaMembroId,
+    int GruppoIvaId,
+    int OrganizzazioneId,
+    DateTime DataAdesione,
+    DateTime? DataUscita,
+    string? MotivoUscita,
+    string? ProtocolloUscita,
+    bool IsCapogruppo,
+    string? RuoloNelGruppo,
+    decimal? PercentualePartecipazione,
+    string StatoMembro,
+    string? Note);
+
 public sealed record SedeItem(
     int SedeId,
     string? Denominazione,

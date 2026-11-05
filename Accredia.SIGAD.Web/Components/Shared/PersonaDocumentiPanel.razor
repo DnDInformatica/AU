@@ -1,0 +1,102 @@
+@namespace Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+
+@if (!CanRead)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudPaper Class="pa-4 sigad-card mb-3" Elevation="0">
+    <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="2">
+        @if (AllowPersonaSelection)
+        {
+            <MudTextField T="int?" Label="PersonaId" Dense="true" Variant="Variant.Outlined" @bind-Value="_personaIdFilter" />
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">PersonaId: @_personaIdFilter</MudText>
+        }
+
+        <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="@_loading" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_loading || !_personaIdFilter.HasValue || _personaIdFilter.Value <= 0)" OnClick="LoadAsync">
+            Carica documenti
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <MudAlert Severity="@(_messageIsError ? Severity.Warning : Severity.Success)" Variant="Variant.Outlined" Class="mb-3">
+        @_message
+    </MudAlert>
+}
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_personaIdFilter is null or <= 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Seleziona un `PersonaId` per visualizzare i documenti.</MudAlert>
+}
+else
+{
+    <MudGrid Spacing="2">
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-4 sigad-card">
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.subtitle2">Elenco documenti (@_items.Count)</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@_loading" OnClick="LoadAsync">Ricarica</MudButton>
+                </MudStack>
+                <MudTable Items="_items" Dense="true" Hover="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Nome file</MudTh>
+                        <MudTh>Tipo</MudTh>
+                        <MudTh>Dimensione</MudTh>
+                        <MudTh>Creato</MudTh>
+                        <MudTh>Stato</MudTh>
+                        <MudTh Align="Right"></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.NomeFile</MudTd>
+                        <MudTd>@(string.IsNullOrWhiteSpace(context.ContentType) ? "n/d" : context.ContentType)</MudTd>
+                        <MudTd>@FormatBytes(context.DimensioneBytes)</MudTd>
+                        <MudTd>@context.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd>@(context.DeletedAtUtc.HasValue ? "Cancellato" : "Attivo")</MudTd>
+                        <MudTd Align="Right">
+                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                           Size="Size.Small"
+                                           Disabled="@(!CanRead)"
+                                           OnClick="@(() => DownloadAsync(context))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           Disabled="@(!CanDelete || context.DeletedAtUtc.HasValue)"
+                                           OnClick="@(() => SoftDeleteAsync(context.DocumentoId))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-4 sigad-card">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Upload documento</MudText>
+                <MudTextField T="string" Label="Note" Dense="true" Variant="Variant.Outlined" @bind-Value="_uploadNote" Class="mb-2" />
+                <InputFile OnChange="OnFileSelectedAsync" />
+                @if (!string.IsNullOrWhiteSpace(_selectedFileName))
+                {
+                    <MudText Typo="Typo.caption" Class="d-block mt-2">@_selectedFileName (@FormatBytes(_selectedFileSize))</MudText>
+                }
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@(!CanCreate || _uploading || _selectedFileContent is null || !_personaIdFilter.HasValue || _personaIdFilter.Value <= 0)"
+                           OnClick="UploadAsync"
+                           Class="mt-2">
+                    @(_uploading ? "Upload in corso..." : "Carica documento")
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

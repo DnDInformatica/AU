@@ -1,0 +1,6 @@
+CREATE SCHEMA [ImportSIAC]
+    AUTHORIZATION [dbo];
+
+
+GO
+

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -7,7 +7,7 @@ using Accredia.SIGAD.Web.Models.Anagrafiche;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Accredia.SIGAD.Web.Components.Pages.AnagraficheIndex;
+namespace Accredia.SIGAD.Web.Components.Pages.Organizzazioni;
 
 public partial class OrganizzazioniResults : ComponentBase
 {

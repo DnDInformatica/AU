@@ -810,3 +810,10 @@ a {
 .mud-main-content {
     overflow: visible !important;
 }
+.mud-layout {
+    overflow-y: visible !important;
+}
+html, body {
+    overflow: hidden !important;
+    height: 100%;
+}

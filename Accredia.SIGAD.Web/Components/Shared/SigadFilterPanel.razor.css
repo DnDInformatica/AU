@@ -1,0 +1,88 @@
+/* ========================================
+   SigadFilterPanel.razor - Scoped Styles
+   Data: 18 Febbraio 2026
+   Responsive filters e mobile UX
+   ======================================== */
+
+/* ── BUTTONS ROW FIX ── */
+::deep .sigad-filterbar-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 700px) {
+    ::deep .sigad-filterbar-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    ::deep .sigad-filterbar-buttons .mud-button-root {
+        flex: 1 1 160px;
+        min-width: 140px;
+    }
+}
+
+/* ── FILTER CHIPS ── */
+::deep .sigad-filterbar-chips {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── EXPANSION PANEL HEADER FIX ── */
+::deep .sigad-filterbar .mud-expand-panel-header {
+    padding: 0 !important;
+}
+
+::deep .sigad-filterbar .mud-expand-panel-header .mud-expand-panel-header-content,
+::deep .sigad-filterbar .mud-expand-panel-header .mud-expand-panel-text {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* ── EXPANDER TITLE LAYOUT ── */
+::deep .sigad-expander-title {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+::deep .sigad-expander-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+::deep .sigad-expander-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+::deep .sigad-expander-title-text {
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    ::deep .sigad-expander-title-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+    :host {
+        display: none !important;
+    }
+}

@@ -1,5 +1,5 @@
 @page "/organizzazioni/{id:int}"
-@namespace Accredia.SIGAD.Web.Components.Pages.Dettagli.Organizzazioni
+@namespace Accredia.SIGAD.Web.Components.Pages.Organizzazioni
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
@@ -632,9 +632,143 @@
 
                 @* ── IDENTIFICATIVI IVA/CF ── *@
                 <MudTabPanel Text="Identificativi IVA/CF" Icon="@Icons.Material.Outlined.Badge">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary pa-4">
-                        Gestione identificativi in fase di sviluppo.
-                    </MudText>
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                        <MudText Typo="Typo.h6">Identificativi fiscali</MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_identificativiLoading" OnClick="@(() => EnsureIdentificativiLoadedAsync(force: true))">
+                            Ricarica
+                        </MudButton>
+                    </MudStack>
+
+                    @if (!string.IsNullOrWhiteSpace(_identificativiError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">@_identificativiError</MudAlert>
+                    }
+
+                    <MudPaper Elevation="0" Class="pa-4 mb-3 sigad-card">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">@SaveIdentificativoLabel</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="2">
+                                <MudTextField T="string" Label="Paese ISO2" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="_identificativoForm.PaeseISO2" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudTextField T="string" Label="Tipo" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="_identificativoForm.TipoIdentificativo" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Valore" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="_identificativoForm.Valore" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudCheckBox T="bool" Label="Principale" @bind-Value="_identificativoForm.Principale" />
+                            </MudItem>
+                            <MudItem xs="12" md="12">
+                                <MudTextField T="string" Label="Note" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="_identificativoForm.Note" />
+                            </MudItem>
+                        </MudGrid>
+                        <MudStack Direction="Row" Spacing="2" Class="mt-2">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@( !CanSaveIdentificativo || _identificativiLoading)" OnClick="SaveIdentificativoAsync">
+                                @SaveIdentificativoLabel
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="ResetIdentificativoForm">
+                                Annulla
+                            </MudButton>
+                        </MudStack>
+                    </MudPaper>
+
+                    @if (_identificativiLoading && _identificativi.Count == 0)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+                            <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="42px" />
+                        </MudPaper>
+                    }
+                    else if (_identificativi.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">Nessun identificativo presente.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="sigad-table-wrap mb-4">
+                            <MudTable Items="_identificativi" Dense="true" Hover="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Tipo</MudTh>
+                                    <MudTh>Valore</MudTh>
+                                    <MudTh>Paese</MudTh>
+                                    <MudTh>Principale</MudTh>
+                                    <MudTh>Note</MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Tipo">@context.TipoIdentificativo</MudTd>
+                                    <MudTd DataLabel="Valore">@context.Valore</MudTd>
+                                    <MudTd DataLabel="Paese">@context.PaeseISO2</MudTd>
+                                    <MudTd DataLabel="Principale">
+                                        @if (context.Principale)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">Sì</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2">No</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Note">@DisplayOrDash(context.Note)</MudTd>
+                                    <MudTd Style="width:1%;white-space:nowrap;text-align:right;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small" OnClick="@(() => EditIdentificativo(context))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteIdentificativoAsync(context.Id))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudPaper>
+                    }
+
+                    <MudDivider Class="my-3" />
+                    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudText Typo="Typo.h6">Gruppi IVA collegati</MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_gruppiIvaLoading" OnClick="@(() => EnsureGruppiIvaLoadedAsync(force: true))">
+                            Ricarica gruppi
+                        </MudButton>
+                    </MudStack>
+
+                    @if (!string.IsNullOrWhiteSpace(_gruppiIvaError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@_gruppiIvaError</MudAlert>
+                    }
+                    else if (_gruppiIvaLoading && _gruppiIva.Count == 0)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 sigad-card">
+                            <MudSkeleton Width="100%" Height="42px" Class="mb-2" />
+                            <MudSkeleton Width="100%" Height="42px" />
+                        </MudPaper>
+                    }
+                    else if (_gruppiIva.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            Nessun gruppo IVA collegato a questa organizzazione.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="sigad-table-wrap">
+                            <MudTable Items="_gruppiIva" Dense="true" Hover="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>ID</MudTh>
+                                    <MudTh>Partita IVA gruppo</MudTh>
+                                    <MudTh>Denominazione</MudTh>
+                                    <MudTh>Stato gruppo</MudTh>
+                                    <MudTh>Ruolo organizzazione</MudTh>
+                                    <MudTh>Stato membro</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="ID">@context.GruppoIvaId</MudTd>
+                                    <MudTd DataLabel="Partita IVA gruppo">@context.PartitaIvaGruppo</MudTd>
+                                    <MudTd DataLabel="Denominazione">@context.Denominazione</MudTd>
+                                    <MudTd DataLabel="Stato gruppo">@context.StatoGruppo</MudTd>
+                                    <MudTd DataLabel="Ruolo organizzazione">@(context.IsCapogruppo ? "Capogruppo" : DisplayOrDash(context.RuoloNelGruppo))</MudTd>
+                                    <MudTd DataLabel="Stato membro">@DisplayOrDash(context.StatoMembro)</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudPaper>
+                    }
                 </MudTabPanel>
 
                     </MudTabs>
@@ -643,4 +777,3 @@
         </MudPaper>
     }
 </MudContainer>
-

@@ -1,0 +1,6 @@
+CREATE SCHEMA [Organi]
+    AUTHORIZATION [dbo];
+
+
+GO
+

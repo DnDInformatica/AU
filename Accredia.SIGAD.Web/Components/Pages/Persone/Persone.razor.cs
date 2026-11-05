@@ -1,0 +1,346 @@
+using System.Globalization;
+using System.Text;
+using Accredia.SIGAD.Web.Components.Shared;
+using Accredia.SIGAD.Web.Models.Anagrafiche;
+using Accredia.SIGAD.Web.Models.Common;
+using Accredia.SIGAD.Web.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using MudBlazor;
+using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+
+namespace Accredia.SIGAD.Web.Components.Pages.Persone;
+
+public partial class Persone
+{
+    [Parameter, SupplyParameterFromQuery(Name = "q")]
+    public string? Q { get; set; }
+
+    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs =
+    [
+        new BreadcrumbItem("Home", "/"),
+        new BreadcrumbItem("Persone")
+    ];
+
+    private MudTable<PersonaListItem>? _table;
+    private IEnumerable<PersonaListItem> _items = Array.Empty<PersonaListItem>();
+    private string? _errorMessage;
+    private string? _query;
+    private string _emptyMessage = "Inserisci un criterio di ricerca.";
+    private int _totalCount;
+    private bool _queryFromUrlApplied;
+    private bool _filtersExpanded = true;
+    private int _activeFiltersCount;
+    private MudTextField<string>? _queryField;
+    private IReadOnlyCollection<PersonaListItem> _selectedItems = Array.Empty<PersonaListItem>();
+    private bool _bulkInProgress;
+    private int _bulkCurrent;
+    private int _bulkTotal;
+    private DateTimeOffset? _bulkStartedAt;
+
+    private string _resultsHint
+        => string.IsNullOrWhiteSpace(_query) || _query.Trim().Length < 2
+            ? "Inserisci almeno 2 caratteri per la ricerca."
+            : $"Totale: {_totalCount}";
+
+    protected override void OnParametersSet()
+    {
+        if (!_queryFromUrlApplied && !string.IsNullOrWhiteSpace(Q))
+        {
+            _queryFromUrlApplied = true;
+            _query = Q;
+            UpdateFiltersCount();
+        }
+    }
+
+    private Task ApplyFilters()
+    {
+        _errorMessage = null;
+        _filtersExpanded = false;
+        UpdateFiltersCount();
+        _table?.ReloadServerData();
+        return Task.CompletedTask;
+    }
+
+    private Task ResetFilters()
+    {
+        _query = null;
+        _totalCount = 0;
+        _filtersExpanded = true;
+        UpdateFiltersCount();
+        _table?.ReloadServerData();
+        _ = FocusQueryAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task OnQueryChanged(string? value)
+    {
+        _query = value;
+        UpdateFiltersCount();
+        return Task.CompletedTask;
+    }
+
+    private void UpdateFiltersCount()
+        => _activeFiltersCount = string.IsNullOrWhiteSpace(_query) ? 0 : 1;
+
+    private void OnQueryFieldRefChanged(MudTextField<string>? field)
+        => _queryField = field;
+
+    private Task OnFiltersExpandedChanged(bool value)
+    {
+        _filtersExpanded = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task FocusQueryAsync()
+    {
+        try
+        {
+            if (_queryField is not null)
+            {
+                await _queryField.FocusAsync();
+            }
+        }
+        catch
+        {
+            // best effort
+        }
+    }
+
+    private async Task<TableData<PersonaListItem>> LoadPersone(TableState state, CancellationToken cancellationToken)
+    {
+        var page = state.Page + 1;
+        var pageSize = state.PageSize;
+
+        if (string.IsNullOrWhiteSpace(_query) || _query.Trim().Length < 2)
+        {
+            _emptyMessage = "Inserisci almeno 2 caratteri per la ricerca.";
+            return new TableData<PersonaListItem>
+            {
+                Items = Array.Empty<PersonaListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        var result = await GatewayClient.SearchPersoneAsync(_query, page, pageSize, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            _errorMessage = result.Error ?? "Impossibile caricare le persone.";
+            return new TableData<PersonaListItem>
+            {
+                Items = Array.Empty<PersonaListItem>(),
+                TotalItems = 0
+            };
+        }
+
+        _errorMessage = null;
+        _items = result.Data.Items;
+        _totalCount = result.Data.TotalCount;
+        await InvokeAsync(StateHasChanged);
+
+        return new TableData<PersonaListItem>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private void OpenQuickPreview(PersonaListItem item)
+    {
+        QuickDrawer.Open(new QuickDrawerRequest(
+            Title: $"{item.Cognome} {item.Nome}",
+            Subtitle: string.IsNullOrWhiteSpace(item.CodiceFiscale) ? "Anteprima persona" : $"CF {item.CodiceFiscale}",
+            Body: BuildQuickPreviewBody(item),
+            Actions: BuildQuickPreviewActions(item)));
+    }
+
+    private RenderFragment BuildQuickPreviewBody(PersonaListItem item) => builder =>
+    {
+        builder.OpenComponent<PersonaQuickPreview>(0);
+        builder.AddAttribute(1, "Item", item);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment BuildQuickPreviewActions(PersonaListItem item) => builder =>
+    {
+        builder.OpenComponent<QuickPreviewActions>(0);
+        builder.AddAttribute(1, "OnClose", EventCallback.Factory.Create(this, () => QuickDrawer.Close()));
+        builder.AddAttribute(2, "OnOpenDetail", EventCallback.Factory.Create(this, () => NavigateToDetail(item.PersonaId)));
+        builder.CloseComponent();
+    };
+
+    private void NavigateToDetail(int personaId)
+    {
+        QuickDrawer.Close();
+        Navigation.NavigateTo($"/persone/{personaId}");
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<PersonaListItem> args)
+    {
+        if (args.Item is null)
+        {
+            return;
+        }
+
+        OpenQuickPreview(args.Item);
+    }
+
+    private void CreateNew()
+        => Navigation.NavigateTo("/persone/nuova");
+
+    private void OnTableRefChanged(MudTable<PersonaListItem>? table)
+        => _table = table;
+
+    private Task OnSelectedItemsChanged(IReadOnlyCollection<PersonaListItem> items)
+    {
+        _selectedItems = items;
+        return Task.CompletedTask;
+    }
+
+    private async Task StartBulkProgressAsync()
+    {
+        _bulkInProgress = true;
+        _bulkCurrent = 0;
+        _bulkTotal = _selectedItems.Count;
+        _bulkStartedAt = DateTimeOffset.UtcNow;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(50);
+    }
+
+    private async Task AdvanceBulkProgressAsync()
+    {
+        _bulkCurrent++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task EndBulkProgressAsync()
+    {
+        if (_bulkStartedAt is not null)
+        {
+            var elapsed = DateTimeOffset.UtcNow - _bulkStartedAt.Value;
+            if (elapsed < TimeSpan.FromMilliseconds(500))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(500) - elapsed);
+            }
+        }
+
+        _bulkInProgress = false;
+        _bulkCurrent = 0;
+        _bulkTotal = 0;
+        _bulkStartedAt = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnExportSelected()
+    {
+        if (_selectedItems.Count == 0)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma esportazione",
+            $"Vuoi esportare {_selectedItems.Count} persone selezionate?\n\n" +
+            "L'operazione potrebbe richiedere qualche secondo.",
+            yesText: "Esporta",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        await StartBulkProgressAsync();
+
+        var csv = await BuildCsvWithProgressAsync(_selectedItems, AdvanceBulkProgressAsync);
+        var filename = $"persone-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+        await JS.InvokeVoidAsync("sigadDownloadFile", filename, csv, "text/csv;charset=utf-8");
+
+        await EndBulkProgressAsync();
+    }
+
+    private async Task OnDeleteSelected()
+    {
+        if (_selectedItems.Count == 0)
+        {
+            return;
+        }
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            $"Vuoi eliminare {_selectedItems.Count} persone selezionate?\n\n" +
+            "Attenzione: l'operazione e irreversibile.",
+            yesText: "Elimina",
+            cancelText: "Annulla");
+
+        if (confirm != true)
+        {
+            return;
+        }
+
+        var errors = new List<string>();
+        await StartBulkProgressAsync();
+        foreach (var item in _selectedItems)
+        {
+            var result = await GatewayClient.SoftDeletePersonaAsync(item.PersonaId, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                errors.Add(result.Error ?? $"Errore eliminando #{item.PersonaId}");
+            }
+
+            await AdvanceBulkProgressAsync();
+        }
+
+        await EndBulkProgressAsync();
+        if (errors.Count > 0)
+        {
+            Snackbar.Add($"Eliminazione parziale: {errors.Count} errori.", Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("Persone eliminate.", Severity.Success);
+        }
+
+        _selectedItems = Array.Empty<PersonaListItem>();
+        _table?.ReloadServerData();
+    }
+
+    private static async Task<string> BuildCsvWithProgressAsync(
+        IReadOnlyCollection<PersonaListItem> items,
+        Func<Task> onRowAsync)
+    {
+        static string Esc(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "\"\"";
+            }
+
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("PersonaId;Cognome;Nome;CodiceFiscale;DataNascita");
+
+        var index = 0;
+        var yieldEvery = items.Count <= 50 ? 1 : 25;
+        foreach (var item in items)
+        {
+            sb.Append(item.PersonaId.ToString(CultureInfo.InvariantCulture)).Append(';')
+              .Append(Esc(item.Cognome)).Append(';')
+              .Append(Esc(item.Nome)).Append(';')
+              .Append(Esc(item.CodiceFiscale)).Append(';')
+              .Append(item.DataNascita.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            sb.AppendLine();
+            index++;
+            await onRowAsync();
+            if (index % yieldEvery == 0)
+            {
+                await Task.Yield();
+            }
+        }
+
+        return sb.ToString();
+    }
+}

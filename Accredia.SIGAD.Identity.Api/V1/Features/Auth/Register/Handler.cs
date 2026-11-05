@@ -32,7 +32,10 @@ internal static class Handler
 -- Check if user already exists
 IF EXISTS (SELECT 1 FROM [Identity].[AspNetUsers] WHERE [NormalizedUserName] = @NormalizedUserName OR [NormalizedEmail] = @NormalizedEmail)
 BEGIN
-    SELECT NULL AS UserId, NULL AS UserName, NULL AS Email;
+    SELECT
+        CAST(NULL AS NVARCHAR(450)) AS UserId,
+        CAST(NULL AS NVARCHAR(256)) AS UserName,
+        CAST(NULL AS NVARCHAR(256)) AS Email;
     RETURN;
 END
 

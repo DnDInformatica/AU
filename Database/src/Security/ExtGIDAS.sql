@@ -1,0 +1,6 @@
+CREATE SCHEMA [ExtGIDAS]
+    AUTHORIZATION [dbo];
+
+
+GO
+

@@ -1,0 +1,63 @@
+# Pipeline di verifica dello schema Accredia_SIDAC.
+# Non applica modifiche: costruisce il dacpac dallo schema versionato
+# e segnala il drift rispetto al database reale.
+trigger:
+  branches:
+    include: [ main, develop ]
+  paths:
+    include: [ Database/** ]
+
+pr:
+  paths:
+    include: [ Database/** ]
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  - name: sqlServer
+    value: accsqlmigration-sql-itn-dev.database.windows.net
+  - name: sqlDatabase
+    value: Accredia_SIDAC
+
+stages:
+  - stage: Build
+    displayName: Build schema
+    jobs:
+      - job: BuildDacpac
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              version: 9.x
+          - script: dotnet build Database/Accredia.SIDAC.Database.sqlproj -c Release
+            displayName: Build dacpac
+          - publish: Database/bin/Release
+            artifact: dacpac
+
+  - stage: Drift
+    displayName: Verifica drift
+    dependsOn: Build
+    jobs:
+      - job: DriftReport
+        steps:
+          - download: current
+            artifact: dacpac
+          - task: AzureCLI@2
+            displayName: DeployReport contro il database
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                dotnet tool install --global microsoft.sqlpackage
+                $token = az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv
+                sqlpackage /Action:DeployReport `
+                  /SourceFile:"$(Pipeline.Workspace)/dacpac/Accredia.SIDAC.Database.dacpac" `
+                  /TargetServerName:"$(sqlServer)" `
+                  /TargetDatabaseName:"$(sqlDatabase)" `
+                  /AccessToken:"$token" `
+                  /OutputPath:"$(Build.ArtifactStagingDirectory)/deployreport.xml" `
+                  /p:BlockOnPossibleDataLoss=True `
+                  /p:DropObjectsNotInSource=False
+          - publish: $(Build.ArtifactStagingDirectory)
+            artifact: drift-report

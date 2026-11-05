@@ -87,19 +87,3 @@
         </MudTable>
     </MudPaper>
 </MudContainer>
-
-@code {
-    private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
-    {
-        new BreadcrumbItem("Home")
-    };
-
-    private readonly List<ActivityItem> _recentItems = new()
-    {
-        new ActivityItem("Organizzazione aggiornata", "06/02/2026"),
-        new ActivityItem("Nuova persona collegata", "05/02/2026"),
-        new ActivityItem("Incarico cessato", "04/02/2026")
-    };
-
-    private sealed record ActivityItem(string Title, string Date);
-}

@@ -1,3 +1,4 @@
+﻿using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.RisorseUmane.Api.Database;
 
 namespace Accredia.SIGAD.RisorseUmane.Api.V1.Features.Reports;
@@ -21,6 +22,7 @@ internal static class Endpoints
                 return await Handler.FormazioneInScadenzaAsync(windowDays, connectionFactory, cancellationToken);
             },
             builder => builder
+                .RichiedePermesso("HR.FORM.LIST", "HR.FORM.READ")
                 .Produces<IReadOnlyCollection<FormazioneInScadenzaDto>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
 
@@ -28,6 +30,7 @@ internal static class Endpoints
             async (ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.DotazioniNonRestituiteCessatiAsync(connectionFactory, cancellationToken),
             builder => builder
+                .RichiedePermesso("HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ")
                 .Produces<IReadOnlyCollection<DotazioneNonRestituitaCessatoDto>>(StatusCodes.Status200OK));
     }
 }

@@ -1,0 +1,12 @@
+CREATE FUNCTION ImportSIAC.fn_NormText(@s NVARCHAR(2000))
+RETURNS NVARCHAR(2000)
+AS
+BEGIN
+    IF @s IS NULL RETURN NULL;
+    SET @s = LOWER(LTRIM(RTRIM(@s)));
+    SET @s = REPLACE(REPLACE(REPLACE(REPLACE(@s,'  ',' '),'  ',' '),'’',''''),'"','');
+    RETURN @s;
+END;
+
+GO
+

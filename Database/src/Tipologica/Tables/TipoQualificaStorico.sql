@@ -1,0 +1,26 @@
+CREATE TABLE [Tipologica].[TipoQualificaStorico] (
+    [TipoQualificaId]    INT              NOT NULL,
+    [Codice]             NVARCHAR (30)    NOT NULL,
+    [Descrizione]        NVARCHAR (500)   NOT NULL,
+    [Categoria]          NVARCHAR (50)    NULL,
+    [RichiedeScadenza]   BIT              NOT NULL,
+    [DataCreazione]      DATETIME2 (7)    NOT NULL,
+    [CreatoDa]           INT              NULL,
+    [DataModifica]       DATETIME2 (7)    NULL,
+    [ModificatoDa]       INT              NULL,
+    [DataCancellazione]  DATETIME2 (7)    NULL,
+    [CancellatoDa]       INT              NULL,
+    [UniqueRowId]        UNIQUEIDENTIFIER NOT NULL,
+    [DataInizioValidita] DATETIME2 (7)    NOT NULL,
+    [DataFineValidita]   DATETIME2 (7)    NOT NULL
+);
+
+
+GO
+
+CREATE CLUSTERED INDEX [ix_TipoQualificaStorico]
+    ON [Tipologica].[TipoQualificaStorico]([DataFineValidita] ASC, [DataInizioValidita] ASC) WITH (DATA_COMPRESSION = PAGE);
+
+
+GO
+

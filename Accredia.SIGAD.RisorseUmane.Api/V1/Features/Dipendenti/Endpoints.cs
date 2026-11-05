@@ -1,5 +1,6 @@
 using Accredia.SIGAD.RisorseUmane.Api.Database;
 using Accredia.SIGAD.RisorseUmane.Api.Services;
+using Accredia.SIGAD.Shared.Auth;
 
 namespace Accredia.SIGAD.RisorseUmane.Api.V1.Features.Dipendenti;
 
@@ -11,6 +12,7 @@ internal static class Endpoints
             async (int id, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.GetByIdAsync(id, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
+                .RichiedePermesso("HR.DIP.LIST", "HR.DIP.READ")
                 .Produces<DipendenteDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -19,6 +21,7 @@ internal static class Endpoints
                     ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.ListAsync(personaId, matricola, q, statoDipendenteId, includeDeleted == true, page ?? 1, pageSize ?? 20, connectionFactory, cancellationToken),
             builder => builder
+                .RichiedePermesso("HR.DIP.LIST", "HR.DIP.READ")
                 .Produces<PagedResponse<DipendenteDto>>(StatusCodes.Status200OK));
 
         ApiVersioning.MapVersionedPost(app, "/dipendenti", "CreateDipendente",
@@ -52,6 +55,7 @@ internal static class Endpoints
                 return await Handler.CreateAsync(request, connectionFactory, cancellationToken);
             },
             builder => builder
+                .RichiedePermesso("HR.DIP.CREATE")
                 .Produces<DipendenteCreateResponse>(StatusCodes.Status201Created)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
@@ -88,6 +92,7 @@ internal static class Endpoints
                 return await Handler.UpdateAsync(id, request, connectionFactory, cancellationToken);
             },
             builder => builder
+                .RichiedePermesso("HR.DIP.UPDATE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -97,6 +102,7 @@ internal static class Endpoints
             async (int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.SoftDeleteAsync(id, connectionFactory, cancellationToken),
             builder => builder
+                .RichiedePermesso("HR.DIP.DELETE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -104,6 +110,7 @@ internal static class Endpoints
             async (int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.StoricoAsync(id, connectionFactory, cancellationToken),
             builder => builder
+                .RichiedePermesso("HR.DIP.LIST", "HR.DIP.READ")
                 .Produces<IReadOnlyCollection<DipendenteStoricoDto>>(StatusCodes.Status200OK));
     }
 }

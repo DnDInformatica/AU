@@ -1,0 +1,179 @@
+@page "/certificazioni"
+@namespace Accredia.SIGAD.Web.Components.Pages.Certificazioni
+@inject UserContext UserContext
+@inject GatewayClient GatewayClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@using Accredia.SIGAD.Web.Components.Shared
+@using Accredia.SIGAD.Web.Models.Anagrafiche
+@using Accredia.SIGAD.Web.Services
+@using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem
+
+@if (!CanAccess)
+{
+    <AccessDenied ShowContactHint="true" />
+    return;
+}
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <PageHeader Title="Certificazioni"
+                Subtitle="Ricerca e consultazione certificazioni."
+                BreadcrumbItems="@_breadcrumbs" />
+
+    @if (!CanRead)
+    {
+        <AccessDenied Title="Permesso mancante"
+                      Message="Per consultare le certificazioni servono i permessi CERT.LIST o CERT.READ."
+                      ShowContactHint="true" />
+        return;
+    }
+
+    <MudPaper Class="pa-4 mb-4 sigad-card" Elevation="0">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+            <MudTextField T="string"
+                          Value="@_query"
+                          ValueChanged="@(v => _query = v)"
+                          Label="Ricerca"
+                          Placeholder="Denominazione, sigla o note"
+                          Immediate="true"
+                          FullWidth="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSearchClicked">
+                Cerca
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="OnResetClicked">
+                Reset
+            </MudButton>
+            @if (CanCreate)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartCreate">
+                    Nuova certificazione
+                </MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @if (CanCreate || IsEditMode)
+    {
+        <MudPaper Class="pa-4 mb-4 sigad-card" Elevation="0">
+            <MudText Typo="Typo.h6" Class="mb-3">@(IsEditMode ? "Modifica certificazione" : "Nuova certificazione")</MudText>
+            @if (!string.IsNullOrWhiteSpace(_formError))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+                    @_formError
+                </MudAlert>
+            }
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Denominazione"
+                                  Value="@_formDenominazione"
+                                  ValueChanged="@(v => _formDenominazione = v ?? string.Empty)"
+                                  Required="true"
+                                  Immediate="true"
+                                  Disabled="@_formBusy" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Sigla"
+                                  Value="@_formSigla"
+                                  ValueChanged="@(v => _formSigla = v)"
+                                  Immediate="true"
+                                  Disabled="@_formBusy" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="Data fondazione"
+                                   Date="@_formDataFondazione"
+                                   DateChanged="@(d => _formDataFondazione = d)"
+                                   Disabled="@_formBusy" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="Note"
+                                  Lines="3"
+                                  Value="@_formNote"
+                                  ValueChanged="@(v => _formNote = v)"
+                                  Immediate="true"
+                                  Disabled="@_formBusy" />
+                </MudItem>
+            </MudGrid>
+            <MudStack Row="true" Spacing="2" Class="mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@_formBusy">
+                    Salva
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="CancelEdit" Disabled="@_formBusy">
+                    Annulla
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudPaper Class="pa-0 sigad-card" Elevation="0">
+        <MudTable T="CertificazioneListItem"
+                  @ref="_table"
+                  ServerData="LoadCertificazioni"
+                  Dense="true"
+                  Hover="true"
+                  Striped="true">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Denominazione</MudTh>
+                <MudTh>Sigla</MudTh>
+                <MudTh>Fondazione</MudTh>
+                <MudTh>Stato</MudTh>
+                @if (CanUpdate || CanDelete)
+                {
+                    <MudTh class="text-right">Azioni</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.CertificazioneId</MudTd>
+                <MudTd DataLabel="Denominazione">@context.Denominazione</MudTd>
+                <MudTd DataLabel="Sigla">@(!string.IsNullOrWhiteSpace(context.Sigla) ? context.Sigla : "-")</MudTd>
+                <MudTd DataLabel="Fondazione">@context.DataFondazione?.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Stato">
+                    @if (context.IsDeleted)
+                    {
+                        <MudChip T="string" Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small">Cancellata</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small">Attiva</MudChip>
+                    }
+                </MudTd>
+                @if (CanUpdate || CanDelete)
+                {
+                    <MudTd DataLabel="Azioni" Class="text-right">
+                        @if (CanUpdate)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => StartEdit(context)">
+                                Modifica
+                            </MudButton>
+                        }
+                        @if (CanDelete && !context.IsDeleted)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteAsync(context)">
+                                Elimina
+                            </MudButton>
+                        }
+                    </MudTd>
+                }
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.body2" Class="pa-4">@_emptyMessage</MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Righe per pagina"
+                               InfoFormat="{first_item}-{last_item} di {all_items}" />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+
+    <MudText Typo="Typo.caption" Class="mt-2">Totale risultati: @_totalCount</MudText>
+</MudContainer>

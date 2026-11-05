@@ -1,0 +1,6 @@
+CREATE SCHEMA [ExtSIA]
+    AUTHORIZATION [dbo];
+
+
+GO
+

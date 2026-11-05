@@ -1,0 +1,6 @@
+CREATE SCHEMA [ArchiveSIAC]
+    AUTHORIZATION [dbo];
+
+
+GO
+

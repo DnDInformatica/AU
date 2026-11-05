@@ -1,6 +1,8 @@
 using Accredia.SIGAD.RisorseUmane.Api;
 using Accredia.SIGAD.RisorseUmane.Api.Database;
 using Accredia.SIGAD.RisorseUmane.Api.Services;
+using Accredia.SIGAD.RisorseUmane.Api.Services.Auth;
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Shared.Middleware;
 using Accredia.SIGAD.Shared.Versioning;
 
@@ -14,6 +16,10 @@ builder.Services.Configure<DatabaseOptions>(
     builder.Configuration.GetSection(DatabaseOptions.SectionName));
 builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 
+// RF-059: ogni API valida autonomamente il token. Il gateway instrada, non autentica.
+builder.Services.AddSigadAuthentication(builder.Configuration, builder.Environment);
+builder.Services.AddScoped<IUserScopeResolver, IamUserScopeResolver>();
+
 // Service-to-service clients
 var anagraficheBaseUrl = builder.Configuration["Services:Anagrafiche:BaseUrl"];
 if (string.IsNullOrWhiteSpace(anagraficheBaseUrl))
@@ -24,7 +30,11 @@ if (string.IsNullOrWhiteSpace(anagraficheBaseUrl))
 builder.Services.AddHttpClient("Anagrafiche", client =>
 {
     client.BaseAddress = new Uri(anagraficheBaseUrl, UriKind.Absolute);
-});
+})
+// L'identita' del chiamante prosegue verso il servizio a valle: senza,
+// la chiamata sarebbe anonima e verrebbe respinta appena le rotte di
+// Anagrafiche richiederanno autenticazione.
+.AddHttpMessageHandler<PropagazioneIdentitaHandler>();
 
 builder.Services.AddSingleton<IPersonaClient, PersonaClient>();
 
@@ -46,6 +56,11 @@ var app = builder.Build();
 
 // Middleware: CorrelationId + Serilog request logging
 app.UseSigadRequestLogging();
+
+// Autenticazione, risoluzione su IAM, autorizzazione. L'ordine e' vincolante.
+app.UseAuthentication();
+app.UseSigadUserResolution();
+app.UseAuthorization();
 
 // Swagger UI (Development only)
 if (app.Environment.IsDevelopment())

@@ -1,0 +1,6 @@
+CREATE SCHEMA [ext_StagingSIAC]
+    AUTHORIZATION [dbo];
+
+
+GO
+

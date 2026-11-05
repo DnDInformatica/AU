@@ -34,6 +34,11 @@ if (builder.Environment.IsDevelopment())
 builder.Services
     .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+#if DEBUG
+    // Profilo di sviluppo: il Gateway torna reverse proxy puro, l'autorizzazione
+    // resta nelle API che risolvono l'utenza su IAM. Vedi AF-31.
+    .AddConfigFilter<Accredia.SIGAD.Gateway.Auth.DevAnonymousProxyConfigFilter>()
+#endif
     .AddTransforms(transformBuilderContext =>
     {
         transformBuilderContext.AddRequestTransform(context =>
@@ -191,6 +196,85 @@ builder.Services.AddAuthorization(options =>
         policy => policy
             .RequireAuthenticatedUser()
             .RequireClaim("perm", "PERS.DELETE"));
+    options.AddPolicy(
+        "PersDocRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "PERS.DOC.READ")
+                || context.User.HasClaim("perm", "PERS.LIST")
+                || context.User.HasClaim("perm", "PERS.READ")));
+    options.AddPolicy(
+        "PersDocCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "PERS.DOC.CREATE")
+                || context.User.HasClaim("perm", "PERS.CREATE")
+                || context.User.HasClaim("perm", "PERS.UPDATE")));
+    options.AddPolicy(
+        "PersDocDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "PERS.DOC.DELETE")
+                || context.User.HasClaim("perm", "PERS.DELETE")));
+    options.AddPolicy(
+        "IncRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "INC.LIST")
+                || context.User.HasClaim("perm", "INC.READ")));
+    options.AddPolicy(
+        "IncCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "INC.CREATE"));
+    options.AddPolicy(
+        "IncUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "INC.UPDATE"));
+    options.AddPolicy(
+        "IncDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("perm", "INC.DELETE"));
+    options.AddPolicy(
+        "CertRead",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "CERT.LIST")
+                || context.User.HasClaim("perm", "CERT.READ")
+                // Backward compatibility while roles are being reseeded.
+                || context.User.HasClaim("perm", "INC.LIST")
+                || context.User.HasClaim("perm", "INC.READ")));
+    options.AddPolicy(
+        "CertCreate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "CERT.CREATE")
+                // Backward compatibility while roles are being reseeded.
+                || context.User.HasClaim("perm", "INC.CREATE")));
+    options.AddPolicy(
+        "CertUpdate",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "CERT.UPDATE")
+                // Backward compatibility while roles are being reseeded.
+                || context.User.HasClaim("perm", "INC.UPDATE")));
+    options.AddPolicy(
+        "CertDelete",
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                context.User.HasClaim("perm", "CERT.DELETE")
+                // Backward compatibility while roles are being reseeded.
+                || context.User.HasClaim("perm", "INC.DELETE")));
     options.AddPolicy(
         "HrPersonaRead",
         policy => policy

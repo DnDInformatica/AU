@@ -1,0 +1,6 @@
+CREATE SCHEMA [Utilita]
+    AUTHORIZATION [dbo];
+
+
+GO
+

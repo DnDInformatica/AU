@@ -1,0 +1,25 @@
+CREATE TABLE [Standard].[SettoreEAGerarchiaStorico] (
+    [SettoreEAGerarchiaId] INT              NOT NULL,
+    [PadreId]              INT              NOT NULL,
+    [FiglioId]             INT              NOT NULL,
+    [Profondita]           INT              NOT NULL,
+    [DataCreazione]        DATETIME2 (7)    NOT NULL,
+    [CreatoDa]             INT              NULL,
+    [DataModifica]         DATETIME2 (7)    NULL,
+    [ModificatoDa]         INT              NULL,
+    [DataCancellazione]    DATETIME2 (7)    NULL,
+    [CancellatoDa]         INT              NULL,
+    [UniqueRowId]          UNIQUEIDENTIFIER NOT NULL,
+    [DataInizioValidita]   DATETIME2 (7)    NOT NULL,
+    [DataFineValidita]     DATETIME2 (7)    NOT NULL
+);
+
+
+GO
+
+CREATE CLUSTERED INDEX [ix_SettoreEAGerarchiaStorico]
+    ON [Standard].[SettoreEAGerarchiaStorico]([DataFineValidita] ASC, [DataInizioValidita] ASC) WITH (DATA_COMPRESSION = PAGE);
+
+
+GO
+
