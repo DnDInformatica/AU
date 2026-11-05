@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.GetUnita;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/organizzazioni/{orgId}/unita-organizzative/{response.UnitaOrganizzativaId}";
                 return Results.Created(location, response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.UPDATE")
                 .Produces<UnitaOrganizzativaDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

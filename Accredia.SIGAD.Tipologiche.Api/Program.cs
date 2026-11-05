@@ -55,7 +55,8 @@ if (app.Environment.IsDevelopment())
 
 // Health (unversioned)
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
-    .Produces<HealthResponse>(StatusCodes.Status200OK);
+    .Produces<HealthResponse>(StatusCodes.Status200OK)
+    .AllowAnonymous();
 
 // VSA: Mappa automaticamente tutti gli endpoint
 app.MapEndpointConfigurations();

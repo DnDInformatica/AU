@@ -11,7 +11,7 @@ internal static class Endpoints
             async (int id, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.GetByIdAsync(id, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.FORM.LIST", "HR.FORM.READ")
+                .RichiedePermesso("SIDAC.HR.FORM.LIST", "SIDAC.HR.FORM.READ")
                 .Produces<FormazioneObbligatoriaDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -19,7 +19,7 @@ internal static class Endpoints
             async (int dipendenteId, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.ListByDipendenteAsync(dipendenteId, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.FORM.LIST", "HR.FORM.READ")
+                .RichiedePermesso("SIDAC.HR.FORM.LIST", "SIDAC.HR.FORM.READ")
                 .Produces<IReadOnlyCollection<FormazioneObbligatoriaDto>>(StatusCodes.Status200OK));
 
         ApiVersioning.MapVersionedPost(app, "/dipendenti/{dipendenteId:int}/formazione-obbligatoria", "CreateFormazioneObbligatoria",
@@ -34,7 +34,7 @@ internal static class Endpoints
                 return await Handler.CreateAsync(dipendenteId, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("HR.FORM.CREATE")
+                .RichiedePermesso("SIDAC.HR.FORM.CREATE")
                 .Produces<FormazioneObbligatoriaCreateResponse>(StatusCodes.Status201Created)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
@@ -51,7 +51,7 @@ internal static class Endpoints
                 return await Handler.UpdateAsync(dipendenteId, id, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("HR.FORM.UPDATE")
+                .RichiedePermesso("SIDAC.HR.FORM.UPDATE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -61,7 +61,7 @@ internal static class Endpoints
             async (int dipendenteId, int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.SoftDeleteAsync(dipendenteId, id, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.FORM.DELETE")
+                .RichiedePermesso("SIDAC.HR.FORM.DELETE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound));
     }

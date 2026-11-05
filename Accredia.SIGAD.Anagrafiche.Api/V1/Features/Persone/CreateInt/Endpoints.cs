@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,7 +31,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/persone/{response.PersonaId}";
                 return Results.Created(location, response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.CREATE")
                 .Produces<V1.Features.Persone.GetByIdInt.PersonaDetailDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());

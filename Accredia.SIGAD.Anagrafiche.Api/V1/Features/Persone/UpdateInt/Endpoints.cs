@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,7 +25,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.UPDATE")
                 .Produces<V1.Features.Persone.GetByIdInt.PersonaDetailDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

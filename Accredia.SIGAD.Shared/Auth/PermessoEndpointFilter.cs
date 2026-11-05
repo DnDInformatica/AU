@@ -11,8 +11,8 @@ namespace Accredia.SIGAD.Shared.Auth;
 /// dell'emittente. Il controllo risiede nel servizio e non nel gateway, perche'
 /// e' nel servizio che l'identita' e' stata risolta; il gateway instrada.
 ///
-/// Uso: .RichiedePermesso("HR.DIP.CREATE") oppure, per i casi in cui piu'
-/// permessi sono equivalenti, .RichiedePermesso("HR.DIP.LIST", "HR.DIP.READ").
+/// Uso: .RichiedePermesso("SIDAC.HR.DIP.CREATE") oppure, per i casi in cui piu'
+/// permessi sono equivalenti, .RichiedePermesso("SIDAC.HR.DIP.LIST", "SIDAC.HR.DIP.READ").
 /// </summary>
 public sealed class PermessoEndpointFilter : IEndpointFilter
 {

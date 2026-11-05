@@ -84,6 +84,10 @@ public static class AuthExtensions
             opt.DefaultPolicy = new AuthorizationPolicyBuilder(schemi.ToArray())
                 .RequireAuthenticatedUser()
                 .Build();
+            // Ogni endpoint richiede un utente autenticato anche se non dichiara
+            // nulla (RF-059: il gateway instrada, non autentica). Le eccezioni
+            // vanno dichiarate con AllowAnonymous, come per /health.
+            opt.FallbackPolicy = opt.DefaultPolicy;
         });
 
         return services;

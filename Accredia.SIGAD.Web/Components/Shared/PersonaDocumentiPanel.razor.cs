@@ -19,18 +19,18 @@ public partial class PersonaDocumentiPanel : ComponentBase
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private bool CanRead =>
-        UserContext.HasPermission("PERS.DOC.READ")
-        || UserContext.HasPermission("PERS.LIST")
-        || UserContext.HasPermission("PERS.READ");
+        UserContext.HasPermission("SIDAC.PERS.DOC.READ")
+        || UserContext.HasPermission("SIDAC.PERS.LIST")
+        || UserContext.HasPermission("SIDAC.PERS.READ");
 
     private bool CanCreate =>
-        UserContext.HasPermission("PERS.DOC.CREATE")
-        || UserContext.HasPermission("PERS.CREATE")
-        || UserContext.HasPermission("PERS.UPDATE");
+        UserContext.HasPermission("SIDAC.PERS.DOC.CREATE")
+        || UserContext.HasPermission("SIDAC.PERS.CREATE")
+        || UserContext.HasPermission("SIDAC.PERS.UPDATE");
 
     private bool CanDelete =>
-        UserContext.HasPermission("PERS.DOC.DELETE")
-        || UserContext.HasPermission("PERS.DELETE");
+        UserContext.HasPermission("SIDAC.PERS.DOC.DELETE")
+        || UserContext.HasPermission("SIDAC.PERS.DELETE");
 
     private bool _loading;
     private bool _uploading;

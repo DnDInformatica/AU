@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.V1.Features.Organizzazioni.UnitaLookups;
 
@@ -14,7 +15,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.INC.LIST", "SIDAC.INC.READ")
                 .Produces<IReadOnlyList<LookupItem>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound));
     }

@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Accredia.SIGAD.Anagrafiche.Api.Services.DocumentStorage;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,7 @@ internal static class Endpoints
                 var items = await Handler.ListAsync(command, connectionFactory, cancellationToken);
                 return items is null ? Results.NotFound() : Results.Ok(items);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.READ", "SIDAC.PERS.LIST", "SIDAC.PERS.READ")
                 .Produces<IReadOnlyList<PersonaDocumentoDto>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -80,7 +81,7 @@ internal static class Endpoints
                         statusCode: StatusCodes.Status503ServiceUnavailable);
                 }
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.CREATE", "SIDAC.PERS.CREATE", "SIDAC.PERS.UPDATE")
                 .DisableAntiforgery()
                 .Accepts<UploadRequest>("multipart/form-data")
                 .Produces<PersonaDocumentoDto>(StatusCodes.Status201Created)
@@ -133,7 +134,7 @@ internal static class Endpoints
                         statusCode: StatusCodes.Status503ServiceUnavailable);
                 }
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.READ", "SIDAC.PERS.LIST", "SIDAC.PERS.READ")
                 .Produces(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status503ServiceUnavailable)
@@ -161,7 +162,7 @@ internal static class Endpoints
                     _ => Results.NoContent()
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.DOC.DELETE", "SIDAC.PERS.DELETE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

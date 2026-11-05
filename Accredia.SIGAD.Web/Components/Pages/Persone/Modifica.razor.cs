@@ -46,8 +46,8 @@ public partial class Modifica : ComponentBase
     }
 
     private PersonaDetail? _detail;
-    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
+    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("SIDAC.PERS.DELETE");
     private bool _isLoading = true;
     private string? _errorMessage;
     private readonly FormModel _model = new();

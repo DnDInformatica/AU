@@ -45,10 +45,10 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     private IReadOnlyList<TipoFinalitaRegistroTrattamentiLookupItem> _lookups = Array.Empty<TipoFinalitaRegistroTrattamentiLookupItem>();
     private IReadOnlyList<RegistroTrattamentiItem> _items = Array.Empty<RegistroTrattamentiItem>();
     private RegistroFormModel _form = RegistroFormModel.CreateDefault();
-    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
-    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
-    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("PERS.DELETE");
+    private bool CanRead => UserContext.HasPermission("SIDAC.PERS.LIST") || UserContext.HasPermission("SIDAC.PERS.READ");
+    private bool CanCreate => UserContext.HasPermission("SIDAC.PERS.CREATE");
+    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("SIDAC.PERS.DELETE");
     private bool CanSave => _editId.HasValue ? CanUpdate : CanCreate;
 
     private IReadOnlyList<RegistroTrattamentiItem> FilteredItems

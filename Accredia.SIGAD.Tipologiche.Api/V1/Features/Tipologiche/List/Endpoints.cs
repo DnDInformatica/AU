@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Tipologiche.Api;
 using Accredia.SIGAD.Tipologiche.Api.Database;
 using Accredia.SIGAD.Tipologiche.Api.V1.Features.Lookups;
@@ -20,7 +21,7 @@ internal static class Endpoints
 
                 return await Handler.Handle(query, metadataProvider, cancellationToken);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.TIPO.LIST", "SIDAC.TIPO.READ")
                 .Produces<ListResponse>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
     }

@@ -43,7 +43,7 @@ private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     }
 
     private readonly FormModel _model = new();
-    private bool CanCreate => UserContext.HasPermission("PERS.CREATE");
+    private bool CanCreate => UserContext.HasPermission("SIDAC.PERS.CREATE");
     private MudForm? _form;
     private bool _isSubmitting;
     private string? _errorMessage;

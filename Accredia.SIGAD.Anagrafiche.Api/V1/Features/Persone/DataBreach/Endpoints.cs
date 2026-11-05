@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +20,7 @@ internal static class Endpoints
                 var response = await Handler.ListAsync(command, connectionFactory, cancellationToken);
                 return Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
                 .Produces<IReadOnlyList<DataBreachDto>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
 
@@ -35,7 +36,7 @@ internal static class Endpoints
                 var response = await Handler.GetByIdAsync(command, connectionFactory, cancellationToken);
                 return response is null ? Results.NotFound() : Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
                 .Produces<DataBreachDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());
@@ -61,7 +62,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.CREATE")
                 .Produces<DataBreachDto>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
@@ -87,7 +88,7 @@ internal static class Endpoints
                     _ => Results.Problem("Operazione non riuscita.")
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.UPDATE")
                 .Produces<DataBreachDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status409Conflict)
@@ -110,7 +111,7 @@ internal static class Endpoints
                     _ => Results.NoContent()
                 };
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.DELETE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .ProducesValidationProblem());

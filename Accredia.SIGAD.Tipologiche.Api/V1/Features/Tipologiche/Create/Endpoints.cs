@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Tipologiche.Api;
 using Accredia.SIGAD.Tipologiche.Api.Database;
 using Accredia.SIGAD.Tipologiche.Api.V1.Features.Tipologiche;
@@ -32,7 +33,7 @@ internal static class Endpoints
 
                 return await Handler.Handle(command, connectionFactory, cancellationToken);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.TIPO.CREATE")
                 .Produces<CreateResponse>(StatusCodes.Status201Created)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());

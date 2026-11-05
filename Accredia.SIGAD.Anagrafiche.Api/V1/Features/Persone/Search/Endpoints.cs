@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 
 namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Persone.Search;
@@ -23,7 +24,7 @@ internal static class Endpoints
                 var response = await Handler.Handle(query, connectionFactory, cancellationToken);
                 return Results.Ok(response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.PERS.LIST", "SIDAC.PERS.READ")
                 .Produces<PagedResponse<PersonaSearchItem>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
     }

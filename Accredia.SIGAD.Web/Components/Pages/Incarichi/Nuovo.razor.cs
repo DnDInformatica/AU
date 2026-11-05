@@ -27,7 +27,7 @@ namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Nuovo : ComponentBase
 {
-    private bool CanCreate => UserContext.HasPermission("INC.CREATE");
+    private bool CanCreate => UserContext.HasPermission("SIDAC.INC.CREATE");
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     {

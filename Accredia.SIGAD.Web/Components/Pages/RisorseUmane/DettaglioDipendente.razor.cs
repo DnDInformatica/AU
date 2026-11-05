@@ -46,25 +46,25 @@ public partial class DettaglioDipendente : ComponentBase
     }
 
     private bool CanReadDipendente =>
-        (UserContext.HasPermission("HR.DIP.LIST") || UserContext.HasPermission("HR.DIP.READ"))
-        && UserContext.HasPermission("HR.PERSONA.READ");
-    private bool CanUpdateDipendente => UserContext.HasPermission("HR.DIP.UPDATE");
-    private bool CanDeleteDipendente => UserContext.HasPermission("HR.DIP.DELETE");
+        (UserContext.HasPermission("SIDAC.HR.DIP.LIST") || UserContext.HasPermission("SIDAC.HR.DIP.READ"))
+        && UserContext.HasPermission("SIDAC.HR.PERSONA.READ");
+    private bool CanUpdateDipendente => UserContext.HasPermission("SIDAC.HR.DIP.UPDATE");
+    private bool CanDeleteDipendente => UserContext.HasPermission("SIDAC.HR.DIP.DELETE");
 
-    private bool CanCreateContratti => UserContext.HasPermission("HR.CONTRATTI.CREATE");
-    private bool CanReadContratti => UserContext.HasPermission("HR.CONTRATTI.LIST") || UserContext.HasPermission("HR.CONTRATTI.READ");
-    private bool CanUpdateContratti => UserContext.HasPermission("HR.CONTRATTI.UPDATE");
-    private bool CanDeleteContratti => UserContext.HasPermission("HR.CONTRATTI.DELETE");
+    private bool CanCreateContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.CREATE");
+    private bool CanReadContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.LIST") || UserContext.HasPermission("SIDAC.HR.CONTRATTI.READ");
+    private bool CanUpdateContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.UPDATE");
+    private bool CanDeleteContratti => UserContext.HasPermission("SIDAC.HR.CONTRATTI.DELETE");
 
-    private bool CanCreateDotazioni => UserContext.HasPermission("HR.DOTAZIONI.CREATE");
-    private bool CanReadDotazioni => UserContext.HasPermission("HR.DOTAZIONI.LIST") || UserContext.HasPermission("HR.DOTAZIONI.READ");
-    private bool CanUpdateDotazioni => UserContext.HasPermission("HR.DOTAZIONI.UPDATE");
-    private bool CanDeleteDotazioni => UserContext.HasPermission("HR.DOTAZIONI.DELETE");
+    private bool CanCreateDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.CREATE");
+    private bool CanReadDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.LIST") || UserContext.HasPermission("SIDAC.HR.DOTAZIONI.READ");
+    private bool CanUpdateDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.UPDATE");
+    private bool CanDeleteDotazioni => UserContext.HasPermission("SIDAC.HR.DOTAZIONI.DELETE");
 
-    private bool CanCreateFormazione => UserContext.HasPermission("HR.FORM.CREATE");
-    private bool CanReadFormazione => UserContext.HasPermission("HR.FORM.LIST") || UserContext.HasPermission("HR.FORM.READ");
-    private bool CanUpdateFormazione => UserContext.HasPermission("HR.FORM.UPDATE");
-    private bool CanDeleteFormazione => UserContext.HasPermission("HR.FORM.DELETE");
+    private bool CanCreateFormazione => UserContext.HasPermission("SIDAC.HR.FORM.CREATE");
+    private bool CanReadFormazione => UserContext.HasPermission("SIDAC.HR.FORM.LIST") || UserContext.HasPermission("SIDAC.HR.FORM.READ");
+    private bool CanUpdateFormazione => UserContext.HasPermission("SIDAC.HR.FORM.UPDATE");
+    private bool CanDeleteFormazione => UserContext.HasPermission("SIDAC.HR.FORM.DELETE");
 
     private bool _isLoading = true;
     private bool _isSaving;

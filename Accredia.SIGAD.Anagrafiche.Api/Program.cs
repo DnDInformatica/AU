@@ -76,7 +76,8 @@ if (app.Environment.IsDevelopment())
 
 // Health (unversioned)
 app.MapGet("/health", () => Results.Ok(new HealthResponse("ok")))
-    .Produces<HealthResponse>(StatusCodes.Status200OK);
+    .Produces<HealthResponse>(StatusCodes.Status200OK)
+    .AllowAnonymous();
 
 app.MapGet(
         "/health/document-storage",
@@ -103,7 +104,8 @@ app.MapGet(
                     });
         })
     .Produces<DocumentStorageHealthResponse>(StatusCodes.Status200OK)
-    .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+    .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+    .AllowAnonymous();
 
 // VSA: Mappa automaticamente tutti gli endpoint
 app.MapEndpointConfigurations();

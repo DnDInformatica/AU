@@ -22,7 +22,7 @@ internal static class Endpoints
                 return await Handler.FormazioneInScadenzaAsync(windowDays, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("HR.FORM.LIST", "HR.FORM.READ")
+                .RichiedePermesso("SIDAC.HR.FORM.LIST", "SIDAC.HR.FORM.READ")
                 .Produces<IReadOnlyCollection<FormazioneInScadenzaDto>>(StatusCodes.Status200OK)
                 .ProducesValidationProblem());
 
@@ -30,7 +30,7 @@ internal static class Endpoints
             async (ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.DotazioniNonRestituiteCessatiAsync(connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.LIST", "SIDAC.HR.DOTAZIONI.READ")
                 .Produces<IReadOnlyCollection<DotazioneNonRestituitaCessatoDto>>(StatusCodes.Status200OK));
     }
 }

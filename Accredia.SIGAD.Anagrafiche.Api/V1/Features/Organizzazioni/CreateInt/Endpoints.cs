@@ -1,3 +1,4 @@
+using Accredia.SIGAD.Shared.Auth;
 using Accredia.SIGAD.Anagrafiche.Api.Database;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,7 +30,7 @@ internal static class Endpoints
                 var location = $"/{ApiVersioning.DefaultVersion}/organizzazioni/{response.OrganizzazioneId}";
                 return Results.Created(location, response);
             },
-            builder => builder
+            builder => builder.RichiedePermesso("SIDAC.ORG.CREATE")
                 .Produces<V1.Features.Organizzazioni.GetByIdInt.OrganizzazioneDetailDto>(StatusCodes.Status201Created)
                 .ProducesValidationProblem());
     }
