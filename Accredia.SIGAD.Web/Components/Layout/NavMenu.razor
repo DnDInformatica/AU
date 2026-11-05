@@ -1,7 +1,7 @@
 @inject UserContext UserContext
 @inject IDemoProfileContext DemoContext
 
-<aside class="portal-sidebar sigad-sidebar @(IsCollapsed ? "sigad-sidebar--collapsed" : null)" aria-label="Navigazione SIGAD">
+<aside data-dev-component="@DevInspector.Annota("NavMenu")" data-dev-source="@DevInspector.Annota("Components/Layout/NavMenu.razor")" class="portal-sidebar sigad-sidebar @(IsCollapsed ? "sigad-sidebar--collapsed" : null)" aria-label="Navigazione SIGAD">
 
     <a class="portal-sidebar__back" href="/">
         <span aria-hidden="true">&larr;</span> SIGAD

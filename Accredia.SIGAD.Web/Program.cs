@@ -239,6 +239,11 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+#if DEBUG
+// Dev Inspector: endpoint solo in Debug e solo in Development (Sviluppo/DevInspectorEndpoints.cs).
+Accredia.SIGAD.Web.Sviluppo.DevInspectorEndpoints.MapDevInspector(app);
+#endif
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -6,7 +6,7 @@
 @using Microsoft.AspNetCore.Components.Web
 
 <RichiedePermesso Permessi="@([PermessiSigad.Organizzazioni.Elenco, PermessiSigad.Organizzazioni.Lettura])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Organizzazioni.Organizzazioni")" data-dev-source="@DevInspector.Annota("Components/Pages/Organizzazioni/Organizzazioni.razor")" MaxWidth="MaxWidth.False">
 
     <PageHeader Title="Organizzazioni"
                 Subtitle="Elenco delle organizzazioni censite."

@@ -4,7 +4,7 @@
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
 <RichiedePermesso Permessi="@([PermessiSigad.Organizzazioni.Elenco, PermessiSigad.Organizzazioni.Lettura])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Organizzazioni.Dettaglio")" data-dev-source="@DevInspector.Annota("Components/Pages/Organizzazioni/Dettaglio.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="@(_detail?.Denominazione ?? "Dettaglio organizzazione")"
                 Subtitle="@($"Scheda organizzazione #{Id}")"
                 BreadcrumbItems="@_breadcrumbs"

@@ -8,7 +8,7 @@
 
 @if (HasActiveFilters)
 {
-    <MudPaper Class="sigad-active-filters-bar" Elevation="0">
+    <MudPaper data-dev-component="@DevInspector.Annota("ActiveFiltersBar")" data-dev-source="@DevInspector.Annota("Components/Shared/ActiveFiltersBar.razor")" Class="sigad-active-filters-bar" Elevation="0">
         <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
             <MudText Typo="Typo.caption" Class="sigad-active-filters-label">
                 Filtri attivi:

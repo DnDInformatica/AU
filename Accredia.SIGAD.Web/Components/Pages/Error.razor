@@ -5,7 +5,7 @@
 
 @* Pagina mostrata per gli errori non gestiti: nessun dettaglio tecnico per
    l'utente, solo il codice della richiesta che serve all'assistenza. *@
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Root.Error")" data-dev-source="@DevInspector.Annota("Components/Pages/Error.razor")" MaxWidth="MaxWidth.Medium" Class="mt-8">
     <MudText Typo="Typo.h5" HtmlTag="h1" tabindex="-1">Si è verificato un errore</MudText>
     <MudText Typo="Typo.body1" Class="mt-2">
         La richiesta non è stata completata. Riprova; se il problema persiste, segnalalo all'assistenza.

@@ -8,7 +8,7 @@
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
 <RichiedePermesso Permessi="@([PermessiSigad.Organizzazioni.Modifica])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Organizzazioni.Uo.Modifica")" data-dev-source="@DevInspector.Annota("Components/Pages/Organizzazioni/Uo/Modifica.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica unita organizzativa"
                 Subtitle="@($"Organizzazione #{Id} · UO #{UoId}")"
                 BreadcrumbItems="@_breadcrumbs"

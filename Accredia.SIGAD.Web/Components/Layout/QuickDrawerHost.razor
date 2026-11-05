@@ -1,7 +1,7 @@
 @implements IDisposable
 @inject QuickDrawerService DrawerService
 
-<MudDrawer Open="@DrawerService.IsOpen"
+<MudDrawer data-dev-component="@DevInspector.Annota("QuickDrawerHost")" data-dev-source="@DevInspector.Annota("Components/Layout/QuickDrawerHost.razor")" Open="@DrawerService.IsOpen"
            OpenChanged="OnOpenChanged"
            Anchor="Anchor.Right"
            Variant="DrawerVariant.Temporary"

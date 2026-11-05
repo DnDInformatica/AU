@@ -15,7 +15,7 @@
 @using Accredia.SIGAD.Web.Models.Common
 
 <RichiedePermesso Permessi="@([PermessiSigad.Persone.Elenco, PermessiSigad.Persone.Lettura])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Persone.Persone")" data-dev-source="@DevInspector.Annota("Components/Pages/Persone/Persone.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="Persone"
                 Subtitle="Ricerca e gestione delle persone collegate."
                 BreadcrumbItems="@_breadcrumbs"

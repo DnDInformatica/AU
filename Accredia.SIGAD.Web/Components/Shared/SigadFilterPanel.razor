@@ -1,7 +1,7 @@
 @namespace Accredia.SIGAD.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Web
 
-<MudPaper Class="@PaperClass" @attributes="AdditionalAttributes">
+<MudPaper data-dev-component="@DevInspector.Annota("SigadFilterPanel")" data-dev-source="@DevInspector.Annota("Components/Shared/SigadFilterPanel.razor")" Class="@PaperClass" @attributes="AdditionalAttributes">
     <MudExpansionPanels Elevation="0">
         <MudExpansionPanel Expanded="@Expanded" ExpandedChanged="OnExpandedChanged">
 
