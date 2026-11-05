@@ -55,7 +55,7 @@
             @if (_detail.DataCancellazione.HasValue)
             {
                 <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
-                    Incarico cancellato (soft delete) il @_detail.DataCancellazione.Value.ToString("dd/MM/yyyy HH:mm").
+                    Incarico eliminato il @_detail.DataCancellazione.Value.ToString("dd/MM/yyyy HH:mm").
                 </MudAlert>
             }
 

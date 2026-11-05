@@ -229,7 +229,7 @@ public partial class PersonaDocumentiPanel : ComponentBase
             return;
         }
 
-        _message = "Documento eliminato (soft delete).";
+        _message = "Documento eliminato.";
         _messageIsError = false;
         await LoadAsync();
     }

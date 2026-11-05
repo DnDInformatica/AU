@@ -13,7 +13,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Data Breach"
-                Subtitle="Gestione incidenti sicurezza (CRUD)"
+                Subtitle="Incidenti di sicurezza sui dati personali."
                 BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -59,9 +59,9 @@
                             <MudTd>@context.Stato</MudTd>
                             <MudTd>@context.DataScoperta.ToString("dd/MM/yyyy")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.DataBreachId))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.DataBreachId))" />
+                                <MudIconButton aria-label="Apri il dettaglio" Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.DataBreachId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.DataBreachId))" />
                             </MudTd>
                         </RowTemplate>
                         <PagerContent><MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" /></PagerContent>

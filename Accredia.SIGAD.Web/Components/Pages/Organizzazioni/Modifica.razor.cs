@@ -176,7 +176,7 @@ public partial class Modifica : ComponentBase
 
         var confirm = await DialogService.ShowMessageBox(
             "Conferma eliminazione",
-            "Vuoi eliminare (soft delete) questa organizzazione?",
+            "Vuoi eliminare questa organizzazione? Resterà nello storico.",
             yesText: "Elimina",
             cancelText: "Annulla");
 

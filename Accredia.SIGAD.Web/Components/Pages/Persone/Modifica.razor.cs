@@ -160,7 +160,7 @@ public partial class Modifica : ComponentBase
 
         var confirm = await DialogService.ShowMessageBox(
             "Conferma eliminazione",
-            "Vuoi eliminare (soft delete) questa persona?",
+            "Vuoi eliminare questa persona? Resterà nello storico.",
             yesText: "Elimina",
             cancelText: "Annulla");
 

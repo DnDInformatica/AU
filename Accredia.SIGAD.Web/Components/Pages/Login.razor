@@ -10,7 +10,8 @@
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
     <MudPaper Class="pa-6" Elevation="0">
-        <MudText Typo="Typo.h5">Accedi</MudText>
+        <PageTitle>Accedi · SIGAD</PageTitle>
+        <MudText Typo="Typo.h5" HtmlTag="h1" tabindex="-1">Accedi</MudText>
         <MudText Typo="Typo.body2" Class="mb-4">Inserisci le credenziali per continuare.</MudText>
 
         @if (!string.IsNullOrWhiteSpace(_errorMessage))

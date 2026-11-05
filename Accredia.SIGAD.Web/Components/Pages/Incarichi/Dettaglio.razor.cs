@@ -110,7 +110,7 @@ public partial class Dettaglio : ComponentBase
 
         var confirm = await DialogService.ShowMessageBox(
             "Conferma eliminazione",
-            "Vuoi eliminare (soft delete) questo incarico?",
+            "Vuoi eliminare questo incarico? Resterà nello storico.",
             yesText: "Elimina",
             cancelText: "Annulla");
 

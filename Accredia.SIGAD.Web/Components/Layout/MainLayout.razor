@@ -91,12 +91,12 @@
                                 <MudText Typo="Typo.caption">@GetUserRoleSummary()</MudText>
                             </MudMenuItem>
                             <MudDivider />
-                            <MudMenuItem OnClick="Logout">Logout</MudMenuItem>
+                            <MudMenuItem OnClick="Logout">Esci</MudMenuItem>
                         </ChildContent>
                     </MudMenu>
                 </Authorized>
                 <NotAuthorized>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/login">Login</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/login">Accedi</MudButton>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
@@ -131,9 +131,9 @@
 </MudLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">x</span>
+    Si è verificato un errore imprevisto.
+    <a href="." class="reload">Ricarica la pagina</a>
+    <span class="dismiss" role="button" aria-label="Chiudi">x</span>
 </div>
 
 @code {

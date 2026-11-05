@@ -66,11 +66,11 @@ else
                         <MudTd>@context.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudTd>
                         <MudTd>@(context.DeletedAtUtc.HasValue ? "Cancellato" : "Attivo")</MudTd>
                         <MudTd Align="Right">
-                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                            <MudIconButton aria-label="Scarica" Icon="@Icons.Material.Filled.Download"
                                            Size="Size.Small"
                                            Disabled="@(!CanRead)"
                                            OnClick="@(() => DownloadAsync(context))" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                            <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete"
                                            Size="Size.Small"
                                            Color="Color.Error"
                                            Disabled="@(!CanDelete || context.DeletedAtUtc.HasValue)"

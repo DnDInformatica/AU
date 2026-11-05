@@ -13,7 +13,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Registro Trattamenti"
-                Subtitle="Gestione registro trattamenti (CRUD)"
+                Subtitle="Registro delle attività di trattamento."
                 BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -58,9 +58,9 @@
                             <MudTd>@context.Stato</MudTd>
                             <MudTd>@context.DataInizioTrattamento.ToString("dd/MM/yyyy")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RegistroTrattamentiId))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RegistroTrattamentiId))" />
+                                <MudIconButton aria-label="Apri il dettaglio" Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RegistroTrattamentiId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RegistroTrattamentiId))" />
                             </MudTd>
                         </RowTemplate>
                         <PagerContent><MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" /></PagerContent>

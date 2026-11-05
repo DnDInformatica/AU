@@ -141,7 +141,7 @@
             <MudTd DataLabel="Codice Fiscale">@context.CodiceFiscale</MudTd>
             <MudTd DataLabel="Data nascita">@context.DataNascita.ToString("dd/MM/yyyy")</MudTd>
             <MudTd Align="Right" Style="width:1%;white-space:nowrap;">
-                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                <MudIconButton aria-label="Apri l'anteprima" Icon="@Icons.Material.Filled.ChevronRight"
                                Color="Color.Inherit"
                                Size="Size.Small"
                                OnClick="@(() => OnQuickPreview.InvokeAsync(context))"

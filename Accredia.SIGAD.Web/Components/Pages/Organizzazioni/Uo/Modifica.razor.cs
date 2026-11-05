@@ -169,7 +169,7 @@ public partial class Modifica : ComponentBase
 
         var confirm = await DialogService.ShowMessageBox(
             "Conferma eliminazione",
-            "Vuoi eliminare (soft delete) questa unita organizzativa?",
+            "Vuoi eliminare questa unità organizzativa? Resterà nello storico.",
             yesText: "Elimina",
             cancelText: "Annulla");
 

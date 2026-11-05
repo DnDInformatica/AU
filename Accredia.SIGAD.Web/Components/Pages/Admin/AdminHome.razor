@@ -3,7 +3,7 @@
 @using MudBlazor
 @using Accredia.SIGAD.Web.Components.Shared
 
-<PageTitle>Admin - SIGAD</PageTitle>
+<PageTitle>Amministrazione · SIGAD</PageTitle>
 
 @if (!UserContext.HasPermission(PermessiIam.AccessoConsole))
 {
@@ -12,7 +12,7 @@
 }
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
-    <MudText Typo="Typo.h4" Class="mb-1">Amministrazione</MudText>
+    <MudText Typo="Typo.h4" HtmlTag="h1" tabindex="-1" Class="mb-1">Amministrazione</MudText>
     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
         Accesso rapido alle funzioni di amministrazione.
     </MudText>

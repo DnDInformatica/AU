@@ -14,7 +14,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Richieste GDPR"
-                Subtitle="Gestione richieste interessati (CRUD)"
+                Subtitle="Richieste degli interessati."
                 BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -30,7 +30,7 @@
                     <MudSpacer />
                     <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_loading" />
                     <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_loading" OnClick="LoadAsync">Applica</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="_loading" OnClick="ResetFiltersAsync">Reset</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="_loading" OnClick="ResetFiltersAsync">Azzera filtri</MudButton>
                 </MudStack>
                 <MudGrid Spacing="1">
                     <MudItem xs="12" sm="3">
@@ -90,9 +90,9 @@
                             <MudTd>@context.DataScadenzaRisposta.ToString("dd/MM/yyyy")</MudTd>
                             <MudTd>@(context.PersonaId?.ToString() ?? "—")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RichiestaGdprId))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RichiestaGdprId))" />
+                                <MudIconButton aria-label="Apri il dettaglio" Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RichiestaGdprId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RichiestaGdprId))" />
                             </MudTd>
                         </RowTemplate>
                         <PagerContent>
