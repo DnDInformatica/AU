@@ -90,7 +90,7 @@
 .sigad-filters-card {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    border: 1px solid var(--line);
     margin-bottom: 20px;
     overflow: hidden;
 }
@@ -148,7 +148,7 @@
 .sigad-active-filters-bar {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    border: 1px solid var(--line);
     padding: 12px 20px;
     margin-bottom: 20px;
 }
@@ -185,7 +185,7 @@
 .sigad-results-card {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    border: 1px solid var(--line);
     overflow: hidden;
 }
 
@@ -267,7 +267,6 @@
     background: var(--sigad-white);
     border: 1px solid var(--sigad-line);
     border-radius: var(--sigad-radius);
-    box-shadow: var(--sigad-shadow);
     padding: 28px 32px;
     margin-bottom: 20px;
 }
@@ -311,7 +310,7 @@
     margin-top: 16px;
     background: rgba(43, 43, 33, 0.025);
     border: 1px solid var(--sigad-line);
-    border-radius: 12px;
+    border-radius: var(--radius-sm, 8px);
     padding: 10px 0;
     overflow: hidden;
 }
@@ -334,8 +333,6 @@
 .det-fiscal-label {
     font-size: 0.68rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: var(--sigad-text-secondary);
     line-height: 1;
     white-space: nowrap;
@@ -379,7 +376,6 @@
     border: 1px solid var(--sigad-line);
     border-radius: var(--sigad-radius);
     background: var(--sigad-white);
-    box-shadow: var(--sigad-shadow);
     overflow: hidden;
 }
 
@@ -535,7 +531,7 @@
 .det-section-card {
     background: rgba(43, 43, 33, 0.018);
     border: 1px solid rgba(43, 43, 33, 0.07);
-    border-radius: 14px;
+    border-radius: var(--radius-sm, 8px);
     padding: 20px 24px;
     height: 100%;
     display: flex;
@@ -583,8 +579,6 @@
 .det-dl dt {
     font-size: 0.72rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
     color: var(--sigad-text-secondary);
     padding: 5px 0 3px;
     white-space: nowrap;

@@ -5,8 +5,8 @@
 
 .det-hero {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--line);
     padding: 24px;
     margin-bottom: 24px;
     display: flex;
@@ -51,8 +51,6 @@
     font-size: 0.75rem;
     font-weight: 500;
     color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .det-fiscal-value {
@@ -78,8 +76,8 @@
 
 .det-tabs-wrap {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--line);
     overflow: hidden;
 }
 
