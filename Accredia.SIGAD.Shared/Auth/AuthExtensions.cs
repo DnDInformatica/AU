@@ -42,8 +42,8 @@ public static class AuthExtensions
             services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
         }
 
-        // Schema selettore: con piu' emittenti non e' possibile avere un default
-        // fisso. Il selettore sceglie lo schema in base alla richiesta.
+        // Schema selettore: sceglie tra il tenant istituzionale e, solo in
+        // sviluppo, l'identita' di prova.
         var auth = services.AddAuthentication(AuthSchemes.Selector);
 
         auth.AddPolicyScheme(AuthSchemes.Selector, AuthSchemes.Selector, opt =>
@@ -58,15 +58,12 @@ public static class AuthExtensions
                     if (DevAuth.IsEnabled(env)) return DevAuth.Schema;
                 }
 #endif
-                // In presenza di due emittenti reali la scelta si fa sull'issuer
-                // del token. Finche' External ID non e' configurato, il default
-                // e' il tenant istituzionale.
+                // SIDAC e' solo per uso interno: nessuno schema per External ID.
                 return AuthSchemes.Workforce;
             };
         });
 
         ConfiguraEmittente(auth, configuration, AuthSchemes.Workforce, "Entra:Workforce");
-        ConfiguraEmittente(auth, configuration, AuthSchemes.External,  "Entra:External");
 
         var schemi = new List<string> { AuthSchemes.Selector };
 
