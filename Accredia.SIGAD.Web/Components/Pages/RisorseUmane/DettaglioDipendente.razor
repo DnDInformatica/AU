@@ -14,7 +14,7 @@
     return;
 }
 
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.RisorseUmane.DettaglioDipendente")" data-dev-source="@DevInspector.Annota("Components/Pages/RisorseUmane/DettaglioDipendente.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="@(_detail is not null ? $"{_detail.Persona.Dettaglio.Cognome} {_detail.Persona.Dettaglio.Nome}" : "Dettaglio dipendente")"
                 Subtitle="@($"Dipendente #{Id}")"
                 BreadcrumbItems="@_breadcrumbs"

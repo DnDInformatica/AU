@@ -13,7 +13,7 @@
     return;
 }
 
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Persone.Dettaglio")" data-dev-source="@DevInspector.Annota("Components/Pages/Persone/Dettaglio.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="@(_detail is null ? "Dettaglio persona" : $"{_detail.Cognome} {_detail.Nome}")"
                 Subtitle="@($"Scheda persona #{Id}")"
                 BreadcrumbItems="@_breadcrumbs"

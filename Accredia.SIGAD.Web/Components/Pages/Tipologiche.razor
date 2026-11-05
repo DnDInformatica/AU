@@ -3,7 +3,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 
 <RichiedePermesso Permessi="@([PermessiSigad.Tipologiche.Elenco, PermessiSigad.Tipologiche.Lettura])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Root.Tipologiche")" data-dev-source="@DevInspector.Annota("Components/Pages/Tipologiche.razor")" MaxWidth="MaxWidth.False">
     <PageTitle>Tipologiche · SIGAD</PageTitle>
     <MudText Typo="Typo.h5" HtmlTag="h1" tabindex="-1" Class="mb-2">Tipologiche</MudText>
     <MudText Typo="Typo.body2" Class="mb-4">Elenco delle voci tipologiche disponibili.</MudText>

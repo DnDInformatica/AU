@@ -1,3 +1,4 @@
+@inject IWebHostEnvironment Ambiente
 <!DOCTYPE html>
 <html lang="it">
 
@@ -13,6 +14,11 @@
     <link rel="stylesheet" href="@Assets["Accredia.SIGAD.Web.styles.css"]" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
+    @* Dev Inspector (Ctrl+Alt+D): solo in Development; in Release i file non sono pubblicati. *@
+    @if (Ambiente.IsDevelopment())
+    {
+        <link rel="stylesheet" href="css/dev-inspector.css" />
+    }
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
@@ -22,6 +28,10 @@
     <script src="js/sigad-download.js"></script>
     <script src="js/sigad-ui-enhancements.js"></script>
     <script src="_framework/blazor.web.js"></script>
+    @if (Ambiente.IsDevelopment())
+    {
+        <script src="js/dev-inspector.js"></script>
+    }
 </body>
 
 </html>

@@ -60,4 +60,19 @@
     <Watch Include="**\*.js" />
   </ItemGroup>
 
+  <!-- Dev Inspector: strumento di sviluppo e collaudo. In Release i suoi file non
+       sono pubblicati e gli endpoint non sono compilati (Sviluppo/DevInspectorEndpoints.cs). -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Content Remove="wwwroot\js\dev-inspector.js" />
+    <Content Remove="wwwroot\css\dev-inspector.css" />
+  </ItemGroup>
+
+  <!-- Dev Inspector: ogni pagina deve avere data-dev-component (come nel Portale). -->
+  <Target Name="CheckPageAnnotationCoverage" BeforeTargets="BeforeBuild">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -File &quot;$(MSBuildProjectDirectory)\..\tools\check-page-annotations.ps1&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot;"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="false"
+          ContinueOnError="false" />
+  </Target>
+
 </Project>

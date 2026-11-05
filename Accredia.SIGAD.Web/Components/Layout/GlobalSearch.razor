@@ -3,7 +3,7 @@
 @inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components.Web
 
-<div class="sigad-search">
+<div data-dev-component="@DevInspector.Annota("GlobalSearch")" data-dev-source="@DevInspector.Annota("Components/Layout/GlobalSearch.razor")" class="sigad-search">
     <MudTextField T="string"
                   @bind-Value="_query"
                   @bind-Value:after="OnQueryChanged"

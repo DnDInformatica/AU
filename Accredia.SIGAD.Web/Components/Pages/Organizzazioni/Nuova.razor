@@ -8,7 +8,7 @@
 @using Accredia.SIGAD.Web.Models.Common
 
 <RichiedePermesso Permessi="@([PermessiSigad.Organizzazioni.Creazione])">
-<MudContainer MaxWidth="MaxWidth.False">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Organizzazioni.Nuova")" data-dev-source="@DevInspector.Annota("Components/Pages/Organizzazioni/Nuova.razor")" MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuova organizzazione"
                 Subtitle="Crea una nuova organizzazione in anagrafica."
                 BreadcrumbItems="@_breadcrumbs"

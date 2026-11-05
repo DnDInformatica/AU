@@ -8,7 +8,7 @@
 @inject ILogger<Login> Logger
 @using Microsoft.AspNetCore.Components.Web
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
+<MudContainer data-dev-component="@DevInspector.Annota("Page.Root.Login")" data-dev-source="@DevInspector.Annota("Components/Pages/Login.razor")" MaxWidth="MaxWidth.Small" Class="mt-10">
     <MudPaper Class="pa-6" Elevation="0">
         <PageTitle>Accedi · SIGAD</PageTitle>
         <MudText Typo="Typo.h5" HtmlTag="h1" tabindex="-1">Accedi</MudText>

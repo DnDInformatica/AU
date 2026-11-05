@@ -1,6 +1,6 @@
 @using MudBlazor
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="@($"mt-8 {Class}")">
+<MudContainer data-dev-component="@DevInspector.Annota("AccessDenied")" data-dev-source="@DevInspector.Annota("Components/Shared/AccessDenied.razor")" MaxWidth="MaxWidth.Large" Class="@($"mt-8 {Class}")">
     @* Contorno e non pieno: l'ocra non fa da fondo a grandi superfici (regole del Portale) e il testo secondario resta leggibile. *@
     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Lock">
         <MudText Typo="Typo.h6">@Title</MudText>

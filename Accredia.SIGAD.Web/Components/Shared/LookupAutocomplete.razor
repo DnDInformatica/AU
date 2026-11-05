@@ -1,7 +1,7 @@
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 @inject ILogger<LookupAutocomplete> Logger
 
-<MudAutocomplete T="LookupItem"
+<MudAutocomplete data-dev-component="@DevInspector.Annota("LookupAutocomplete")" data-dev-source="@DevInspector.Annota("Components/Shared/LookupAutocomplete.razor")" T="LookupItem"
                  Label="@Label"
                  Variant="@Variant"
                  Dense="@Dense"

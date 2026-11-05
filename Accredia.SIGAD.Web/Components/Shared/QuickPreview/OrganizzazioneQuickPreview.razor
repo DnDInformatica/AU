@@ -1,7 +1,7 @@
 @namespace Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
-<MudStack Spacing="2">
+<MudStack data-dev-component="@DevInspector.Annota("OrganizzazioneQuickPreview")" data-dev-source="@DevInspector.Annota("Components/Shared/QuickPreview/OrganizzazioneQuickPreview.razor")" Spacing="2">
     <MudStack Direction="Row" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
         <MudText Typo="Typo.subtitle2">Dati principali</MudText>
         <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="@GetStatoColor(Item.StatoAttivitaId)">
