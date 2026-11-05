@@ -365,7 +365,8 @@
 }
 
 .ops-contenuto .mud-card,
-.ops-contenuto .mud-paper[class*="mud-elevation-"]:not(.mud-elevation-0) {
+.ops-contenuto .mud-paper[class*="mud-elevation-"]:not(.mud-elevation-0),
+.ops-contenuto .mud-table[class*="mud-elevation-"]:not(.mud-elevation-0) {
   border: 1px solid var(--line);
   box-shadow: none;
 }
