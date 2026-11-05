@@ -12,8 +12,10 @@
     --sigad-error: var(--acc-rosso, #BA0C2F);
     /* Primitive neutre */
     --sigad-line: rgba(43, 43, 33, 0.12);
-    --sigad-shadow: 0 10px 28px rgba(43, 43, 33, 0.10);
-    --sigad-radius: 16px;
+    /* Superfici piatte (regola del Portale, v1.2): i pannelli si separano con il
+       bordo; l'ombra resta a cio' che galleggia (--shadow-raised). */
+    --sigad-shadow: none;
+    --sigad-radius: var(--radius-sm, 8px);
     --sigad-focus: var(--acc-focus-ring, #2B2B21);
 }
 
@@ -93,15 +95,12 @@ a {
 
 .sigad-app-title {
     font-family: "Montserrat Accredia", Arial, sans-serif;
-    letter-spacing: 0.08em;
     margin-left: 8px;
 }
 
 .sigad-app-subtitle {
     color: var(--sigad-text-secondary);
     margin-left: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
 }
 
 .sigad-search {
@@ -130,7 +129,6 @@ a {
 
 .sigad-search-group-title {
     color: var(--sigad-text-secondary);
-    letter-spacing: 0.08em;
 }
 
 .sigad-search-group-count {
@@ -256,7 +254,6 @@ a {
 .sigad-brand-title {
     font-family: "Montserrat Accredia", Arial, sans-serif;
     font-weight: 800;
-    letter-spacing: 0.04em;
     color: rgba(255, 255, 255, 0.87);
 }
 
@@ -266,7 +263,7 @@ a {
 
 .sigad-collapse-btn {
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
+    border-radius: var(--radius-sm, 8px);
     width: 44px;
     height: 44px;
     background: rgba(255, 255, 255, 0.04);
@@ -289,9 +286,7 @@ a {
     padding: 0 16px;
     margin-top: 6px;
     font-size: 0.7rem;
-    letter-spacing: 0.08em;
     font-weight: 700;
-    text-transform: uppercase;
 }
 
 /* NavMenu link visual states are defined in NavMenu.razor.css to keep styles component-scoped. */
@@ -300,17 +295,16 @@ a {
     font-family: "Open Sans Accredia", Arial, sans-serif;
     font-weight: 700;
     font-size: 12px;
-    letter-spacing: 0.04em;
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: var(--radius-xs, 4px);
     background: rgba(43, 43, 33, 0.92);
     color: var(--sigad-white);
-    box-shadow: var(--sigad-shadow);
+    box-shadow: var(--shadow-raised);
 }
 
 /* Admin: role list */
 .sigad-admin-rolelist .mud-list-item {
-    border-radius: 12px;
+    border-radius: var(--radius-sm, 8px);
 }
 
     .sigad-admin-rolelist .mud-list-item:hover {
@@ -437,8 +431,6 @@ a {
     font-family: "Open Sans Accredia", Arial, sans-serif;
     font-weight: 800;
     font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: rgba(43, 43, 33, 0.70);
     border-bottom: 1px solid rgba(43, 43, 33, 0.10);
 }
@@ -583,7 +575,6 @@ a {
 
 .sigad-kpi-label {
     color: var(--sigad-text-secondary);
-    letter-spacing: 0.08em;
 }
 
 .sigad-kpi-value {
@@ -612,7 +603,7 @@ a {
 .sigad-quickdrawer .mud-drawer-paper {
     border-left: 1px solid var(--sigad-line);
     background: var(--sigad-white);
-    box-shadow: 0 18px 44px rgba(43, 43, 33, 0.22);
+    box-shadow: var(--shadow-raised);
 }
 
 .sigad-quickdrawer-header {
@@ -680,8 +671,6 @@ a {
     .sigad-dl-item dt {
         font-size: 0.75rem;
         color: var(--sigad-text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
         margin-bottom: 2px;
     }
 
@@ -759,7 +748,7 @@ a {
     background: rgba(255, 255, 255, 0.97) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.72);
     border-bottom: 1px solid rgba(43, 43, 33, 0.12);
-    box-shadow: 0 10px 28px rgba(43, 43, 33, 0.05) !important;
+    box-shadow: none !important;
     backdrop-filter: blur(18px);
 }
 
@@ -797,7 +786,7 @@ a {
         width: 280px !important;
         transform: translateX(0);
         visibility: visible;
-        box-shadow: 0 18px 60px rgba(43, 43, 33, 0.24);
+        box-shadow: var(--shadow-raised);
     }
 
     .mud-layout > .main-content {

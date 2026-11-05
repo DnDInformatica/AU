@@ -58,9 +58,8 @@
   margin-bottom: 0.75rem;
   padding: 0.7rem 1rem;
   border: 1px solid rgba(43, 43, 33, 0.12);
-  border-radius: 14px;
+  border-radius: var(--radius-sm, 8px);
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 24px rgba(43, 43, 33, 0.06);
 }
 .sigad-breadcrumbs a {
   color: rgba(43, 43, 33, 0.82);

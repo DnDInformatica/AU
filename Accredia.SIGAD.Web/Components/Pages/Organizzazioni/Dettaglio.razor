@@ -27,11 +27,11 @@
     }
     else if (_detail is not null)
     {
-        @* ───── HERO CARD ───── *@
+        @* Intestazione della scheda: il nome e' gia' nel titolo della pagina (PageHeader);
+           qui restano stato, dati fiscali e azione. *@
         <div class="det-hero">
             <div class="det-hero-main">
                 <div class="det-hero-title-row">
-                    <MudText Typo="Typo.h4" Class="det-hero-name">@_detail.Denominazione</MudText>
                     <MudChip T="string"
                              Color="@GetStatoColor(_detail.StatoAttivitaId)"
                              Variant="Variant.Filled"
@@ -49,7 +49,7 @@
                 @if (!string.IsNullOrWhiteSpace(_detail.RagioneSociale)
                      && !string.Equals(_detail.RagioneSociale, _detail.Denominazione, StringComparison.OrdinalIgnoreCase))
                 {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="margin-top:2px;">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">
                         @_detail.RagioneSociale
                     </MudText>
                 }
@@ -112,7 +112,7 @@
                                    Class="det-side-tab-btn"
                                    Style="@GetSideTabStyle(0)"
                                    OnClick="@(() => ActivateTabAsync(0))">
-                            Overview
+                            Panoramica
                         </MudButton>
                         <MudButton Variant="Variant.Text"
                                    Color="Color.Inherit"
@@ -167,7 +167,7 @@
                              KeepPanelsAlive="true">
 
                 @* ── OVERVIEW ── *@
-                <MudTabPanel Text="Overview" Icon="@Icons.Material.Outlined.Dashboard">
+                <MudTabPanel Text="Panoramica" Icon="@Icons.Material.Outlined.Dashboard">
                     <MudGrid Spacing="3">
                         @* — Anagrafica — *@
                         <MudItem xs="12" md="6">

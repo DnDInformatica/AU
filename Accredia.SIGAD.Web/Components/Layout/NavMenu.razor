@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <p class="portal-sidebar__area-label">GESTIONE ANAGRAFICHE</p>
+    <p class="portal-sidebar__area-label">Gestione anagrafiche</p>
     <hr class="portal-sidebar__divider" />
 
     <MudNavMenu Class="portal-sidebar__nav" Color="Color.Primary" Bordered="true">
@@ -95,7 +95,7 @@
             }
             else
             {
-                <p class="portal-sidebar__subgroup-label">CONFIGURAZIONE</p>
+                <p class="portal-sidebar__subgroup-label">Configurazione</p>
                 @NavLink("Tipologiche", Icons.Material.Filled.List, "/tipologiche")
             }
         }
@@ -119,7 +119,7 @@
             }
             else
             {
-                <p class="portal-sidebar__subgroup-label">AMMINISTRAZIONE</p>
+                <p class="portal-sidebar__subgroup-label">Amministrazione</p>
                 @if (UserContext.HasPermission(PermessiIam.GestioneUtenti))
                 {
                     @NavLink("Gestione Utenti", Icons.Material.Filled.AccountCircle, "/admin/utenti")

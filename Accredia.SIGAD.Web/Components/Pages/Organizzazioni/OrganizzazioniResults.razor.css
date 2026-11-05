@@ -1,6 +1,6 @@
 ﻿.sigad-results-card {
     border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 16px;
+    border-radius: var(--radius-sm, 8px);
     overflow: hidden;
     background: var(--mud-palette-background);
 }
@@ -46,7 +46,7 @@
 }
 
 .sigad-btn-primary {
-    border-radius: 12px;
+    border-radius: var(--radius-sm, 8px);
 }
 
 .sigad-bulkbar {
