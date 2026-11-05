@@ -28,10 +28,10 @@ namespace Accredia.SIGAD.Web.Components.Pages.RisorseUmane;
 public partial class Dipendenti : ComponentBase
 {
 private bool CanRead =>
-        (UserContext.HasPermission("HR.DIP.LIST") || UserContext.HasPermission("HR.DIP.READ"))
-        && UserContext.HasPermission("HR.PERSONA.READ");
+        (UserContext.HasPermission("SIDAC.HR.DIP.LIST") || UserContext.HasPermission("SIDAC.HR.DIP.READ"))
+        && UserContext.HasPermission("SIDAC.HR.PERSONA.READ");
 
-    private bool CanCreate => UserContext.HasPermission("HR.DIP.CREATE");
+    private bool CanCreate => UserContext.HasPermission("SIDAC.HR.DIP.CREATE");
 
     private readonly IReadOnlyList<BreadcrumbItem> _breadcrumbs = new[]
     {

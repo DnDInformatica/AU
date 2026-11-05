@@ -25,20 +25,20 @@ public partial class NavMenu : ComponentBase
     private bool _isCollapsed => IsCollapsed;
 
     private bool _hasAnagraficheAccess =>
-        UserContext.HasPermission("MODULE.ORG.ACCESS")
-        || UserContext.HasPermission("MODULE.PERS.ACCESS")
-        || UserContext.HasPermission("MODULE.INC.ACCESS")
-        || UserContext.HasPermission("MODULE.CERT.ACCESS");
+        UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS")
+        || UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS")
+        || UserContext.HasPermission("SIDAC.MODULE.INC.ACCESS")
+        || UserContext.HasPermission("SIDAC.MODULE.CERT.ACCESS");
 
     private bool _hasRuAccess =>
-        UserContext.HasPermission("HR.DIP.LIST")
-        || UserContext.HasPermission("HR.DIP.READ")
-        || UserContext.HasPermission("HR.DIP.CREATE")
-        || UserContext.HasPermission("HR.DIP.UPDATE")
-        || UserContext.HasPermission("HR.DIP.DELETE");
+        UserContext.HasPermission("SIDAC.HR.DIP.LIST")
+        || UserContext.HasPermission("SIDAC.HR.DIP.READ")
+        || UserContext.HasPermission("SIDAC.HR.DIP.CREATE")
+        || UserContext.HasPermission("SIDAC.HR.DIP.UPDATE")
+        || UserContext.HasPermission("SIDAC.HR.DIP.DELETE");
 
     private bool _hasAdminAccess =>
-        UserContext.IsAdmin && UserContext.HasPermission("MODULE.ADMIN.ACCESS");
+        UserContext.IsAdmin && UserContext.HasPermission("IAM.CONSOLE.ACCESS");
 
     private RenderFragment NavLink(string label, string icon, string href, NavLinkMatch match = NavLinkMatch.Prefix)
         => builder =>

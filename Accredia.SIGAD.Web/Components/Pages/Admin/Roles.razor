@@ -8,7 +8,7 @@
 
 <PageTitle>Gestione Ruoli - SIGAD</PageTitle>
 
-@if (!UserContext.HasPermission("ADMIN.ROLES.MANAGE") && !UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE"))
+@if (!UserContext.HasPermission("IAM.ROLES.MANAGE") && !UserContext.HasPermission("IAM.PERMISSIONS.MANAGE"))
 {
     <AccessDenied />
     return;

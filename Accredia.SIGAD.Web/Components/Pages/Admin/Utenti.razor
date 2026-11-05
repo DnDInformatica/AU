@@ -9,7 +9,7 @@
 
 <PageTitle>Gestione Utenti - SIGAD</PageTitle>
 
-@if (!UserContext.HasPermission("ADMIN.USERS.MANAGE"))
+@if (!UserContext.HasPermission("IAM.USERS.MANAGE"))
 {
     <AccessDenied ShowContactHint="true" />
     return;

@@ -21,5 +21,9 @@
          Esclusa dal modello, resta presente nel database. -->
     <Build Remove="src\Reporting\Views\vw_GOV_ConsumerAdHocLegacy.sql" />
     <None Include="src\Reporting\Views\vw_GOV_ConsumerAdHocLegacy.sql" />
+    <!-- Schema IAM: la fonte e' il repository Accredia.IAM (database/src/IAM),
+         decisione del 2026-11-05. Escluso anche se una nuova estrazione lo
+         ricrea; con DropObjectsNotInSource=False il confronto non lo elimina. -->
+    <Build Remove="src\IAM\**\*.sql" />
   </ItemGroup>
 </Project>

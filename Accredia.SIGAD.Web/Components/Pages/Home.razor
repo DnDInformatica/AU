@@ -40,7 +40,7 @@
     </MudGrid>
 
     <MudGrid Spacing="3">
-        @if (UserContext.HasPermission("MODULE.ORG.ACCESS"))
+        @if (UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS"))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
@@ -50,7 +50,7 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("MODULE.PERS.ACCESS"))
+        @if (UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS"))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
@@ -60,7 +60,7 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+        @if (UserContext.HasPermission("IAM.CONSOLE.ACCESS"))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">

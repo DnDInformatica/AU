@@ -48,6 +48,14 @@ Il report elenca gli oggetti divergenti e genera lo script di allineamento
 - **Le viste sono il contratto** verso l'applicazione: i `Handler` leggono viste,
   non tabelle, così le tabelle restano rifattorizzabili senza rompere il codice.
 
+## Schema IAM
+
+Lo schema `IAM` non è definito qui: la fonte è il repository `Accredia.IAM`
+(`database/src/IAM`, migrazioni in `database/migrations`), decisione del
+5 novembre 2026. Il progetto lo esclude dalla compilazione (`src\IAM\**`) e
+il confronto usa `DropObjectsNotInSource=False`, quindi non ne propone la
+rimozione. Dopo una nuova estrazione eliminare la cartella `src/IAM`.
+
 ## Riferimenti
 
 - Ipotesi architetturale: AF-30

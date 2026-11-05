@@ -42,7 +42,7 @@ private bool _isLoading;
     private string _permissionFilter = string.Empty;
     private HashSet<string> _selectedPermissions = new(StringComparer.OrdinalIgnoreCase);
 
-    private bool CanEditPermissions => UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE");
+    private bool CanEditPermissions => UserContext.HasPermission("IAM.PERMISSIONS.MANAGE");
 
     private IEnumerable<RoleDto> FilteredRoles =>
         string.IsNullOrWhiteSpace(_roleFilter)

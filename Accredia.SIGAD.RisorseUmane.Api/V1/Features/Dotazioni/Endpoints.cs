@@ -11,7 +11,7 @@ internal static class Endpoints
             async (int id, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.GetByIdAsync(id, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.LIST", "SIDAC.HR.DOTAZIONI.READ")
                 .Produces<DotazioneDto>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound));
 
@@ -19,7 +19,7 @@ internal static class Endpoints
             async (int dipendenteId, bool? includeDeleted, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.ListByDipendenteAsync(dipendenteId, includeDeleted == true, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.LIST", "HR.DOTAZIONI.READ")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.LIST", "SIDAC.HR.DOTAZIONI.READ")
                 .Produces<IReadOnlyCollection<DotazioneDto>>(StatusCodes.Status200OK));
 
         ApiVersioning.MapVersionedPost(app, "/dipendenti/{dipendenteId:int}/dotazioni", "CreateDotazione",
@@ -34,7 +34,7 @@ internal static class Endpoints
                 return await Handler.CreateAsync(dipendenteId, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.CREATE")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.CREATE")
                 .Produces<DotazioneCreateResponse>(StatusCodes.Status201Created)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
                 .ProducesValidationProblem());
@@ -51,7 +51,7 @@ internal static class Endpoints
                 return await Handler.UpdateAsync(dipendenteId, id, request, connectionFactory, cancellationToken);
             },
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.UPDATE")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.UPDATE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound)
                 .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -61,7 +61,7 @@ internal static class Endpoints
             async (int dipendenteId, int id, ISqlConnectionFactory connectionFactory, CancellationToken cancellationToken)
                 => await Handler.SoftDeleteAsync(dipendenteId, id, connectionFactory, cancellationToken),
             builder => builder
-                .RichiedePermesso("HR.DOTAZIONI.DELETE")
+                .RichiedePermesso("SIDAC.HR.DOTAZIONI.DELETE")
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status404NotFound));
     }

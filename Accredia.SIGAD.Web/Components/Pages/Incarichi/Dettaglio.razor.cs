@@ -27,9 +27,9 @@ namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Dettaglio : ComponentBase
 {
-    private bool CanRead => UserContext.HasPermission("INC.LIST") || UserContext.HasPermission("INC.READ");
-    private bool CanUpdate => UserContext.HasPermission("INC.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("INC.DELETE");
+    private bool CanRead => UserContext.HasPermission("SIDAC.INC.LIST") || UserContext.HasPermission("SIDAC.INC.READ");
+    private bool CanUpdate => UserContext.HasPermission("SIDAC.INC.UPDATE");
+    private bool CanDelete => UserContext.HasPermission("SIDAC.INC.DELETE");
 
     [Parameter] public int Id { get; set; }
 

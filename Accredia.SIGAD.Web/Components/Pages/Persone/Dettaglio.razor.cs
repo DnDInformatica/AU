@@ -55,8 +55,8 @@ public partial class Dettaglio : ComponentBase
     private const int TabStorico = 8;
 
     private PersonaDetail? _detail;
-    private bool CanRead => UserContext.HasPermission("PERS.LIST") || UserContext.HasPermission("PERS.READ");
-    private bool CanUpdate => UserContext.HasPermission("PERS.UPDATE");
+    private bool CanRead => UserContext.HasPermission("SIDAC.PERS.LIST") || UserContext.HasPermission("SIDAC.PERS.READ");
+    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
     private bool _isLoading = true;
     private string? _errorMessage;
     private int _activeTabIndex;

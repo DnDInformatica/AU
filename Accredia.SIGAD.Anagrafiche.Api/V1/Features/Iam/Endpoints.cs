@@ -20,8 +20,8 @@ namespace Accredia.SIGAD.Anagrafiche.Api.V1.Features.Iam;
 /// </summary>
 internal static class Endpoints
 {
-    private const string PermessoGestione = "ADMIN.PERMISSIONS.MANAGE";
-    private static readonly string[] PermessiLettura = ["ADMIN.PERMISSIONS.MANAGE", "ADMIN.ROLES.MANAGE", "MODULE.ADMIN.ACCESS"];
+    private const string PermessoGestione = "IAM.PERMISSIONS.MANAGE";
+    private static readonly string[] PermessiLettura = ["IAM.PERMISSIONS.MANAGE", "IAM.ROLES.MANAGE", "IAM.CONSOLE.ACCESS"];
 
     public sealed record RuoloDto(string RoleId, string Name, string? Description, string Ambito);
 

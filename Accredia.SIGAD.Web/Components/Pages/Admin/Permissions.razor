@@ -8,7 +8,7 @@
 
 <PageTitle>Permessi - SIGAD</PageTitle>
 
-@if (!UserContext.HasPermission("ADMIN.PERMISSIONS.MANAGE") && !UserContext.HasPermission("MODULE.ADMIN.ACCESS"))
+@if (!UserContext.HasPermission("IAM.PERMISSIONS.MANAGE") && !UserContext.HasPermission("IAM.CONSOLE.ACCESS"))
 {
     <AccessDenied />
     return;
