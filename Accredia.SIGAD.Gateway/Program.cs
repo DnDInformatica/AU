@@ -1,10 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
-using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -34,11 +31,6 @@ if (builder.Environment.IsDevelopment())
 builder.Services
     .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-#if DEBUG
-    // Profilo di sviluppo: il Gateway torna reverse proxy puro, l'autorizzazione
-    // resta nelle API che risolvono l'utenza su IAM. Vedi AF-31.
-    .AddConfigFilter<Accredia.SIGAD.Gateway.Auth.DevAnonymousProxyConfigFilter>()
-#endif
     .AddTransforms(transformBuilderContext =>
     {
         transformBuilderContext.AddRequestTransform(context =>
@@ -73,310 +65,20 @@ if (string.IsNullOrWhiteSpace(anagraficheAddress))
     throw new InvalidOperationException("ReverseProxy anagrafiche address is missing in Gateway configuration.");
 }
 
+// La ricerca globale interroga Anagrafiche per conto dell'utente: il token (e in
+// sviluppo X-Dev-Oid) va propagato, altrimenti le chiamate risultano anonime.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<Accredia.SIGAD.Shared.Auth.PropagazioneIdentitaHandler>();
 builder.Services.AddHttpClient("Anagrafiche", client =>
 {
     client.BaseAddress = new Uri(anagraficheAddress, UriKind.Absolute);
-});
+})
+.AddHttpMessageHandler<Accredia.SIGAD.Shared.Auth.PropagazioneIdentitaHandler>();
 
-// Authentication & Authorization (Gateway)
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtIssuer = jwtSection["Issuer"];
-var jwtAudience = jwtSection["Audience"];
-var jwtKey = jwtSection["Key"];
-
-if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience) || string.IsNullOrWhiteSpace(jwtKey))
-{
-    throw new InvalidOperationException("JWT configuration is missing in Gateway.");
-}
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.Zero
-        };
-
-        // Safe diagnostics: never log the token value. Useful to understand persistent 401s.
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                // Log only presence/shape of Authorization header.
-                var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger("Gateway.Jwt");
-
-                var hasAuthHeader = context.Request.Headers.TryGetValue(HeaderNames.Authorization, out var authHeader);
-                var authHeaderValue = hasAuthHeader ? authHeader.ToString() : string.Empty;
-                var hasBearer = authHeaderValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
-                var tokenLength = hasBearer ? Math.Max(0, authHeaderValue.Length - "Bearer ".Length) : 0;
-
-                logger.LogDebug(
-                    "JWT MessageReceived. Path={Path}, HasAuthorization={HasAuthorization}, HasBearer={HasBearer}, TokenLength={TokenLength}",
-                    context.HttpContext.Request.Path,
-                    hasAuthHeader,
-                    hasBearer,
-                    tokenLength);
-
-                return Task.CompletedTask;
-            },
-            OnAuthenticationFailed = context =>
-            {
-                var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger("Gateway.Jwt");
-
-                logger.LogWarning(
-                    context.Exception,
-                    "JWT AuthenticationFailed. Path={Path}, ErrorType={ErrorType}, Message={Message}",
-                    context.HttpContext.Request.Path,
-                    context.Exception.GetType().Name,
-                    context.Exception.Message);
-
-                return Task.CompletedTask;
-            },
-            OnChallenge = context =>
-            {
-                // This fires when a 401 challenge is returned.
-                var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger("Gateway.Jwt");
-
-                logger.LogInformation(
-                    "JWT Challenge. Path={Path}, Error={Error}, Description={Description}",
-                    context.HttpContext.Request.Path,
-                    context.Error,
-                    context.ErrorDescription);
-
-                return Task.CompletedTask;
-            },
-            OnForbidden = context =>
-            {
-                var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger("Gateway.Jwt");
-
-                logger.LogInformation(
-                    "JWT Forbidden. Path={Path}, UserAuthenticated={Authenticated}",
-                    context.HttpContext.Request.Path,
-                    context.HttpContext.User?.Identity?.IsAuthenticated == true);
-
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-    options.AddPolicy("Admin", policy => policy.RequireRole("SIGAD_ADMIN", "SIGAD_SUPERADMIN"));
-    options.AddPolicy(
-        "PersRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "PERS.LIST")
-                || context.User.HasClaim("perm", "PERS.READ")));
-    options.AddPolicy(
-        "PersCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "PERS.CREATE"));
-    options.AddPolicy(
-        "PersUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "PERS.UPDATE"));
-    options.AddPolicy(
-        "PersDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "PERS.DELETE"));
-    options.AddPolicy(
-        "PersDocRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "PERS.DOC.READ")
-                || context.User.HasClaim("perm", "PERS.LIST")
-                || context.User.HasClaim("perm", "PERS.READ")));
-    options.AddPolicy(
-        "PersDocCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "PERS.DOC.CREATE")
-                || context.User.HasClaim("perm", "PERS.CREATE")
-                || context.User.HasClaim("perm", "PERS.UPDATE")));
-    options.AddPolicy(
-        "PersDocDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "PERS.DOC.DELETE")
-                || context.User.HasClaim("perm", "PERS.DELETE")));
-    options.AddPolicy(
-        "IncRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "INC.LIST")
-                || context.User.HasClaim("perm", "INC.READ")));
-    options.AddPolicy(
-        "IncCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "INC.CREATE"));
-    options.AddPolicy(
-        "IncUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "INC.UPDATE"));
-    options.AddPolicy(
-        "IncDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "INC.DELETE"));
-    options.AddPolicy(
-        "CertRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "CERT.LIST")
-                || context.User.HasClaim("perm", "CERT.READ")
-                // Backward compatibility while roles are being reseeded.
-                || context.User.HasClaim("perm", "INC.LIST")
-                || context.User.HasClaim("perm", "INC.READ")));
-    options.AddPolicy(
-        "CertCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "CERT.CREATE")
-                // Backward compatibility while roles are being reseeded.
-                || context.User.HasClaim("perm", "INC.CREATE")));
-    options.AddPolicy(
-        "CertUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "CERT.UPDATE")
-                // Backward compatibility while roles are being reseeded.
-                || context.User.HasClaim("perm", "INC.UPDATE")));
-    options.AddPolicy(
-        "CertDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "CERT.DELETE")
-                // Backward compatibility while roles are being reseeded.
-                || context.User.HasClaim("perm", "INC.DELETE")));
-    options.AddPolicy(
-        "HrPersonaRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.PERSONA.READ"));
-    options.AddPolicy(
-        "HrDipRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "HR.DIP.LIST")
-                || context.User.HasClaim("perm", "HR.DIP.READ")));
-    options.AddPolicy(
-        "HrDipCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DIP.CREATE"));
-    options.AddPolicy(
-        "HrDipUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DIP.UPDATE"));
-    options.AddPolicy(
-        "HrDipDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DIP.DELETE"));
-    options.AddPolicy(
-        "HrContrattiRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "HR.CONTRATTI.LIST")
-                || context.User.HasClaim("perm", "HR.CONTRATTI.READ")));
-    options.AddPolicy(
-        "HrContrattiCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.CONTRATTI.CREATE"));
-    options.AddPolicy(
-        "HrContrattiUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.CONTRATTI.UPDATE"));
-    options.AddPolicy(
-        "HrContrattiDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.CONTRATTI.DELETE"));
-    options.AddPolicy(
-        "HrDotazioniRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "HR.DOTAZIONI.LIST")
-                || context.User.HasClaim("perm", "HR.DOTAZIONI.READ")));
-    options.AddPolicy(
-        "HrDotazioniCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DOTAZIONI.CREATE"));
-    options.AddPolicy(
-        "HrDotazioniUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DOTAZIONI.UPDATE"));
-    options.AddPolicy(
-        "HrDotazioniDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.DOTAZIONI.DELETE"));
-    options.AddPolicy(
-        "HrFormRead",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                context.User.HasClaim("perm", "HR.FORM.LIST")
-                || context.User.HasClaim("perm", "HR.FORM.READ")));
-    options.AddPolicy(
-        "HrFormCreate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.FORM.CREATE"));
-    options.AddPolicy(
-        "HrFormUpdate",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.FORM.UPDATE"));
-    options.AddPolicy(
-        "HrFormDelete",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("perm", "HR.FORM.DELETE"));
-    options.AddPolicy(
-        "HrDipReadPersona",
-        policy => policy
-            .RequireAuthenticatedUser()
-            .RequireAssertion(context =>
-                (context.User.HasClaim("perm", "HR.DIP.LIST")
-                 || context.User.HasClaim("perm", "HR.DIP.READ"))
-                && context.User.HasClaim("perm", "HR.PERSONA.READ")));
-});
+// Autenticazione e autorizzazione: nessuna nel Gateway (RF-059, decisione del
+// 2026-11-05). Il Gateway instrada; ogni API valida il token Entra e
+// autorizza per permesso IAM. Il vecchio token di Identity.Api non e' piu'
+// validato qui: nessuna API lo accetta.
 
 // Rate limiting (Gateway)
 builder.Services.AddRateLimiter(options =>
@@ -530,12 +232,9 @@ app.MapGet("/search/global", async (
 
         return Results.Ok(response);
     })
-    .RequireAuthorization("Authenticated")
     .Produces<GlobalSearchResponse>(StatusCodes.Status200OK);
 
 app.UseRateLimiter();
-app.UseAuthentication();
-app.UseAuthorization();
 
 static async Task<PagedResponse<T>> FetchAsync<T>(
     HttpClient client,
