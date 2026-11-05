@@ -17,6 +17,7 @@ public partial class MainLayout : LayoutComponentBase
 {
 private bool _drawerOpen = true;
     private bool _authInitialized;
+    private bool _contestoPronto;
     private bool _disposed;
 
     private void ToggleDrawer()
@@ -32,9 +33,18 @@ private bool _drawerOpen = true;
             _authInitialized = true;
 
             // NOTE: auth initialization is performed in Routes.razor so it runs even when MainLayout is not rendered.
-            await UserContext.EnsureLoadedAsync();
-            // UserContext is loaded asynchronously after the first paint; trigger a re-render so NavMenu updates immediately.
-            await InvokeAsync(StateHasChanged);
+            // Il corpo della pagina si mostra solo dopo il caricamento, anche se fallisce:
+            // in quel caso la pagina segnala da sola i permessi mancanti.
+            try
+            {
+                await UserContext.EnsureLoadedAsync();
+            }
+            finally
+            {
+                _contestoPronto = true;
+                // UserContext is loaded asynchronously after the first paint; trigger a re-render so NavMenu updates immediately.
+                await InvokeAsync(StateHasChanged);
+            }
 
             // AVVIA TokenRefreshService per auto-refresh token
             // Questo previene logout improvvisi ogni 15 minuti
@@ -87,7 +97,15 @@ private bool _drawerOpen = true;
                     return;
                 }
 
-                await UserContext.EnsureLoadedAsync();
+                _contestoPronto = false;
+                try
+                {
+                    await UserContext.EnsureLoadedAsync();
+                }
+                finally
+                {
+                    _contestoPronto = true;
+                }
 
                 // Avvia/Ferma TokenRefreshService basato sullo stato auth
                 var authState = await task;

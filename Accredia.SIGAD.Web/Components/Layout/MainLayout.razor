@@ -115,7 +115,16 @@
     </MudDrawer>
 
     <MudMainContent Class="main-content" id="main-content">
-        @Body
+        @* Le pagine controllano i permessi appena disegnate: senza questa attesa
+           vedrebbero un utente ancora senza permessi e mostrerebbero "Accesso negato". *@
+        @if (_contestoPronto)
+        {
+            @Body
+        }
+        else
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="Caricamento dei permessi" />
+        }
     </MudMainContent>
 
     <QuickDrawerHost />
