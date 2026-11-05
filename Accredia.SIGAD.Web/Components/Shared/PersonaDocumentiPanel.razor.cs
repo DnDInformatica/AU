@@ -3,6 +3,7 @@ using Accredia.SIGAD.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Shared;
 
@@ -19,18 +20,18 @@ public partial class PersonaDocumentiPanel : ComponentBase
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private bool CanRead =>
-        UserContext.HasPermission("SIDAC.PERS.DOC.READ")
-        || UserContext.HasPermission("SIDAC.PERS.LIST")
-        || UserContext.HasPermission("SIDAC.PERS.READ");
+        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Lettura)
+        || UserContext.HasPermission(PermessiSidac.Persone.Elenco)
+        || UserContext.HasPermission(PermessiSidac.Persone.Lettura);
 
     private bool CanCreate =>
-        UserContext.HasPermission("SIDAC.PERS.DOC.CREATE")
-        || UserContext.HasPermission("SIDAC.PERS.CREATE")
-        || UserContext.HasPermission("SIDAC.PERS.UPDATE");
+        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Caricamento)
+        || UserContext.HasPermission(PermessiSidac.Persone.Creazione)
+        || UserContext.HasPermission(PermessiSidac.Persone.Modifica);
 
     private bool CanDelete =>
-        UserContext.HasPermission("SIDAC.PERS.DOC.DELETE")
-        || UserContext.HasPermission("SIDAC.PERS.DELETE");
+        UserContext.HasPermission(PermessiSidac.DocumentiPersona.Eliminazione)
+        || UserContext.HasPermission(PermessiSidac.Persone.Cancellazione);
 
     private bool _loading;
     private bool _uploading;

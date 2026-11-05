@@ -5,7 +5,7 @@
 
 <PageTitle>Admin - SIGAD</PageTitle>
 
-@if (!UserContext.HasPermission("IAM.CONSOLE.ACCESS"))
+@if (!UserContext.HasPermission(PermessiIam.AccessoConsole))
 {
     <AccessDenied Message="Non hai i permessi necessari per accedere al modulo amministrazione." />
     return;
@@ -18,7 +18,7 @@
     </MudText>
 
     <MudGrid Spacing="3">
-        @if (UserContext.HasPermission("IAM.USERS.MANAGE"))
+        @if (UserContext.HasPermission(PermessiIam.GestioneUtenti))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card pa-4" Elevation="0">
@@ -28,7 +28,7 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("IAM.ROLES.MANAGE") || UserContext.HasPermission("IAM.PERMISSIONS.MANAGE"))
+        @if (UserContext.HasPermission(PermessiIam.GestioneRuoli) || UserContext.HasPermission(PermessiIam.GestionePermessi))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card pa-4" Elevation="0">
@@ -38,7 +38,7 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("IAM.PERMISSIONS.MANAGE") || UserContext.HasPermission("IAM.CONSOLE.ACCESS"))
+        @if (UserContext.HasPermission(PermessiIam.GestionePermessi) || UserContext.HasPermission(PermessiIam.AccessoConsole))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card pa-4" Elevation="0">
@@ -50,9 +50,9 @@
         }
     </MudGrid>
 
-    @if (!UserContext.HasPermission("IAM.USERS.MANAGE")
-         && !UserContext.HasPermission("IAM.ROLES.MANAGE")
-         && !UserContext.HasPermission("IAM.PERMISSIONS.MANAGE"))
+    @if (!UserContext.HasPermission(PermessiIam.GestioneUtenti)
+         && !UserContext.HasPermission(PermessiIam.GestioneRuoli)
+         && !UserContext.HasPermission(PermessiIam.GestionePermessi))
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info" Class="mt-4">
             Il modulo Admin è disponibile, ma non hai funzionalità operative assegnate.

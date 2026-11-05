@@ -7,6 +7,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
+<RichiedePermesso Permessi="@([PermessiSidac.Organizzazioni.Modifica])">
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Modifica sede"
                 Subtitle="@($"Organizzazione #{Id} · Sede #{SedeId}")"
@@ -125,3 +126,4 @@
         </MudPaper>
     }
 </MudContainer>
+</RichiedePermesso>

@@ -55,7 +55,7 @@ public partial class BulkLogoutDialog : ComponentBase
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Errore: {ex.Message}", Severity.Error);
+            Snackbar.Add(MessaggioErroreApi.Da(ex), Severity.Error);
         }
         finally
         {

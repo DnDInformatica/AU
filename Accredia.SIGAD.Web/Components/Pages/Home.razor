@@ -5,42 +5,13 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
     <PageHeader Title="Dashboard"
-                Subtitle="Accesso rapido alle anagrafiche principali con pattern coerenti."
+                Subtitle="Accesso rapido alle anagrafiche principali."
                 BreadcrumbItems="@_breadcrumbs" />
 
-    <MudGrid Spacing="3" Class="mb-4">
-        <MudItem xs="12" md="3">
-            <MudPaper Class="sigad-kpi-card" Elevation="0">
-                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Organizzazioni</MudText>
-                <MudText Typo="Typo.h4" Class="sigad-kpi-value">128</MudText>
-                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Attive</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="3">
-            <MudPaper Class="sigad-kpi-card" Elevation="0">
-                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Persone</MudText>
-                <MudText Typo="Typo.h4" Class="sigad-kpi-value">542</MudText>
-                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Censite</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="3">
-            <MudPaper Class="sigad-kpi-card" Elevation="0">
-                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Incarichi</MudText>
-                <MudText Typo="Typo.h4" Class="sigad-kpi-value">87</MudText>
-                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Attivi</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="3">
-            <MudPaper Class="sigad-kpi-card" Elevation="0">
-                <MudText Typo="Typo.overline" Class="sigad-kpi-label">Segnalazioni</MudText>
-                <MudText Typo="Typo.h4" Class="sigad-kpi-value">6</MudText>
-                <MudText Typo="Typo.caption" Class="sigad-kpi-hint">Ultime 24h</MudText>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-
+    @* Niente KPI né attività recenti finché non ci sono dati veri: numeri fissi
+       nel codice farebbero credere a valori che non esistono. *@
     <MudGrid Spacing="3">
-        @if (UserContext.HasPermission("SIDAC.MODULE.ORG.ACCESS"))
+        @if (UserContext.HasPermission(PermessiSidac.Organizzazioni.Accesso))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
@@ -50,17 +21,17 @@
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("SIDAC.MODULE.PERS.ACCESS"))
+        @if (UserContext.HasPermission(PermessiSidac.Persone.Accesso))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
                     <MudText Typo="Typo.h6">Persone</MudText>
-                    <MudText Typo="Typo.caption">Ricerca CF/P.IVA con regole smart.</MudText>
+                    <MudText Typo="Typo.caption">Ricerca per nome, codice fiscale o partita IVA.</MudText>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4" Href="/persone">Apri</MudButton>
                 </MudPaper>
             </MudItem>
         }
-        @if (UserContext.HasPermission("IAM.CONSOLE.ACCESS"))
+        @if (UserContext.HasPermission(PermessiIam.AccessoConsole))
         {
             <MudItem xs="12" md="4">
                 <MudPaper Class="sigad-card" Elevation="0">
@@ -72,18 +43,4 @@
         }
     </MudGrid>
 
-    <MudPaper Class="sigad-table-wrap mt-6" Elevation="0">
-        <MudTable Items="_recentItems" Dense="true" Hover="true" Elevation="0">
-            <HeaderContent>
-                <MudTh>Attività recenti</MudTh>
-                <MudTh>Data</MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.Title</MudTd>
-                <MudTd>@context.Date</MudTd>
-                <MudTd Align="Right">Dettagli</MudTd>
-            </RowTemplate>
-        </MudTable>
-    </MudPaper>
 </MudContainer>

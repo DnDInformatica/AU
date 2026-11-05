@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Persone;
 
@@ -46,8 +47,8 @@ public partial class Modifica : ComponentBase
     }
 
     private PersonaDetail? _detail;
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.PERS.UPDATE");
-    private bool CanDelete => UserContext.HasPermission("SIDAC.PERS.DELETE");
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Persone.Modifica);
+    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Persone.Cancellazione);
     private bool _isLoading = true;
     private string? _errorMessage;
     private readonly FormModel _model = new();
@@ -136,7 +137,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -183,7 +184,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

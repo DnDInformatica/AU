@@ -6,6 +6,7 @@
 @using Accredia.SIGAD.Web.Components.Shared
 @using Accredia.SIGAD.Web.Models.Anagrafiche
 
+<RichiedePermesso Permessi="@([PermessiSidac.Organizzazioni.Modifica])">
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Nuova unita organizzativa"
                 Subtitle="@($"Organizzazione #{Id}")"
@@ -97,3 +98,4 @@
         </MudForm>
     </MudPaper>
 </MudContainer>
+</RichiedePermesso>

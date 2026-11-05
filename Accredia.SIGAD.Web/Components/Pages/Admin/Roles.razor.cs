@@ -22,6 +22,7 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Admin;
 
@@ -42,7 +43,7 @@ private bool _isLoading;
     private string _permissionFilter = string.Empty;
     private HashSet<string> _selectedPermissions = new(StringComparer.OrdinalIgnoreCase);
 
-    private bool CanEditPermissions => UserContext.HasPermission("IAM.PERMISSIONS.MANAGE");
+    private bool CanEditPermissions => UserContext.HasPermission(PermessiIam.GestionePermessi);
 
     private IEnumerable<RoleDto> FilteredRoles =>
         string.IsNullOrWhiteSpace(_roleFilter)
@@ -121,7 +122,7 @@ private bool _isLoading;
         }
         catch (Exception ex)
         {
-            _rolesError = ex.Message;
+            _rolesError = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -175,7 +176,7 @@ private bool _isLoading;
         }
         catch (Exception ex)
         {
-            _permissionsError = ex.Message;
+            _permissionsError = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -216,7 +217,7 @@ private bool _isLoading;
 
         if (!CanEditPermissions)
         {
-            Snackbar.Add("Accesso negato: manca il permesso ADMIN.PERMISSIONS.MANAGE.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di gestire i permessi dei ruoli.", Severity.Error);
             return;
         }
 
@@ -236,7 +237,7 @@ private bool _isLoading;
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(MessaggioErroreApi.Da(ex), Severity.Error);
         }
         finally
         {

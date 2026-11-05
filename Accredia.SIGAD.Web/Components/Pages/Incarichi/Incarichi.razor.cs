@@ -9,14 +9,15 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MudBlazor;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Incarichi
 {
-    private bool CanRead => UserContext.HasPermission("SIDAC.INC.LIST") || UserContext.HasPermission("SIDAC.INC.READ");
-    private bool CanCreate => UserContext.HasPermission("SIDAC.INC.CREATE");
-    private bool CanDelete => UserContext.HasPermission("SIDAC.INC.DELETE");
+    private bool CanRead => UserContext.HasPermission(PermessiSidac.Incarichi.Elenco) || UserContext.HasPermission(PermessiSidac.Incarichi.Lettura);
+    private bool CanCreate => UserContext.HasPermission(PermessiSidac.Incarichi.Creazione);
+    private bool CanDelete => UserContext.HasPermission(PermessiSidac.Incarichi.Cancellazione);
 
     [Parameter, SupplyParameterFromQuery(Name = "q")]
     public string? Q { get; set; }
@@ -116,7 +117,7 @@ public partial class Incarichi
     {
         if (!CanRead)
         {
-            _errorMessage = "Accesso negato: permesso INC.LIST/READ mancante.";
+            _errorMessage = "Il tuo profilo non consente di consultare gli incarichi.";
             return new TableData<IncaricoListItem>
             {
                 Items = Array.Empty<IncaricoListItem>(),
@@ -203,7 +204,7 @@ public partial class Incarichi
     {
         if (!CanCreate)
         {
-            Snackbar.Add("Accesso negato: permesso INC.CREATE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di creare gli incarichi.", Severity.Error);
             return;
         }
 
@@ -285,7 +286,7 @@ public partial class Incarichi
     {
         if (!CanDelete)
         {
-            Snackbar.Add("Accesso negato: permesso INC.DELETE mancante.", Severity.Error);
+            Snackbar.Add("Il tuo profilo non consente di eliminare gli incarichi.", Severity.Error);
             return;
         }
 

@@ -86,7 +86,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _lookupsError = ex.Message;
+            _lookupsError = MessaggioErroreApi.Da(ex);
             _tipiUnita = Array.Empty<LookupItem>();
             _tipiSede = Array.Empty<LookupItem>();
         }
@@ -155,7 +155,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -190,7 +190,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

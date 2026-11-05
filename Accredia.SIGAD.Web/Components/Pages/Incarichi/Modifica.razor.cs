@@ -22,12 +22,13 @@ using Accredia.SIGAD.Web.Models.Search;
 using Accredia.SIGAD.Web.Models.Tipologiche;
 using Accredia.SIGAD.Web.Services;
 using BreadcrumbItem = Accredia.SIGAD.Web.Models.Common.BreadcrumbItem;
+using Accredia.SIGAD.Shared.Permessi;
 
 namespace Accredia.SIGAD.Web.Components.Pages.Incarichi;
 
 public partial class Modifica : ComponentBase
 {
-    private bool CanUpdate => UserContext.HasPermission("SIDAC.INC.UPDATE");
+    private bool CanUpdate => UserContext.HasPermission(PermessiSidac.Incarichi.Modifica);
 
     [Parameter] public int Id { get; set; }
 
@@ -137,7 +138,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _lookupsError = ex.Message;
+            _lookupsError = MessaggioErroreApi.Da(ex);
             _ruoli = Array.Empty<LookupItem>();
         }
         finally
@@ -255,7 +256,7 @@ public partial class Modifica : ComponentBase
 
         if (!CanUpdate)
         {
-            _errorMessage = "Accesso negato: permesso INC.UPDATE mancante.";
+            _errorMessage = "Il tuo profilo non consente di modificare gli incarichi.";
             return;
         }
 
@@ -313,7 +314,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {

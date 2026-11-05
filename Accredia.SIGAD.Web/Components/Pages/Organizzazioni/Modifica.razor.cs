@@ -159,7 +159,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
@@ -200,7 +200,7 @@ public partial class Modifica : ComponentBase
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = MessaggioErroreApi.Da(ex);
         }
         finally
         {
