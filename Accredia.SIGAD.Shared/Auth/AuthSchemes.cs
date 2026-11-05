@@ -3,18 +3,18 @@ using Microsoft.Extensions.Hosting;
 namespace Accredia.SIGAD.Shared.Auth;
 
 /// <summary>
-/// Nomi degli schemi di autenticazione. Due emittenti Entra distinti:
-/// il tenant istituzionale per il personale ACCREDIA, il tenant esterno
-/// (External ID) per referenti dei CAB e ispettori. L'emittente stabilisce
-/// CHI e' il soggetto; ruoli, permessi e ambito provengono sempre da IAM.
-/// Riferimento: AF-31 cap. 2.
+/// Nomi degli schemi di autenticazione. SIDAC e' solo per uso interno
+/// (decisione del 2026-11-05): accetta il solo tenant istituzionale. Referenti
+/// dei CAB e ispettori (External ID) usano il Portale, non SIDAC; eventuali
+/// consulenti entrano come ospiti del tenant istituzionale. L'emittente
+/// stabilisce CHI e' il soggetto; ruoli, permessi e ambito provengono sempre
+/// da IAM. Riferimento: AF-31 cap. 2.
 /// </summary>
 public static class AuthSchemes
 {
     /// <summary>Schema selettore: instrada allo schema corretto per richiesta.</summary>
     public const string Selector  = "Sigad";
     public const string Workforce = "EntraWorkforce";
-    public const string External  = "EntraExternal";
 }
 
 /// <summary>

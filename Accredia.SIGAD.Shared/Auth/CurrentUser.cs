@@ -30,12 +30,13 @@ public sealed class CurrentUser : ICurrentUser
         Principal?.Identity?.AuthenticationType == AuthSchemes.Workforce;
 
     // I valori corrispondono a IAM.Utente.EntraProvider gia' in uso nel modello.
-    private string Provider => Principal?.Identity?.AuthenticationType switch
+    // SIDAC e' solo per uso interno: un'identita' esterna (ENTRA_ESTERNO) non
+    // viene cercata in IAM e non accede, anche se avesse ruoli con permessi SIDAC.
+    private string? Provider => Principal?.Identity?.AuthenticationType switch
     {
         AuthSchemes.Workforce => "ENTRA_AZIENDALE",
-        AuthSchemes.External  => "ENTRA_ESTERNO",
         DevAuth.Schema        => "ENTRA_AZIENDALE",
-        _ => "SCONOSCIUTO"
+        _ => null
     };
 
     private UserScope Scope => _scope ?? UserScope.NonRisolto;
@@ -54,8 +55,8 @@ public sealed class CurrentUser : ICurrentUser
     /// </summary>
     public async Task<bool> RisolviAsync(CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(EntraObjectId)) return false;
-        _scope = await _resolver.ResolveAsync(EntraObjectId, Provider, cancellationToken);
+        if (string.IsNullOrWhiteSpace(EntraObjectId) || Provider is not { } provider) return false;
+        _scope = await _resolver.ResolveAsync(EntraObjectId, provider, cancellationToken);
         return _scope.Risolto;
     }
 }
