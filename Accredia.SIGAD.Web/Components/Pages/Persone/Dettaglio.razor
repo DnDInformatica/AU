@@ -96,8 +96,8 @@
                                     <MudTd>@context.Email</MudTd>
                                     <MudTd>@GetEmailTipoLabel(context.TipoEmailId)</MudTd>
                                     <MudTd Align="Right">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditEmail(context))" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEmailAsync(context.PersonaEmailId))" />
+                                        <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditEmail(context))" />
+                                        <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEmailAsync(context.PersonaEmailId))" />
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>
@@ -114,8 +114,8 @@
                                     <MudTd>@FormatTelefono(context)</MudTd>
                                     <MudTd>@GetTelefonoTipoLabel(context.TipoTelefonoId)</MudTd>
                                     <MudTd Align="Right">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTelefono(context))" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTelefonoAsync(context.PersonaTelefonoId))" />
+                                        <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTelefono(context))" />
+                                        <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTelefonoAsync(context.PersonaTelefonoId))" />
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>
@@ -175,8 +175,8 @@
                             <MudTd>@(context.Principale ? "Si" : "No")</MudTd>
                             <MudTd>@(context.Attivo ? "Si" : "No")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditIndirizzo(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteIndirizzoAsync(context.PersonaIndirizzoId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditIndirizzo(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteIndirizzoAsync(context.PersonaIndirizzoId))" />
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -213,8 +213,8 @@
                             <MudTd>@(context.Valida ? "Si" : "No")</MudTd>
                             <MudTd>@(context.DataScadenza?.ToString("dd/MM/yyyy") ?? "—")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditQualifica(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteQualificaAsync(context.PersonaQualificaId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditQualifica(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteQualificaAsync(context.PersonaQualificaId))" />
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -249,8 +249,8 @@
                             <MudTd>@GetTipoRelazioneLabel(context.TipoRelazionePersonaleId)</MudTd>
                             <MudTd>@(string.IsNullOrWhiteSpace(context.Note) ? "—" : context.Note)</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditRelazione(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteRelazioneAsync(context.PersonaRelazionePersonaleId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditRelazione(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteRelazioneAsync(context.PersonaRelazionePersonaleId))" />
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -286,8 +286,8 @@
                             <MudTd>@(string.IsNullOrWhiteSpace(context.Corso) ? "—" : context.Corso)</MudTd>
                             <MudTd>@(context.Principale ? "Si" : "No")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTitolo(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTitoloAsync(context.PersonaTitoloStudioId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditTitolo(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTitoloAsync(context.PersonaTitoloStudioId))" />
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
@@ -322,8 +322,8 @@
                             <MudTd>@(context.Consenso ? "Si" : "No")</MudTd>
                             <MudTd>@context.DataConsenso.ToString("dd/MM/yyyy")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditConsenso(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteConsensoAsync(context.ConsensoPersonaId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => BeginEditConsenso(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteConsensoAsync(context.ConsensoPersonaId))" />
                             </MudTd>
                         </RowTemplate>
                     </MudTable>

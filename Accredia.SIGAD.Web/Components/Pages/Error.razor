@@ -1,25 +1,22 @@
 @page "/Error"
 @using System.Diagnostics
 
-<PageTitle>Error</PageTitle>
+<PageTitle>Errore · SIGAD</PageTitle>
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+@* Pagina mostrata per gli errori non gestiti: nessun dettaglio tecnico per
+   l'utente, solo il codice della richiesta che serve all'assistenza. *@
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudText Typo="Typo.h5" HtmlTag="h1" tabindex="-1">Si è verificato un errore</MudText>
+    <MudText Typo="Typo.body1" Class="mt-2">
+        La richiesta non è stata completata. Riprova; se il problema persiste, segnalalo all'assistenza.
+    </MudText>
 
-@if (ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@RequestId</code>
-    </p>
-}
+    @if (ShowRequestId)
+    {
+        <MudText Typo="Typo.body2" Class="mt-4">
+            Codice della richiesta da comunicare all'assistenza: <code>@RequestId</code>
+        </MudText>
+    }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/" Class="mt-6">Torna alla Home</MudButton>
+</MudContainer>

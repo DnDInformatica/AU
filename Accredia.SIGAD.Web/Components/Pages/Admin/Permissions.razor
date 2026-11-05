@@ -6,7 +6,7 @@
 @using Accredia.SIGAD.Web.Models.Admin
 @using Accredia.SIGAD.Web.Components.Shared
 
-<PageTitle>Permessi - SIGAD</PageTitle>
+<PageTitle>Permessi · SIGAD</PageTitle>
 
 @if (!UserContext.HasPermission(PermessiIam.GestionePermessi) && !UserContext.HasPermission(PermessiIam.AccessoConsole))
 {
@@ -20,7 +20,7 @@
             <div class="d-flex align-center mb-2">
                 <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Large" Class="mr-3" />
                 <div>
-                    <MudText Typo="Typo.h4">Permessi</MudText>
+                    <MudText Typo="Typo.h4" HtmlTag="h1" tabindex="-1">Permessi</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Elenco permessi disponibili nel sistema (catalogo).
                     </MudText>

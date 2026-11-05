@@ -27,6 +27,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+// Testi italiani di paginatori, filtri e selettori MudBlazor (come nel Portale).
+builder.Services.AddTransient<MudBlazor.MudLocalizer, Accredia.SIGAD.Web.Services.MudLocalizerItaliano>();
 MudGlobal.DialogDefaults.DefaultFocus = DefaultFocus.None;
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();

@@ -13,7 +13,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False">
     <PageHeader Title="Richieste Esercizio Diritti"
-                Subtitle="Gestione richieste art. GDPR (CRUD)"
+                Subtitle="Richieste di esercizio dei diritti degli interessati."
                 BreadcrumbItems="@_breadcrumbs" />
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -29,7 +29,7 @@
                     <MudSpacer />
                     <MudCheckBox T="bool" @bind-Value="_includeDeleted" Label="Mostra cancellati" Dense="true" Disabled="_loading" />
                     <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_loading" OnClick="LoadAsync">Applica</MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="_loading" OnClick="ResetFiltersAsync">Reset</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="_loading" OnClick="ResetFiltersAsync">Azzera filtri</MudButton>
                 </MudStack>
                 <MudGrid Spacing="1" Class="mt-1">
                     <MudItem xs="12" sm="4"><MudTextField T="int?" Label="PersonaId" Dense="true" Variant="Variant.Outlined" @bind-Value="_filterPersonaId" /></MudItem>
@@ -69,9 +69,9 @@
                             <MudTd>@context.Stato</MudTd>
                             <MudTd>@context.DataScadenza.ToString("dd/MM/yyyy")</MudTd>
                             <MudTd Align="Right">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RichiestaEsercizioDirittiId))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RichiestaEsercizioDirittiId))" />
+                                <MudIconButton aria-label="Apri il dettaglio" Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Disabled="@(!CanRead)" OnClick="@(() => LoadByIdAsync(context.RichiestaEsercizioDirittiId))" />
+                                <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Disabled="@(!CanUpdate)" OnClick="@(() => BeginEdit(context))" />
+                                <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="@(!CanDelete)" OnClick="@(() => DeleteAsync(context.RichiestaEsercizioDirittiId))" />
                             </MudTd>
                         </RowTemplate>
                         <PagerContent><MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })" /></PagerContent>

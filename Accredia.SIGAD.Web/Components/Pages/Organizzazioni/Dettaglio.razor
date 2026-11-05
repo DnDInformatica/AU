@@ -714,8 +714,8 @@
                                     </MudTd>
                                     <MudTd DataLabel="Note">@DisplayOrDash(context.Note)</MudTd>
                                     <MudTd Style="width:1%;white-space:nowrap;text-align:right;">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small" OnClick="@(() => EditIdentificativo(context))" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteIdentificativoAsync(context.Id))" />
+                                        <MudIconButton aria-label="Modifica" Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small" OnClick="@(() => EditIdentificativo(context))" />
+                                        <MudIconButton aria-label="Elimina" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteIdentificativoAsync(context.Id))" />
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>

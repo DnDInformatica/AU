@@ -29,7 +29,7 @@
 | Fase | Contenuto | Stato |
 |---|---|---|
 | 1. Correttezza | costanti `PermessiSigad`/`PermessiIam` (prima `PermessiSidac`) al posto dei codici scritti come testo; niente capacità dal nome del ruolo (`IsAdmin`); profili demo solo interni; controllo dei permessi nelle pagine scoperte (`RichiedePermesso`); messaggi d'errore comprensibili (`MessaggioErroreApi`); niente codici tecnici nei messaggi; Home senza KPI e attività inventati | fatta (questo branch) |
-| 2. Lingua e accessibilità | localizzazione italiana di MudBlazor (paginatori), testi inglesi e pagina d'errore, testi autoreferenziali, un `h1` per pagina (anche per il focus alla navigazione), etichette dei pulsanti con sola icona, `PageTitle` su tutte le pagine | da fare |
+| 2. Lingua e accessibilità | localizzazione italiana di MudBlazor (paginatori), testi inglesi e pagina d'errore, testi autoreferenziali, un `h1` per pagina (anche per il focus alla navigazione), etichette dei pulsanti con sola icona, `PageTitle` su tutte le pagine | fatta: `MudLocalizerItaliano` (copia del Portale); `PageHeader` con `h1` e titolo della scheda; `HeadOutlet` interattivo (prima nessun `PageTitle` arrivava al browser); pagina d'errore in italiano senza dettagli tecnici; 32 pulsanti con etichetta; testi «(CRUD)» e «soft delete» riscritti |
 | 3. Stile | foglio di stile operativo condiviso (copia identica), via ombre, gradiente, maiuscolo spaziato, hero; Bootstrap e stili inline da togliere gradualmente; registro delle icone condiviso | dopo la validazione della Corporate Identity |
 | 4. Strumenti | `data-dev-component`/`data-dev-source` sulle 63 componenti, controllo in build; Dev Inspector caricato solo in Development e assente in Release | da fare |
 

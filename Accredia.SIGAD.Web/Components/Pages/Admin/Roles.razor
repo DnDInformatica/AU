@@ -6,7 +6,7 @@
 @using Accredia.SIGAD.Web.Models.Admin
 @using Accredia.SIGAD.Web.Components.Shared
 
-<PageTitle>Gestione Ruoli - SIGAD</PageTitle>
+<PageTitle>Gestione ruoli · SIGAD</PageTitle>
 
 @if (!UserContext.HasPermission(PermessiIam.GestioneRuoli) && !UserContext.HasPermission(PermessiIam.GestionePermessi))
 {
@@ -20,7 +20,7 @@
             <div class="d-flex align-center mb-2">
                 <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" Class="mr-3" />
                 <div>
-                    <MudText Typo="Typo.h4">Gestione Ruoli</MudText>
+                    <MudText Typo="Typo.h4" HtmlTag="h1" tabindex="-1">Gestione ruoli</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Assegna permessi ai ruoli e verifica le policy applicate.
                     </MudText>

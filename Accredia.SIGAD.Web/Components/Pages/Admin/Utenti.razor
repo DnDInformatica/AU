@@ -7,7 +7,7 @@
 @using Accredia.SIGAD.Web.Models.Admin
 @using Accredia.SIGAD.Web.Components.Shared
 
-<PageTitle>Gestione Utenti - SIGAD</PageTitle>
+<PageTitle>Gestione utenti · SIGAD</PageTitle>
 
 @if (!UserContext.HasPermission(PermessiIam.GestioneUtenti))
 {
@@ -21,7 +21,7 @@
             <div class="d-flex align-center mb-2">
                 <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large" Class="mr-3" />
                 <div>
-                    <MudText Typo="Typo.h4">Gestione Utenti</MudText>
+                    <MudText Typo="Typo.h4" HtmlTag="h1" tabindex="-1">Gestione utenti</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Gestisci account, ruoli e permessi degli utenti del sistema SIGAD
                     </MudText>

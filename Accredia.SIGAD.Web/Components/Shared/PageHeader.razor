@@ -1,5 +1,7 @@
 @namespace Accredia.SIGAD.Web.Components.Shared
 
+<PageTitle>@Title · SIGAD</PageTitle>
+
 <div class="sigad-page-header">
     <div class="sigad-page-header-left">
         @if (HasBackButton)
@@ -42,7 +44,9 @@
         {
             <MudText Typo="Typo.caption" Class="sigad-page-breadcrumbs">@Breadcrumbs</MudText>
         }
-        <MudText Typo="Typo.h5" Class="sigad-page-title">@Title</MudText>
+        @* h1 unico della pagina: Routes.razor sposta il focus sull'h1 a ogni navigazione
+           (lettori di schermo). tabindex -1 lo rende focalizzabile senza entrare nel tab. *@
+        <MudText Typo="Typo.h5" HtmlTag="h1" Class="sigad-page-title" tabindex="-1">@Title</MudText>
         @if (!string.IsNullOrWhiteSpace(Subtitle))
         {
             <MudText Typo="Typo.body2" Class="sigad-page-subtitle">@Subtitle</MudText>
